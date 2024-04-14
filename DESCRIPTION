@@ -10,7 +10,7 @@ Description: Implements the Triple Differences (DDD) estimators for  assesing th
               At its core, the DDD estimator employs a combination of inverse probability weighting
               and outcome regression (i.e., nusiance functions) ensuring a doubly-robust property. 
               Furthemore, this package supports the implementation of machine learning methods for estimation of nuisance functions.
-License: GPL (>= 3)
+License: MIT + file LICENSE
 Encoding: UTF-8
 Depends:
     R (>= 4.3)
