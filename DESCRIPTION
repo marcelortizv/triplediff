@@ -1,0 +1,26 @@
+Package: triplediff
+Title: Triple Differences Estimators
+Version: 0.0.0.9000
+Authors@R: c(person("Marcelo", "Ortiz-Villavicencio", email = "marcelo.ortiz@emory.edu", role = c("aut", "cre")),
+              person("Pedro H.C.", "Sant'Anna", email = "pedro.santanna@emory.edu", role = c("aut"))
+            )
+Description: Implements the Triple Differences (DDD) estimators for  assesing the average treatment effect on the treated
+              proposed by Ortiz-Villavicencio and Sant'Anna (2024). It offers tools for
+              estimating the DDD accomodating covariates and/or under multiple time periods. 
+              At its core, the DDD estimator employs a combination of inverse probability weighting
+              and outcome regression (i.e., nusiance functions) ensuring a doubly-robust property. 
+              Furthemore, this package supports the implementation of machine learning methods for estimation of nuisance functions.
+License: GPL (>= 3)
+Encoding: UTF-8
+Depends:
+    R (>= 4.3)
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.1
+Imports: 
+    BMisc (>= 1.4.6),
+    data.table (>= 1.15.0),
+    parglm (>= 0.1.7),
+    Rcpp (>= 1.0.12),
+    speedglm (>= 0.3-5)
+LinkingTo: 
+    Rcpp (>= 1.0.12)
