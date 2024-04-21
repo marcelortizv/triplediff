@@ -37,6 +37,12 @@ run_preprocess_2Periods <- function(yname,
     }
   }
 
+  # Flag for estMethod
+  if (estMethod!="trad" && estMethod!="dml") {
+    warning("estMethod = ",estMethod,  " is not supported. Using 'trad'.")
+    estMethod <- "trad"
+  }
+
   # Check if 'dta' is a data.table
   if (!"data.table" %in% class(data)) {
     # converting data to data.table
@@ -56,7 +62,7 @@ run_preprocess_2Periods <- function(yname,
   dta$weights <- weights
 
   # Check if weights are unique by idname
-  try(checkWeightsUniqueness(dta, idname))
+  checkWeightsUniqueness(dta, idname)
 
 
   # Flag for xformla

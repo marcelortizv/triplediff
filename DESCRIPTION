@@ -24,3 +24,6 @@ Imports:
     speedglm (>= 0.3-5)
 LinkingTo: 
     Rcpp (>= 1.0.12)
+Suggests: 
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3

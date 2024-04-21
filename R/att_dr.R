@@ -67,16 +67,15 @@ att_dr <- function(did_preprocessed) {
       nboot <- 999
     }
     if (boot.type == "multiplier"){
-      cat("Computing bootstrapped error a la Mammen (1993) \n")
       # perform multiplier bootstrap
       inf.boot <- mboot_did(inf.func, nboot)
       # get bootstrap std errors based on IQR
       se_ddd <- stats::IQR(inf.boot) / (stats::qnorm(0.75) - stats::qnorm(0.25))
-      # get symmtric critival values
+      # get symmetric critical values
       cv <- stats::quantile(abs(inf.boot/se_ddd), probs = 0.95)
-      # Estimate of upper boudary of 95% CI
+      # Estimate of upper boundary of 95% CI
       ci_upper <- dr_ddd + cv * se_ddd
-      # Estimate of lower doundary of 95% CI
+      # Estimate of lower boundary of 95% CI
       ci_lower <- dr_ddd - cv * se_ddd
     } else {
       stop("Bootstrapping type other than multiplier is currently not supported.")

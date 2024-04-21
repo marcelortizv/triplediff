@@ -18,12 +18,6 @@ validate_args_2Periods <- function(args, dta){
   nboot <- args$nboot
   inffunc <- args$inffunc
 
-  # Flag for estMethod=dml
-  if (estMethod=="dml") {
-    if (is.null(learners)) {
-      stop("learners should be provided when estMethod = 'dml'")
-    }
-  }
 
   # Flag for yname
   if (!is.element(yname, base::colnames(dta))) {
@@ -92,10 +86,10 @@ validate_args_2Periods <- function(args, dta){
   }
 
   # Check if partition is unique by idname
-  try(checkPartitionUniqueness(dta, idname, partition.name))
+  checkPartitionUniqueness(dta, idname, partition.name)
 
   # Check if dname is unique by idname
-  try(checkTreatmentUniqueness(dta, idname, dname))
+  checkTreatmentUniqueness(dta, idname, dname)
 
   # Flag for weightsname
   if(!is.null(weightsname)){
