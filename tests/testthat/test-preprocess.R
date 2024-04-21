@@ -1,5 +1,4 @@
 # Testing error handling in run_preprocess_2periods() function
-
 library(data.table)
 
 test_that("Testing error handling in run_preprocess_2periods() function", {
