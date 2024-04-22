@@ -97,6 +97,7 @@ att_dr <- function(did_preprocessed) {
               se = se_ddd,
               uci = ci_upper,
               lci = ci_lower,
+              nboot = nboot,
               inf.func = inf.func
               ))
 

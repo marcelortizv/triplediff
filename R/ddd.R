@@ -232,8 +232,7 @@ ddd <- function(yname, tname, idname, dname, gname, partition.name, xformla,
     multiple.periods = multiple.periods,
     learners = args$learners,
     boot = args$boot,
-    boot.type = args$boot.type,
-    nboot = args$nboot
+    boot.type = args$boot.type
   )
 
   if (multiple.periods == FALSE){
@@ -243,6 +242,7 @@ ddd <- function(yname, tname, idname, dname, gname, partition.name, xformla,
           se = att_dr$se,
           lci = att_dr$lci,
           uci = att_dr$uci,
+          nboot = att_dr$nboot,
           att.inf.func = att_dr$inf.func,
           call.params = call.params,
           argu = argu
