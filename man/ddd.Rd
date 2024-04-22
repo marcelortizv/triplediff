@@ -112,7 +112,13 @@ ddd(yname = "outcome", tname = "year", idname = "id", dname = "treat",
 # Triple Diff with multiple time periods
 #----------------------------------------------------------
 
-
+\dontrun{
+ddd(yname = "outcome", tname = "year", idname = "id", dname = NULL,
+    gname = "group", partition.name = "partition", xformla = ~x1 + x2,
+    data = sim_data, control.group = "notyettreated",
+    estMethod = "trad", learners = NULL, weightsname = NULL, boot = FALSE,
+    boot.type = "multiplier", nboot = NULL, inffunc = FALSE)
+}
 
 
 }
