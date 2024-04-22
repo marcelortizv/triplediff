@@ -109,10 +109,10 @@ print.ddd <- function(x, ...) {
     boot1 <-
       cat(
         "\n Boostrapped standard error based on",
-        x$argu$nboot,
-        "bootstrap draws. \n Bootstrap method:",
+        x$nboot,
+        "bootstrap draws. \n Bootstrap Method:",
         x$argu$boot.type[1],
-        ". Bootstrapped Standard Errors computed a la Mammen (1993) \n"
+        "(Mammen,1993) \n"
       )
   } else {
     boot1 <- cat("\n Analytical standard errors.\n")
