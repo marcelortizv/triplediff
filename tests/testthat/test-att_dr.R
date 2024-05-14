@@ -9,12 +9,12 @@ test_that("multiplication works", {
 
   ddd_analytical <- ddd(yname = "outcome", tname = "year", idname = "id", dname = "treat",
                   gname = NULL, partition.name = "partition", xformla = ~x1 + x2,
-                  data = test_panel, control.group = NULL, estMethod = "trad", learners = NULL,
+                  data = test_panel, control.group = NULL, estMethod = "trad", learners = NULL, n_folds = NULL,
                   weightsname = NULL, boot = TRUE, boot.type = "multiplier", nboot = NULL, inffunc = FALSE)
 
   ddd_boostrap <- ddd(yname = "outcome", tname = "year", idname = "id", dname = "treat",
                   gname = NULL, partition.name = "partition", xformla = ~x1 + x2,
-                  data = test_panel, control.group = NULL, estMethod = "trad", learners = NULL,
+                  data = test_panel, control.group = NULL, estMethod = "trad", learners = NULL, n_folds = NULL,
                   weightsname = NULL, boot = FALSE, boot.type = "multiplier", nboot = NULL, inffunc = FALSE)
 
   # Check that point estimates are the same

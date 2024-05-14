@@ -19,6 +19,9 @@ RoxygenNote: 7.3.1
 Imports: 
     BMisc (>= 1.4.6),
     data.table (>= 1.15.0),
+    mlr3,
+    mlr3learners,
+    mlr3tuning,
     parglm (>= 0.1.7),
     Rcpp (>= 1.0.12),
     speedglm (>= 0.3-5)

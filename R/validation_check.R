@@ -12,6 +12,7 @@ validate_args_2Periods <- function(args, dta){
   xformla <- args$xformla
   estMethod <- args$estMethod
   learners <- args$learners
+  n_folds <- args$n_folds
   weightsname <- args$weightsname
   boot <- args$boot
   boot.type <- args$boot.type
@@ -104,7 +105,25 @@ validate_args_2Periods <- function(args, dta){
       stop("learners should be provided when estMethod = 'dml'")
     }
 
-    # TODO: ADD MORE CHECKs IF NEEDED FOR DML
+    if (is.null(n_folds)) {
+      stop("n_folds should be provided when estMethod = 'dml'")
+    }
+
+    # check if there 2 learners provided in learners list
+    if (length(learners) != 2) {
+      stop("learners must be a list of two learners: ml_pa and ml_md")
+    }
+
+    # check if learner is a classifier type
+    if (!inherits(learners$ml_pa, "LearnerClassif")) {
+      stop("The learner must be a classification learner.")
+    }
+
+    # check if learner  is a regression type
+    if (!inherits(learners$ml_md, "LearnerRegr")) {
+      stop("The learner must be a regression learner.")
+    }
+
   }
 
 }

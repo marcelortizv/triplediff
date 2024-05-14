@@ -68,7 +68,7 @@ NULL
 #' ddd(yname = "outcome", tname = "year", idname = "id", dname = "treat",
 #'     gname = NULL, partition.name = "partition", xformla = ~x1 + x2,
 #'     data = sim_data, control.group = NULL,
-#'     estMethod = "trad", learners = NULL, weightsname = NULL, boot = FALSE,
+#'     estMethod = "trad", learners = NULL, n_folds = NULL, weightsname = NULL, boot = FALSE,
 #'     boot.type = "multiplier", nboot = NULL, inffunc = FALSE)
 #'
 #' #----------------------------------------------------------
@@ -88,8 +88,9 @@ NULL
 
 ddd <- function(yname, tname, idname, dname, gname, partition.name, xformla,
                 data, control.group = NULL,
-                estMethod = "trad", learners = NULL, weightsname = NULL,
-                boot = FALSE, boot.type = "multiplier", nboot = NULL, inffunc = FALSE) {
+                estMethod = "trad", learners = NULL, n_folds = NULL,
+                weightsname = NULL, boot = FALSE, boot.type = "multiplier",
+                nboot = NULL, inffunc = FALSE) {
 
 
   #------------------------------------------
@@ -129,6 +130,7 @@ ddd <- function(yname, tname, idname, dname, gname, partition.name, xformla,
     #                                  control.group = control.group,
     #                                  estMethod = "trad",
     #                                  learners = NULL,
+    #                                  n_folds = NULL,
     #                                  weightsname = weightsname,
     #                                  boot = boot,
     #                                  boot.type = boot.type,
@@ -147,6 +149,7 @@ ddd <- function(yname, tname, idname, dname, gname, partition.name, xformla,
     #                                  control.group = control.group,
     #                                  estMethod = "dml",
     #                                  learners = learners,
+    #                                  n_folds = n_folds,
     #                                  weightsname = weightsname,
     #                                  boot = boot,
     #                                  boot.type = boot.type,
@@ -165,29 +168,31 @@ ddd <- function(yname, tname, idname, dname, gname, partition.name, xformla,
                                  control.group = NULL,
                                  estMethod = "trad",
                                  learners = NULL,
+                                 n_folds = NULL,
                                  weightsname = weightsname,
                                  boot = boot,
                                  boot.type = boot.type,
                                  nboot = nboot,
                                  inffunc = inffunc)
   } else if ((!multiple.periods) && (estMethod=="dml")) {
-    # dp <- run_preprocess_2Periods(yname = yname,
-    #                              tname = tname,
-    #                              idname = idname,
-    #                              dname = dname,
-    #                              gname = NULL,
-    #                              partition.name = partition.name,
-    #                              xformla = xformla,
-    #                              data = data,
-    #                              control.group = NULL,
-    #                              estMethod = "dml",
-    #                              learners = learners,
-    #                              weightsname = weightsname,
-    #                              boot = boot,
-    #                              boot.type = boot.type,
-    #                              nboot = nboot,
-    #                              inffunc = inffunc)
-    stop("Triple Diff with 2 periods and DML is not yet supported")
+    dp <- run_preprocess_2Periods(yname = yname,
+                                 tname = tname,
+                                 idname = idname,
+                                 dname = dname,
+                                 gname = NULL,
+                                 partition.name = partition.name,
+                                 xformla = xformla,
+                                 data = data,
+                                 control.group = NULL,
+                                 estMethod = "dml",
+                                 learners = learners,
+                                 n_folds = n_folds,
+                                 weightsname = weightsname,
+                                 boot = boot,
+                                 boot.type = boot.type,
+                                 nboot = nboot,
+                                 inffunc = inffunc)
+    #stop("Triple Diff with 2 periods and DML is not yet supported")
   }
 
   #------------------------------------------
@@ -198,10 +203,9 @@ ddd <- function(yname, tname, idname, dname, gname, partition.name, xformla,
   if (multiple.periods == FALSE){
     if (estMethod == "trad"){
       att_dr <- att_dr(dp)
-    }
+    }#RUN TRADITIONAL ESTIMATION
   } else {
-      #TODO: IMPLEMENT att_dml PROCEDURE AND ADJUST PARAMETERS
-      # att_dml <- att_dml(dp)
+      att_dml <- att_dml(dp)
   }#RUN DML ESTIMATION
 
   # multiple time periods case: trad or dml
@@ -226,11 +230,13 @@ ddd <- function(yname, tname, idname, dname, gname, partition.name, xformla,
   arg_names <- setdiff(names(formals()), "data")
   args <- mget(arg_names, sys.frame(sys.nframe()))
   argu <- list(
+    yname = args$yname,
     partition.name = args$partition.name,
     control.group = args$control.group,
     estMethod = estMethod,
     multiple.periods = multiple.periods,
     learners = args$learners,
+    n_folds = args$n_folds,
     boot = args$boot,
     boot.type = args$boot.type
   )
@@ -247,17 +253,17 @@ ddd <- function(yname, tname, idname, dname, gname, partition.name, xformla,
           call.params = call.params,
           argu = argu
         )
-  } #else {
-   #      ret <- list(
-   #        ATT = att_dml$ATT,
-   #        se = att_dml$se,
-   #        lci = att_dml$lci,
-   #        uci = att_dml$uci,
-   #        att.inf.func = att_dml$inf.func,
-   #        call.params = call.params,
-   #        argu = argu
-   #      )
-   # }
+  } else {
+        ret <- list(
+          ATT = att_dml$ATT,
+          se = att_dml$se,
+          lci = att_dml$lci,
+          uci = att_dml$uci,
+          att.inf.func = att_dml$inf.func,
+          call.params = call.params,
+          argu = argu
+        )
+   }
   }# RETURNING LIST FOR 2 PERIODS CASE
 
   # multiple time periods case: trad or dml

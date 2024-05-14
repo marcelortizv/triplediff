@@ -101,9 +101,6 @@ att_dr <- function(did_preprocessed) {
               inf.func = inf.func
               ))
 
-  # # define a class
-  # class(ret) <- "ddd"
-
   return(ret)
 
 }

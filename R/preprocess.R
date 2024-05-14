@@ -4,7 +4,6 @@
 NULL
 #--------------------------------------------------
 # Function the pre-process the data to use on ddd estimator
-# sourceCpp('drddd_estimator/sanity_checks.cpp')
 
 # Preprocess function for 2 periods case
 run_preprocess_2Periods <- function(yname,
@@ -18,6 +17,7 @@ run_preprocess_2Periods <- function(yname,
                                    control.group = NULL,
                                    estMethod = "trad",
                                    learners = NULL,
+                                   n_folds = NULL,
                                    weightsname = NULL,
                                    boot = FALSE,
                                    boot.type = "multiplier",
@@ -175,6 +175,7 @@ run_preprocess_2Periods <- function(yname,
               xformula = xformla,
               estMethod = estMethod,
               learners = learners,
+              n_folds = n_folds,
               boot = boot,
               boot.type = boot.type,
               nboot = nboot,

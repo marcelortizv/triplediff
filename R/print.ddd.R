@@ -19,9 +19,8 @@ print.ddd <- function(x, ...) {
       estMethod3 <- "Propensity score estimated using: Maximum Likelihood"
     } else {
       estMethod1 <- "DMLDDD estimator for the ATT: \n"
-      #TODO: Add the method used to estimate OR and PS (name should be contained in "learners")
-      estMethod2 <- paste("Outcome Regression estimated using:", x$argu$learners[1]$name)
-      estMethod3 <- paste("Propensity score estimated using:", x$argu$learners[1]$name)
+      estMethod2 <- paste("Outcome Regression estimated using:", x$argu$learners$ml_pa$learner$label)
+      estMethod3 <- paste("Propensity score estimated using:", x$argu$learners$ml_ma$learner$label)
     }
 
     # Front-end Summary Table
@@ -85,17 +84,19 @@ print.ddd <- function(x, ...) {
   # Printing results in console
   cat(" Call:\n")
   print(x$call.params)
-  cat("------------------------------------------------------------------")
+  cat("=========================== DDD Summary ==========================")
   cat("\n", estMethod1, "\n")
+  cat("--------------------------- Fit Results --------------------------")
   utils::write.table(format(rbind(header, body), justify= "centre", digits=2, nsmall=2),
                      row.names=FALSE, col.names=FALSE, quote=FALSE, sep=" ")
-  cat("------------------------------------------------------------------")
-  # Panel data
-  cat("\n", "Panel data")
+  cat("--------------------------- Algorithm   --------------------------")
   # Estimation Method
   cat("\n", estMethod2)
   cat("\n", estMethod3)
-
+  cat("--------------------------- Data Info   --------------------------")
+  # Panel data
+  cat("\n", "Panel data")
+  cat("\n", paste("Outcome variable: ", x$argu$yname))
   # add partition variable name
   cat("\n", paste("Partition variable: ", x$argu$partition.name))
 
@@ -104,7 +105,16 @@ print.ddd <- function(x, ...) {
     cat("\n", paste("Control group: ", x$argu$control.group))
   }
 
+  # TODO: ADD number of observations in each partition
+  # TODO: ADD number of covariates and some examples
+
+  if (x$argu$estMethod[1] == 'dml'){
+    cat("--------------------------- Cross-fitting  -------------------------")
+    cat("\n No. of folds: ", x$argu$n_folds)
+    cat("\n Apply cross-fitting: TRUE")
+  }
   # Analytical vs bootstrapped standard errors
+  cat("--------------------------- Std. Errors  -------------------------")
   if (x$argu$boot == T) {
     boot1 <-
       cat(

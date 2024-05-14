@@ -16,6 +16,7 @@ ddd(
   control.group = NULL,
   estMethod = "trad",
   learners = NULL,
+  n_folds = NULL,
   weightsname = NULL,
   boot = FALSE,
   boot.type = "multiplier",
