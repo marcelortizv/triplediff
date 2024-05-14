@@ -69,7 +69,7 @@ mean_ddd_k <- function(dmlddd_scores_hat_k) {
 # Function to compute propensity scores using parglm for multiple subgroups
 compute_pscore <- function(data, condition_subgroup, xformula) {
   # get formula for pscore estimation using covariates
-  formula_pscore <- get_formula_pscore(xformula)
+  formula_pscore <- get_formula_pscore(xformula, weights = FALSE)
   # Subset data for condition_subgroup and subgroup == 4 or the given condition_subgroup
   condition_data <- data[data$subgroup %in% c(condition_subgroup, 4)]
   # Adding treatment variable P(1{PA4 = 4}|X)

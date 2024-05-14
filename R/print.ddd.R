@@ -85,15 +85,15 @@ print.ddd <- function(x, ...) {
   cat(" Call:\n")
   print(x$call.params)
   cat("=========================== DDD Summary ==========================")
-  cat("\n", estMethod1, "\n")
-  cat("--------------------------- Fit Results --------------------------")
+  cat("\n", estMethod1)
+  cat("\n --------------------------- Fit Results --------------------------\n")
   utils::write.table(format(rbind(header, body), justify= "centre", digits=2, nsmall=2),
                      row.names=FALSE, col.names=FALSE, quote=FALSE, sep=" ")
-  cat("--------------------------- Algorithm   --------------------------")
+  cat("\n --------------------------- Algorithm   --------------------------")
   # Estimation Method
   cat("\n", estMethod2)
   cat("\n", estMethod3)
-  cat("--------------------------- Data Info   --------------------------")
+  cat("\n --------------------------- Data Info   --------------------------")
   # Panel data
   cat("\n", "Panel data")
   cat("\n", paste("Outcome variable: ", x$argu$yname))
@@ -109,12 +109,12 @@ print.ddd <- function(x, ...) {
   # TODO: ADD number of covariates and some examples
 
   if (x$argu$estMethod[1] == 'dml'){
-    cat("--------------------------- Cross-fitting  -------------------------")
+    cat("\n --------------------------- Cross-fitting  -------------------------")
     cat("\n No. of folds: ", x$argu$n_folds)
     cat("\n Apply cross-fitting: TRUE")
   }
   # Analytical vs bootstrapped standard errors
-  cat("--------------------------- Std. Errors  -------------------------")
+  cat("\n --------------------------- Std. Errors  -------------------------")
   if (x$argu$boot == T) {
     boot1 <-
       cat(
@@ -127,6 +127,6 @@ print.ddd <- function(x, ...) {
   } else {
     boot1 <- cat("\n Analytical standard errors.\n")
   }
-  cat("------------------------------------------------------------------")
+  cat("\n ------------------------------------------------------------------")
   cat("\n See Ortiz-Villavicencio and Sant'Anna (2024) for details.")
 }
