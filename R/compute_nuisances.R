@@ -100,7 +100,7 @@ compute_pscore <- function(data, condition_subgroup, xformula) {
 
   # Warning for overlap condition
   if (any(propensity_scores < 0.01) | any(propensity_scores > 0.99)) {
-    warning(paste("Propensity scores for subgroup", condition_subgroup,
+    stop(paste("Propensity scores for subgroup", condition_subgroup,
                   "have poor overlap."))
   }
 
@@ -126,7 +126,7 @@ compute_outcome_regression <- function(data, condition_subgroup, xformula){
   # get covariates including the intercept (conditioning in pre-treatment period since covariates are invariant)
   cov_control <- stats::model.matrix(as.formula(xformula), data = control_data[control_data$post == 0])
   # get weights (conditioning in pre-treatment period since weights are invariant)
-  i.weights = control_data[control_data$post == 0, weights]
+  i_weights = control_data[control_data$post == 0, weights]
 
   # get coefficients of outcome regression model for the control group (subgroup != 4)
   # Attempt to compute reg.coeff using speedglm
@@ -134,13 +134,13 @@ compute_outcome_regression <- function(data, condition_subgroup, xformula){
     reg.coeff <- stats::coef(speedglm::speedglm.wfit(y = deltaY_control,
                                                      X = as.matrix(cov_control),
                                                      intercept = FALSE,
-                                                     weights = i.weights))
+                                                     weights = i_weights))
   }, error = function(e) {
     # If error, attempt to compute reg.coeff using lm.wfit
     reg.coeff <- tryCatch({
       stats::coef(stats::lm.wfit(x = as.matrix(cov_control),
                                  y = deltaY_control,
-                                 w = i.weights))
+                                 w = i_weights))
     }, error = function(e2) {
       # If error with lm.wfit, stop the program and send an error message
       stop("Error in computing regression coefficients: Subgroup ", condition_subgroup, " may have insufficient data.")
@@ -198,20 +198,20 @@ compute_did <- function(data, condition_subgroup, pscores, reg_adjustment, xform
   }
 
   # get weights
-  i.weights = condition_data[condition_data$post == 0, weights]
+  i_weights = condition_data[condition_data$post == 0, weights]
 
   ################################
   # Get doubly-robust estimation #
   ################################
 
-  w.treat = i.weights * PA4
-  w.control = (i.weights * pscore * PAa) / (1 - pscore)
-  riesz.treat = w.treat * (deltaY - or_delta)
-  riesz.control = w.control * (deltaY - or_delta)
-  att.treat = mean(riesz.treat, na.rm = TRUE) / mean(w.treat, na.rm = TRUE)
-  att.control = mean(riesz.control, na.rm = TRUE) / mean(w.control, na.rm = TRUE)
+  w_treat = i_weights * PA4
+  w_control = (i_weights * pscore * PAa) / (1 - pscore)
+  riesz_treat = w_treat * (deltaY - or_delta)
+  riesz_control = w_control * (deltaY - or_delta)
+  att_treat = mean(riesz_treat, na.rm = TRUE) / mean(w_treat, na.rm = TRUE)
+  att_control = mean(riesz_control, na.rm = TRUE) / mean(w_control, na.rm = TRUE)
 
-  dr.att = att.treat - att.control
+  dr_att = att_treat - att_control
 
   ##########################
   # Get influence function #
@@ -219,47 +219,47 @@ compute_did <- function(data, condition_subgroup, pscores, reg_adjustment, xform
 
   # Influence function related to the estimation of pscores
   cov = stats::model.matrix(xformula, data = condition_data)
-  M2 <- base::colMeans(w.control * (deltaY - or_delta - att.control) * cov, na.rm = TRUE) # reg_adjust = deltaY - m_delta(x)
+  M2 <- base::colMeans(w_control * (deltaY - or_delta - att_control) * cov, na.rm = TRUE) # reg_adjust = deltaY - m_delta(x)
 
-  score_ps <- i.weights * (PA4 - pscore) * cov
+  score_ps <- i_weights * (PA4 - pscore) * cov
   # asymptotic linear representation of logit's beta
   score_ps_no_na <- na.omit(score_ps) # Exclude rows with NA values
-  asy.lin.rep.ps <- score_ps_no_na %*% hessian
-  inf.control.pscore <- asy.lin.rep.ps %*% as.matrix(M2)
+  asy_lin_rep_ps <- score_ps_no_na %*% hessian
+  inf_control_pscore <- asy_lin_rep_ps %*% as.matrix(M2)
 
   # Influence function related to the estimation of pscores
 
-  M1 <- base::colMeans(w.treat * cov, na.rm = TRUE)
-  M3 <- base::colMeans(w.control * cov, na.rm = TRUE)
+  M1 <- base::colMeans(w_treat * cov, na.rm = TRUE)
+  M3 <- base::colMeans(w_control * cov, na.rm = TRUE)
 
   # Influence function related to the estimation of regression model
-  or_x <- i.weights * PAa * cov
-  or_ex <- i.weights * PAa * (deltaY - or_delta) * cov
+  or_x <- i_weights * PAa * cov
+  or_ex <- i_weights * PAa * (deltaY - or_delta) * cov
   XpX <- crossprod(or_x, cov)/nrow(condition_data)
 
   #asymptotic linear representation of the beta
-  asy.linear.or <- t(solve(XpX, t(or_ex)))
+  asy_linear_or <- t(solve(XpX, t(or_ex)))
 
   #or for treat
-  inf.treat.or <- -asy.linear.or %*% M1
+  inf_treat_or <- -asy_linear_or %*% M1
   #or for control
-  inf.cont.or <- -asy.linear.or %*% M3
+  inf_cont_or <- -asy_linear_or %*% M3
 
   # Influence function from did
-  inf.control.did <- riesz.control - w.control*att.control
-  inf.treat.did <- riesz.treat - w.treat*att.treat
+  inf_control_did <- riesz_control - w_control*att_control
+  inf_treat_did <- riesz_treat - w_treat*att_treat
 
   # Influence function for the ATT
-  inf.control <- (inf.control.did + inf.control.pscore + inf.cont.or)/mean(w.control)
-  inf.treat <- (inf.treat.did + inf.treat.or)/mean(w.treat)
+  inf_control <- (inf_control_did + inf_control_pscore + inf_cont_or)/mean(w_control)
+  inf_treat <- (inf_treat_did + inf_treat_or)/mean(w_treat)
   # putting all together
-  inf.func <- inf.treat - inf.control
+  inf_func <- inf_treat - inf_control
 
   # fill zeros in influence function for observation outside the subgroup analyzed
-  data[, "inf.func.result" := numeric(.N)]
-  data[data$subgroup %in% c(condition_subgroup, 4), "inf.func.result" := inf.func]
+  data[, "inf_func_result" := numeric(.N)]
+  data[data$subgroup %in% c(condition_subgroup, 4), "inf_func_result" := inf_func]
 
-  return(list(dr.att = dr.att, inf.func = data[["inf.func.result"]]))
+  return(list(dr_att = dr_att, inf_func = data[["inf_func_result"]]))
 }
 
 ### FUNCTIONS FOR DML ###
@@ -290,15 +290,16 @@ get_score_elements <- function(y, d, p_hat, m_hat){
 }
 
 # Function to get the predicted score for each k fold
-compute_scores <- function(ml_pa, ml_md){
+compute_scores <- function(ml_pa, ml_md, condition_subgroup){
   #' Function to compute scores based on first step nuisances predictions
-  #' @param ml_pa: MLR3 object for propensity score estimation
-  #' @param ml_md: MLR3 object for regression adjustment estimation
+  #' @param ml_pa MLR3 object for propensity score estimation
+  #' @param ml_md MLR3 object for regression adjustment estimation
+  #' @param condition_subgroup Subgroup to analyze
   #' @return: A list of scores and id for each k fold
 
   # Warning for overlap condition
   if (any(ml_pa$prediction()$prob[,2] < 0.01) | any(ml_pa$prediction()$prob[,2] > 0.99)) {
-    warning(paste("Propensity scores for subgroup", condition_subgroup,
+    stop(paste("Propensity scores for subgroup", condition_subgroup,
                   "have poor overlap."))
   }
 
@@ -318,6 +319,7 @@ compute_scores <- function(ml_pa, ml_md){
 
     # Avoid divide by zero
     pscores <- pmin(pscores, 1 - 1e-16)
+    pscores <- pmax(pscores, 1e-16)
 
     # Get the predictions for the k-th fold
     pscores_k_dt <- as.data.table(list(row_ids = pscores_pred[[k]]$row_ids,
@@ -415,7 +417,7 @@ compute_dml_nuisances <- function(data, condition_subgroup, xformula, ml_pa, ml_
   ml_regr <- resample(task_regr, ml_md, resampling)
 
   # Compute the scores for each k fold
-  dml_scores <- compute_scores(ml_pa = ml_classif, ml_md = ml_regr)
+  dml_scores <- compute_scores(ml_pa = ml_classif, ml_md = ml_regr, condition_subgroup = condition_subgroup)
 
   # Get a list of dmlddd estimator + scores, for each k-fold
   ddd_dml <- lapply(dml_scores, compute_dml)
@@ -428,6 +430,6 @@ compute_se_dml <- function(dml_scores1, dml_scores2, dml_scores3) {
   scores <- c(dml_scores1, dml_scores2, dml_scores3)
   N = length(scores)
   sigma2 = stats::var(scores)
-  se = stats::sqrt(sigma2 / N)
+  se = sqrt(sigma2 / N)
   return(se)
 }

@@ -8,14 +8,14 @@ validate_args_2Periods <- function(args, dta){
   tname <- args$tname
   idname <- args$idname
   dname <- args$dname
-  partition.name <- args$partition.name
+  partition_name <- args$partition_name
   xformla <- args$xformla
-  estMethod <- args$estMethod
+  est_method <- args$est_method
   learners <- args$learners
   n_folds <- args$n_folds
   weightsname <- args$weightsname
   boot <- args$boot
-  boot.type <- args$boot.type
+  boot_type <- args$boot_type
   nboot <- args$nboot
   inffunc <- args$inffunc
 
@@ -52,21 +52,21 @@ validate_args_2Periods <- function(args, dta){
     stop("The type of ddd specified only allow for two groups (treated and untreated). Change type of ddd for multiple groups")
   }
 
-  # Flag for partition.name
-  if ( !is.element(partition.name, base::colnames(dta))) {
-    stop("partition.name = ",partition.name,  " could not be found in the data provided.")
+  # Flag for partition_name
+  if ( !is.element(partition_name, base::colnames(dta))) {
+    stop("partition_name = ",partition_name,  " could not be found in the data provided.")
   }
 
 
-  # check if partition.name is numeric
-  if (!all(sapply(dta[, ..partition.name], is.numeric))) {
-    stop("partition.name = ",partition.name,  " is not numeric. Please convert it")
+  # check if partition_name is numeric
+  if (!all(sapply(dta[, ..partition_name], is.numeric))) {
+    stop("partition_name = ",partition_name,  " is not numeric. Please convert it")
   }
 
   # Check if partition values are binary
-  plist <- unique(dta[[partition.name]])[base::order(unique(dta[[partition.name]]))]
+  plist <- unique(dta[[partition_name]])[base::order(unique(dta[[partition_name]]))]
   if (length(plist) != 2) {
-    stop("partition.name =", partition.name, " must have only two values (0 and 1). Please check partition.name")
+    stop("partition_name =", partition_name, " must have only two values (0 and 1). Please check partition_name")
   }
 
   # Check if idname is in the data
@@ -87,7 +87,7 @@ validate_args_2Periods <- function(args, dta){
   }
 
   # Check if partition is unique by idname
-  checkPartitionUniqueness(dta, idname, partition.name)
+  checkPartitionUniqueness(dta, idname, partition_name)
 
   # Check if dname is unique by idname
   checkTreatmentUniqueness(dta, idname, dname)
@@ -100,13 +100,13 @@ validate_args_2Periods <- function(args, dta){
   }
 
   # FLAGS FOR DML ESTIMATION
-  if (estMethod=="dml") {
+  if (est_method=="dml") {
     if (is.null(learners)) {
-      stop("learners should be provided when estMethod = 'dml'")
+      stop("learners should be provided when est_method = 'dml'")
     }
 
     if (is.null(n_folds)) {
-      stop("n_folds should be provided when estMethod = 'dml'")
+      stop("n_folds should be provided when est_method = 'dml'")
     }
 
     # check if there 2 learners provided in learners list

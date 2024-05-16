@@ -12,15 +12,15 @@
 
 print.ddd <- function(x, ...) {
   # Methods used
-  if (x$argu$multiple.periods == FALSE){
-    if (x$argu$estMethod[1] == 'trad') {
-      estMethod1 <- "DRDDD estimator for the ATT: \n"
-      estMethod2 <- "Outcome Regression estimated using: OLS"
-      estMethod3 <- "Propensity score estimated using: Maximum Likelihood"
+  if (x$argu$multiple_periods == FALSE){
+    if (x$argu$est_method[1] == 'trad') {
+      est_method1 <- "DRDDD estimator for the ATT: \n"
+      est_method2 <- "Outcome Regression estimated using: OLS"
+      est_method3 <- "Propensity score estimated using: Maximum Likelihood"
     } else {
-      estMethod1 <- "DMLDDD estimator for the ATT: \n"
-      estMethod2 <- paste("Outcome Regression estimated using:", x$argu$learners$ml_pa$learner$label)
-      estMethod3 <- paste("Propensity score estimated using:", x$argu$learners$ml_ma$learner$label)
+      est_method1 <- "DMLDDD estimator for the ATT: \n"
+      est_method2 <- paste0("Outcome Regression estimated using: ", x$argu$learners$ml_pa$label)
+      est_method3 <- paste0("Propensity score estimated using: ", x$argu$learners$ml_md$label)
     }
 
     # Front-end Summary Table
@@ -44,17 +44,17 @@ print.ddd <- function(x, ...) {
     colnames(body) <- header
   }
 
-  # TODO: Fix this when multiple.periods is done
-  # if (x$argu$multiple.periods == TRUE){
-  #   if (x$argu$estMethod[1] == 'trad') {
-  #     estMethod1 <- "DRDDD estimator for the ATT(gt): \n"
-  #     estMethod2 <- "Outcome Regression estimated using: OLS"
-  #     estMethod3 <- "Propensity score estimated using: Maximum Likelihood"
+  # TODO: Fix this when multiple_periods is done
+  # if (x$argu$multiple_periods == TRUE){
+  #   if (x$argu$est_method[1] == 'trad') {
+  #     est_method1 <- "DRDDD estimator for the ATT(gt): \n"
+  #     est_method2 <- "Outcome Regression estimated using: OLS"
+  #     est_method3 <- "Propensity score estimated using: Maximum Likelihood"
   #   } else {
-  #     estMethod1 <- "DMLDDD estimator for the ATT(gt): \n"
+  #     est_method1 <- "DMLDDD estimator for the ATT(gt): \n"
   #     #TODO: Add the method used to estimate OR and PS (name should be contained in "learners")
-  #     estMethod2 <- paste("Outcome Regression estimated using:", x$argu$learners[1]$name)
-  #     estMethod3 <- paste("Propensity score estimated using:", x$argu$learners[1]$name)
+  #     est_method2 <- paste("Outcome Regression estimated using:", x$argu$learners[1]$name)
+  #     est_method3 <- paste("Propensity score estimated using:", x$argu$learners[1]$name)
   #   }
   #
   #   # Front-end Summary Table
@@ -84,32 +84,37 @@ print.ddd <- function(x, ...) {
   # Printing results in console
   cat(" Call:\n")
   print(x$call.params)
-  cat("=========================== DDD Summary ==========================")
-  cat("\n", estMethod1)
+  cat("=========================== DDD Summary ===========================")
+  cat("\n", est_method1)
   cat("\n --------------------------- Fit Results --------------------------\n")
   utils::write.table(format(rbind(header, body), justify= "centre", digits=2, nsmall=2),
                      row.names=FALSE, col.names=FALSE, quote=FALSE, sep=" ")
-  cat("\n --------------------------- Algorithm   --------------------------")
-  # Estimation Method
-  cat("\n", estMethod2)
-  cat("\n", estMethod3)
   cat("\n --------------------------- Data Info   --------------------------")
   # Panel data
   cat("\n", "Panel data")
   cat("\n", paste("Outcome variable: ", x$argu$yname))
   # add partition variable name
-  cat("\n", paste("Partition variable: ", x$argu$partition.name))
+  cat("\n", paste("Partition variable: ", x$argu$partition_name))
+  cat("\n", "No. of observations for each partition:")
+  cat("\n", paste("PA = 4: ", x$subgroup_counts$V1[1]))
+  cat("\n", paste("PA = 3: ", x$subgroup_counts$V1[2]))
+  cat("\n", paste("PA = 2: ", x$subgroup_counts$V1[3]))
+  cat("\n", paste("PA = 1: ", x$subgroup_counts$V1[4]))
 
   # add control group for multiple periods
-  if(x$argu$multiple.periods == TRUE){
+  if(x$argu$multiple_periods == TRUE){
     cat("\n", paste("Control group: ", x$argu$control.group))
   }
-
   # TODO: ADD number of observations in each partition
   # TODO: ADD number of covariates and some examples
 
-  if (x$argu$estMethod[1] == 'dml'){
-    cat("\n --------------------------- Cross-fitting  -------------------------")
+  cat("\n --------------------------- Algorithm   --------------------------")
+  # Estimation Method
+  cat("\n", est_method2)
+  cat("\n", est_method3)
+
+  if (x$argu$est_method[1] == 'dml'){
+    cat("\n -------------------------- Cross-fitting  ------------------------")
     cat("\n No. of folds: ", x$argu$n_folds)
     cat("\n Apply cross-fitting: TRUE")
   }
@@ -125,8 +130,8 @@ print.ddd <- function(x, ...) {
         "(Mammen,1993) \n"
       )
   } else {
-    boot1 <- cat("\n Analytical standard errors.\n")
+    boot1 <- cat("\n Analytical standard errors.")
   }
-  cat("\n ------------------------------------------------------------------")
+  cat("\n ==================================================================")
   cat("\n See Ortiz-Villavicencio and Sant'Anna (2024) for details.")
 }

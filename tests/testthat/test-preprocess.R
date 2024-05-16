@@ -4,55 +4,55 @@ library(data.table)
 test_that("Testing error handling in run_preprocess_2periods() function", {
 
   # generating dataset without errors
-  two.periods.no.errors.df = generate_test_panel()
+  two_periods_no_errors_df = generate_test_panel()
 
   # ------------------------------
   # Performing tests
   # ------------------------------
 
   # Introducing discrepancy in the dataset
-  y.not.numeric = copy(two.periods.no.errors.df)
-  y.not.numeric$outcome = as.character(y.not.numeric$outcome) # Introducing error: converting numeric to character
+  y_not_numeric = copy(two_periods_no_errors_df)
+  y_not_numeric$outcome = as.character(y_not_numeric$outcome) # Introducing error: converting numeric to character
 
   # Introducing missing values in the outcome
-  missing.values.outcome.df = copy(two.periods.no.errors.df)
-  missing.values.outcome.df[1:2, "outcome"] = NA # Introducing missing values in the outcome variable
+  missing_values_outcome_df = copy(two_periods_no_errors_df)
+  missing_values_outcome_df[1:2, "outcome"] = NA # Introducing missing values in the outcome variable
 
   # Introducing missing values in the treatment
-  missing.values.treat.df = copy(two.periods.no.errors.df)
-  missing.values.treat.df[1:2, "treat"] = NA # Introducing missing values in the treatment variable
+  missing_values_treat_df = copy(two_periods_no_errors_df)
+  missing_values_treat_df[1:2, "treat"] = NA # Introducing missing values in the treatment variable
 
   # Dataset only with 1 treated unit (inference is no feasible)
-  one.treated.unit.df = copy(two.periods.no.errors.df)
-  one.treated.unit.df$treat = ifelse(one.treated.unit.df$treat == 1, 0, 0)
-  one.treated.unit.df[1:2, "treat"] = 1
+  one_treated_unit_df = copy(two_periods_no_errors_df)
+  one_treated_unit_df$treat = ifelse(one_treated_unit_df$treat == 1, 0, 0)
+  one_treated_unit_df[1:2, "treat"] = 1
 
   # partition is no unique by id
-  partition.not.unique.df = copy(two.periods.no.errors.df)
-  partition.not.unique.df$partition[1] <- ifelse(partition.not.unique.df$partition[1] == 1, 0, 1)
+  partition_not_unique_df = copy(two_periods_no_errors_df)
+  partition_not_unique_df$partition[1] <- ifelse(partition_not_unique_df$partition[1] == 1, 0, 1)
 
   # treatment variables "dname" is not unique by id
-  treat.not.unique.df = copy(two.periods.no.errors.df)
-  treat.not.unique.df$treat[1] <- ifelse(treat.not.unique.df$treat[1] == 1, 0, 1)
+  treat_not_unique_df = copy(two_periods_no_errors_df)
+  treat_not_unique_df$treat[1] <- ifelse(treat_not_unique_df$treat[1] == 1, 0, 1)
 
   # covariates are varying over time
-  covariates.invariant.df = copy(two.periods.no.errors.df)
-  covariates.invariant.df$x1 = rnorm(nrow(covariates.invariant.df))
+  covariates_invariant_df = copy(two_periods_no_errors_df)
+  covariates_invariant_df$x1 = rnorm(nrow(covariates_invariant_df))
 
   # more than 2 time periods
-  more.than.two.periods.df = generate_test_panel(time = 3)
+  more_than_two_periods_df = generate_test_panel(time = 3)
 
   # more than 2 groups
-  more.than.two.groups.df = copy(two.periods.no.errors.df)
-  more.than.two.groups.df$treat[1] = 2
+  more_than_two_groups_df = copy(two_periods_no_errors_df)
+  more_than_two_groups_df$treat[1] = 2
 
   # partition is not numeric
-  partition.not.numeric.df = copy(two.periods.no.errors.df)
-  partition.not.numeric.df$partition = as.character(partition.not.numeric.df$partition)
+  partition_not_numeric_df = copy(two_periods_no_errors_df)
+  partition_not_numeric_df$partition = as.character(partition_not_numeric_df$partition)
 
   # partition is not binary
-  partition.not.binary.df = copy(two.periods.no.errors.df)
-  partition.not.binary.df$partition = rnorm(nrow(partition.not.binary.df))
+  partition_not_binary_df = copy(two_periods_no_errors_df)
+  partition_not_binary_df$partition = rnorm(nrow(partition_not_binary_df))
 
   # ------------------------------
   # Warnings
@@ -60,21 +60,21 @@ test_that("Testing error handling in run_preprocess_2periods() function", {
 
   # Test 1: Warning for bootype
   expect_warning(ddd(yname = "outcome", tname = "year", idname = "id", dname = "treat",
-                     gname = NULL, partition.name = "partition", xformla = ~x1 + x2,
-                     data = two.periods.no.errors.df, control.group = NULL, estMethod = "trad", learners = NULL,
-                     weightsname = NULL, boot = TRUE, boot.type = "whatever", nboot = NULL, inffunc = FALSE))
+                     gname = NULL, partition_name = "partition", xformla = ~x1 + x2,
+                     data = two_periods_no_errors_df, control_group = NULL, est_method = "trad", learners = NULL,
+                     weightsname = NULL, boot = TRUE, boot_type = "whatever", nboot = NULL, inffunc = FALSE))
 
-  # Test 2: Warning for estMethod
+  # Test 2: Warning for est_method
   expect_warning(ddd(yname = "outcome", tname = "year", idname = "id", dname = "treat",
-                     gname = NULL, partition.name = "partition", xformla = ~x1 + x2,
-                     data = two.periods.no.errors.df, control.group = NULL, estMethod = "whatever", learners = NULL,
-                     weightsname = NULL, boot = FALSE, boot.type = "multiplier", nboot = NULL, inffunc = FALSE))
+                     gname = NULL, partition_name = "partition", xformla = ~x1 + x2,
+                     data = two_periods_no_errors_df, control_group = NULL, est_method = "whatever", learners = NULL,
+                     weightsname = NULL, boot = FALSE, boot_type = "multiplier", nboot = NULL, inffunc = FALSE))
 
   # Test 3: Warning for missing values in outcome variable "yname"
   expect_warning(ddd(yname = "outcome", tname = "year", idname = "id", dname = "treat",
-                     gname = NULL, partition.name = "partition", xformla = ~x1 + x2,
-                     data = missing.values.outcome.df, control.group = NULL, estMethod = "trad", learners = NULL,
-                     weightsname = NULL, boot = FALSE, boot.type = "multiplier", nboot = NULL, inffunc = FALSE))
+                     gname = NULL, partition_name = "partition", xformla = ~x1 + x2,
+                     data = missing_values_outcome_df, control_group = NULL, est_method = "trad", learners = NULL,
+                     weightsname = NULL, boot = FALSE, boot_type = "multiplier", nboot = NULL, inffunc = FALSE))
 
 
   # ------------------------------
@@ -82,98 +82,98 @@ test_that("Testing error handling in run_preprocess_2periods() function", {
   # ------------------------------
   # Test 4: handling of non-numeric "yname" column
   expect_error(ddd(yname = "outcome", tname = "year", idname = "id", dname = "treat",
-                   gname = NULL, partition.name = "partition", xformla = ~x1 + x2,
-                   data = y.not.numeric, control.group = NULL, estMethod = "trad", learners = NULL,
-                   weightsname = NULL, boot = FALSE, boot.type = "multiplier", nboot = NULL, inffunc = FALSE))
+                   gname = NULL, partition_name = "partition", xformla = ~x1 + x2,
+                   data = y_not_numeric, control_group = NULL, est_method = "trad", learners = NULL,
+                   weightsname = NULL, boot = FALSE, boot_type = "multiplier", nboot = NULL, inffunc = FALSE))
 
   # Test 5: error for missing values in treatment variable "dname"
   expect_error(ddd(yname = "outcome", tname = "year", idname = "id", dname = "treat",
-                   gname = NULL, partition.name = "partition", xformla = ~x1 + x2,
-                   data = missing.values.treat.df, control.group = NULL, estMethod = "trad", learners = NULL,
-                   weightsname = NULL, boot = FALSE, boot.type = "multiplier", nboot = NULL, inffunc = FALSE))
+                   gname = NULL, partition_name = "partition", xformla = ~x1 + x2,
+                   data = missing_values_treat_df, control_group = NULL, est_method = "trad", learners = NULL,
+                   weightsname = NULL, boot = FALSE, boot_type = "multiplier", nboot = NULL, inffunc = FALSE))
 
   # Test 6: error for small groups for inference (e.g. only one treated unit)
   expect_error(ddd(yname = "outcome", tname = "year", idname = "id", dname = "treat",
-                   gname = NULL, partition.name = "partition", xformla = ~x1 + x2,
-                   data = one.treated.unit.df, control.group = NULL, estMethod = "trad", learners = NULL,
-                   weightsname = NULL, boot = FALSE, boot.type = "multiplier", nboot = NULL, inffunc = TRUE))
+                   gname = NULL, partition_name = "partition", xformla = ~x1 + x2,
+                   data = one_treated_unit_df, control_group = NULL, est_method = "trad", learners = NULL,
+                   weightsname = NULL, boot = FALSE, boot_type = "multiplier", nboot = NULL, inffunc = TRUE))
 
   # Test 7: error when "yname" is not in data
   expect_error(ddd(yname = "whatever", tname = "year", idname = "id", dname = "treat",
-                   gname = NULL, partition.name = "partition", xformla = ~x1 + x2,
-                   data = two.periods.no.errors.df, control.group = NULL, estMethod = "trad", learners = NULL,
-                   weightsname = NULL, boot = FALSE, boot.type = "multiplier", nboot = NULL, inffunc = FALSE))
+                   gname = NULL, partition_name = "partition", xformla = ~x1 + x2,
+                   data = two_periods_no_errors_df, control_group = NULL, est_method = "trad", learners = NULL,
+                   weightsname = NULL, boot = FALSE, boot_type = "multiplier", nboot = NULL, inffunc = FALSE))
 
   # Test 8: error when "tname" is not in data
   expect_error(ddd(yname = "outcome", tname = "whatever", idname = "id", dname = "treat",
-                   gname = NULL, partition.name = "partition", xformla = ~x1 + x2,
-                   data = two.periods.no.errors.df, control.group = NULL, estMethod = "trad", learners = NULL,
-                   weightsname = NULL, boot = FALSE, boot.type = "multiplier", nboot = NULL, inffunc = FALSE))
+                   gname = NULL, partition_name = "partition", xformla = ~x1 + x2,
+                   data = two_periods_no_errors_df, control_group = NULL, est_method = "trad", learners = NULL,
+                   weightsname = NULL, boot = FALSE, boot_type = "multiplier", nboot = NULL, inffunc = FALSE))
 
   # Test 9: error when "dname" is not in data
   expect_error(ddd(yname = "outcome", tname = "year", idname = "id", dname = "whatever",
-                   gname = NULL, partition.name = "partition", xformla = ~x1 + x2,
-                   data = two.periods.no.errors.df, control.group = NULL, estMethod = "trad", learners = NULL,
-                   weightsname = NULL, boot = FALSE, boot.type = "multiplier", nboot = NULL, inffunc = FALSE))
+                   gname = NULL, partition_name = "partition", xformla = ~x1 + x2,
+                   data = two_periods_no_errors_df, control_group = NULL, est_method = "trad", learners = NULL,
+                   weightsname = NULL, boot = FALSE, boot_type = "multiplier", nboot = NULL, inffunc = FALSE))
 
   # Test 10: error when "partition" is not in data
   expect_error(ddd(yname = "outcome", tname = "year", idname = "id", dname = "treat",
-                   gname = NULL, partition.name = "whatever", xformla = ~x1 + x2,
-                   data = two.periods.no.errors.df, control.group = NULL, estMethod = "trad", learners = NULL,
-                   weightsname = NULL, boot = FALSE, boot.type = "multiplier", nboot = NULL, inffunc = FALSE))
+                   gname = NULL, partition_name = "whatever", xformla = ~x1 + x2,
+                   data = two_periods_no_errors_df, control_group = NULL, est_method = "trad", learners = NULL,
+                   weightsname = NULL, boot = FALSE, boot_type = "multiplier", nboot = NULL, inffunc = FALSE))
 
   # Test 11: error when "idname" is not in data
   expect_error(ddd(yname = "outcome", tname = "year", idname = "whatever", dname = "treat",
-                   gname = NULL, partition.name = "whatever", xformla = ~x1 + x2,
-                   data = two.periods.no.errors.df, control.group = NULL, estMethod = "trad", learners = NULL,
-                   weightsname = NULL, boot = FALSE, boot.type = "multiplier", nboot = NULL, inffunc = FALSE))
+                   gname = NULL, partition_name = "whatever", xformla = ~x1 + x2,
+                   data = two_periods_no_errors_df, control_group = NULL, est_method = "trad", learners = NULL,
+                   weightsname = NULL, boot = FALSE, boot_type = "multiplier", nboot = NULL, inffunc = FALSE))
 
   # Test 12: error when "xformla" is not a formula
   expect_error(ddd(yname = "outcome", tname = "year", idname = "id", dname = "treat",
-                   gname = NULL, partition.name = "partition", xformla = "x1 - x2",
-                   data = two.periods.no.errors.df, control.group = NULL, estMethod = "trad", learners = NULL,
-                   weightsname = NULL, boot = FALSE, boot.type = "multiplier", nboot = NULL, inffunc = FALSE))
+                   gname = NULL, partition_name = "partition", xformla = "x1 - x2",
+                   data = two_periods_no_errors_df, control_group = NULL, est_method = "trad", learners = NULL,
+                   weightsname = NULL, boot = FALSE, boot_type = "multiplier", nboot = NULL, inffunc = FALSE))
 
   # Test 13: partition variable "partition" is not unique by id
   expect_error(ddd(yname = "outcome", tname = "year", idname = "id", dname = "treat",
-                   gname = NULL, partition.name = "partition", xformla = ~x1 + x2,
-                   data = partition.not.unique.df, control.group = NULL, estMethod = "trad", learners = NULL,
-                   weightsname = NULL, boot = FALSE, boot.type = "multiplier", nboot = NULL, inffunc = FALSE))
+                   gname = NULL, partition_name = "partition", xformla = ~x1 + x2,
+                   data = partition_not_unique_df, control_group = NULL, est_method = "trad", learners = NULL,
+                   weightsname = NULL, boot = FALSE, boot_type = "multiplier", nboot = NULL, inffunc = FALSE))
 
   # Test 14: treatment variable "dname" is not unique by id
   expect_error(ddd(yname = "outcome", tname = "year", idname = "id", dname = "treat",
-                   gname = NULL, partition.name = "partition", xformla = ~x1 + x2,
-                   data = treat.not.unique.df, control.group = NULL, estMethod = "trad", learners = NULL,
-                   weightsname = NULL, boot = FALSE, boot.type = "multiplier", nboot = NULL, inffunc = FALSE))
+                   gname = NULL, partition_name = "partition", xformla = ~x1 + x2,
+                   data = treat_not_unique_df, control_group = NULL, est_method = "trad", learners = NULL,
+                   weightsname = NULL, boot = FALSE, boot_type = "multiplier", nboot = NULL, inffunc = FALSE))
 
   # Test 15: error when covariates are not invariant
   expect_error(ddd(yname = "outcome", tname = "year", idname = "id", dname = "treat",
-                   gname = NULL, partition.name = "partition", xformla = ~x1 + x2,
-                   data = covariates.not.invariant.df, control.group = NULL, estMethod = "trad", learners = NULL,
-                   weightsname = NULL, boot = FALSE, boot.type = "multiplier", nboot = NULL, inffunc = FALSE))
+                   gname = NULL, partition_name = "partition", xformla = ~x1 + x2,
+                   data = covariates.not.invariant.df, control_group = NULL, est_method = "trad", learners = NULL,
+                   weightsname = NULL, boot = FALSE, boot_type = "multiplier", nboot = NULL, inffunc = FALSE))
 
   # Test 16: More that 2 time periods
   expect_error(ddd(yname = "outcome", tname = "year", idname = "id", dname = "treat",
-                   gname = NULL, partition.name = "partition", xformla = ~x1 + x2,
-                   data = more.than.two.periods.df, control.group = NULL, estMethod = "trad", learners = NULL,
-                   weightsname = NULL, boot = FALSE, boot.type = "multiplier", nboot = NULL, inffunc = FALSE))
+                   gname = NULL, partition_name = "partition", xformla = ~x1 + x2,
+                   data = more_than_two_periods_df, control_group = NULL, est_method = "trad", learners = NULL,
+                   weightsname = NULL, boot = FALSE, boot_type = "multiplier", nboot = NULL, inffunc = FALSE))
 
   # Test 17: More than 2 groups
   expect_error(ddd(yname = "outcome", tname = "year", idname = "id", dname = "treat",
-                   gname = "group", partition.name = "partition", xformla = ~x1 + x2,
-                   data = more.than.two.groups.df, control.group = NULL, estMethod = "trad", learners = NULL,
-                   weightsname = NULL, boot = FALSE, boot.type = "multiplier", nboot = NULL, inffunc = FALSE))
+                   gname = "group", partition_name = "partition", xformla = ~x1 + x2,
+                   data = more_than_two_groups_df, control_group = NULL, est_method = "trad", learners = NULL,
+                   weightsname = NULL, boot = FALSE, boot_type = "multiplier", nboot = NULL, inffunc = FALSE))
 
   # Test 18: Partition is not numeric
   expect_error(ddd(yname = "outcome", tname = "year", idname = "id", dname = "treat",
-                   gname = NULL, partition.name = "partition", xformla = ~x1 + x2,
-                   data = partition.not.numeric.df, control.group = NULL, estMethod = "trad", learners = NULL,
-                   weightsname = NULL, boot = FALSE, boot.type = "multiplier", nboot = NULL, inffunc = FALSE))
+                   gname = NULL, partition_name = "partition", xformla = ~x1 + x2,
+                   data = partition_not_numeric_df, control_group = NULL, est_method = "trad", learners = NULL,
+                   weightsname = NULL, boot = FALSE, boot_type = "multiplier", nboot = NULL, inffunc = FALSE))
 
   # Test 19: Partition is not numeric
   expect_error(ddd(yname = "outcome", tname = "year", idname = "id", dname = "treat",
-                   gname = NULL, partition.name = "partition", xformla = ~x1 + x2,
-                   data = partition.not.numeric.df, control.group = NULL, estMethod = "trad", learners = NULL,
-                   weightsname = NULL, boot = FALSE, boot.type = "multiplier", nboot = NULL, inffunc = FALSE))
+                   gname = NULL, partition_name = "partition", xformla = ~x1 + x2,
+                   data = partition_not_numeric_df, control_group = NULL, est_method = "trad", learners = NULL,
+                   weightsname = NULL, boot = FALSE, boot_type = "multiplier", nboot = NULL, inffunc = FALSE))
 
 })

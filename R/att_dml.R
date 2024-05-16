@@ -12,7 +12,7 @@
 #'        Expected elements include:
 #'        - `preprocessed_data`: the data table containing the variables needed for the analysis.
 #'        - `xformula`: formula object specifying the model for the nuisance functions.
-#'        - `estMethod`: the estimation method to use.
+#'        - `est_method`: the estimation method to use.
 #'        - `learners`: specified machine learning methods for nuisance function estimation.
 #'        - `n_folds`: the number of folds for cross-fitting
 #'
@@ -26,40 +26,41 @@ att_dml <- function(did_preprocessed) {
 
   data <- did_preprocessed$preprocessed_data
   xformula <- did_preprocessed$xformula
-  estMethod <- did_preprocessed$estMethod
+  est_method <- did_preprocessed$est_method
   learners <- did_preprocessed$learners
   n_folds <- did_preprocessed$n_folds
+  subgroup_counts <- did_preprocessed$subgroup_counts
 
   # --------------------------------------------------------------------
   # Compute ATT
   # --------------------------------------------------------------------
 
   # Compute DML Triple Difference Estimator
-  dml.att.scores_3 <- compute_dml_nuisances(data, condition_subgroup = 3,
+  dml_att_scores_3 <- compute_dml_nuisances(data, condition_subgroup = 3,
                                             xformula,
                                             ml_pa = learners$ml_pa,
                                             ml_md = learners$ml_md,
                                             n_folds = n_folds)
 
-  dml.att.scores_2 <- compute_dml_nuisances(data, condition_subgroup = 2,
+  dml_att_scores_2 <- compute_dml_nuisances(data, condition_subgroup = 2,
                                             xformula,
                                             ml_pa = learners$ml_pa,
                                             ml_md = learners$ml_md,
                                             n_folds = n_folds)
 
-  dml.att.scores_1 <- compute_dml_nuisances(data, condition_subgroup = 1,
+  dml_att_scores_1 <- compute_dml_nuisances(data, condition_subgroup = 1,
                                             xformula,
                                             ml_pa = learners$ml_pa,
                                             ml_md = learners$ml_md,
                                             n_folds = n_folds)
 
   # Compute ATT
-  att_dml = mean_ddd_k(dml.att.scores_3) - mean_ddd_k(dml.att.scores_2) + mean_ddd_k(dml.att.scores_1)
+  att_dml = mean_ddd_k(dml_att_scores_3) - mean_ddd_k(dml_att_scores_2) + mean_ddd_k(dml_att_scores_1)
 
   # Inference
-  scores_3 <- get_long_scores(dml.att.scores_3)
-  scores_2 <- get_long_scores(dml.att.scores_2)
-  scores_1 <- get_long_scores(dml.att.scores_1)
+  scores_3 <- get_long_scores(dml_att_scores_3)
+  scores_2 <- get_long_scores(dml_att_scores_2)
+  scores_1 <- get_long_scores(dml_att_scores_1)
 
   se_dml <- compute_se_dml(scores_3, scores_2, scores_1)
 
@@ -75,7 +76,8 @@ att_dml <- function(did_preprocessed) {
   ret <- (list(ATT = att_dml,
                se = se_dml,
                uci = ci_upper,
-               lci = ci_lower
+               lci = ci_lower,
+               subgroup_counts = subgroup_counts
                ))
 
   return(ret)

@@ -21,6 +21,10 @@ compute_dml_nuisances(
 \item{xformula}{The formula for the propensity score model}
 
 \item{ml_pa}{The machine learning algorithm to use for the propensity score model}
+
+\item{ml_md}{The machine learning algorithm to use for the regression adjustment model}
+
+\item{n_folds}{The number of folds for cross-fitting}
 }
 \value{
 A list containing ids, estimator for each k fold, and scores

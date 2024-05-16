@@ -4,12 +4,14 @@
 \alias{compute_scores}
 \title{Function to compute scores based on first step nuisances predictions}
 \usage{
-compute_scores(ml_pa, ml_md)
+compute_scores(ml_pa, ml_md, condition_subgroup)
 }
 \arguments{
-\item{ml_pa:}{MLR3 object for propensity score estimation}
+\item{ml_pa}{MLR3 object for propensity score estimation}
 
-\item{ml_md:}{MLR3 object for regression adjustment estimation}
+\item{ml_md}{MLR3 object for regression adjustment estimation}
+
+\item{condition_subgroup}{Subgroup to analyze}
 }
 \value{
 : A list of scores and id for each k fold

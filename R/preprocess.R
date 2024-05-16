@@ -11,16 +11,16 @@ run_preprocess_2Periods <- function(yname,
                                    idname,
                                    dname,
                                    gname = NULL,
-                                   partition.name,
+                                   partition_name,
                                    xformla = ~1,
                                    data,
-                                   control.group = NULL,
-                                   estMethod = "trad",
+                                   control_group = NULL,
+                                   est_method = "trad",
                                    learners = NULL,
                                    n_folds = NULL,
                                    weightsname = NULL,
                                    boot = FALSE,
-                                   boot.type = "multiplier",
+                                   boot_type = "multiplier",
                                    nboot = NULL,
                                    inffunc = FALSE){
 
@@ -29,18 +29,18 @@ run_preprocess_2Periods <- function(yname,
   # Error checking
   #-------------------------------------
 
-  # Flag for boot.type
+  # Flag for boot_type
   if (boot){
-    if (boot.type!="multiplier") {
-      warning("boot.type = ",boot.type,  " is not supported. Using 'multiplier'.")
-      boot.type <- "multiplier"
+    if (boot_type!="multiplier") {
+      warning("boot_type = ",boot_type,  " is not supported. Using 'multiplier'.")
+      boot_type <- "multiplier"
     }
   }
 
-  # Flag for estMethod
-  if (estMethod!="trad" && estMethod!="dml") {
-    warning("estMethod = ",estMethod,  " is not supported. Using 'trad'.")
-    estMethod <- "trad"
+  # Flag for est_method
+  if (est_method!="trad" && est_method!="dml") {
+    warning("est_method = ",est_method,  " is not supported. Using 'trad'.")
+    est_method <- "trad"
   }
 
   # Check if 'dta' is a data.table
@@ -106,13 +106,23 @@ run_preprocess_2Periods <- function(yname,
                                          y = dta[[yname]],
                                          post = dta$post,
                                          treat = dta[[dname]],
-                                         partition = dta[[partition.name]],
+                                         partition = dta[[partition_name]],
                                          weights = dta$weights)
   # creating subgroup variable
   # 4 if (partition ==1 & treat == 1); 3 if (partition ==0 & treat == 1); 2 if (partition ==1 & treat == 0); 1 if (partition ==0 & treat == 0)
   cleaned_data$subgroup <- ifelse((cleaned_data$partition == 1) & (cleaned_data$treat == 1), 4,
                           ifelse((cleaned_data$partition == 0) & (cleaned_data$treat == 1), 3,
                           ifelse((cleaned_data$partition == 1) & (cleaned_data$treat == 0), 2, 1)))
+
+  # Flag for not enough observations for each subgroup
+  # Calculate the size of each subgroup in the 'subgroup' column
+  subgroup_counts <- cleaned_data[, .N/2, by = subgroup]
+  # Check if each subgroup has at least 5 observations. Check this threshold if needed.
+  sufficient_obs <- all(subgroup_counts$N >= 5)
+  # Stop the code if not all subgroups have at least 5 observations
+  if (!sufficient_obs) {
+    stop("Not enough observations in each subgroup. Please check the data.")
+  }
 
   # Flag for small groups for inference
   # Calculate the size of each group in the 'treat' column
@@ -162,24 +172,18 @@ run_preprocess_2Periods <- function(yname,
   # drop the intercept
   cleaned_data[, 8 := NULL]
 
-  # out <- list(preprocessed_data = cleaned_data,
-  #             xformula = xformla,
-  #             estMethod = estMethod,
-  #             learners = learners,
-  #             weightsname = weightsname,
-  #             boot = boot,
-  #             boot.type = boot.type,
-  #             nboot = nboot,
-  #             inffunc = inffunc)
+  # TODO: Add subgroup_counts to the output to present information about the subgroups
+
   out <- list(preprocessed_data = cleaned_data,
               xformula = xformla,
-              estMethod = estMethod,
+              est_method = est_method,
               learners = learners,
               n_folds = n_folds,
               boot = boot,
-              boot.type = boot.type,
+              boot_type = boot_type,
               nboot = nboot,
-              inffunc = inffunc)
+              inffunc = inffunc,
+              subgroup_counts = subgroup_counts)
 
   return(out)
 }
@@ -191,25 +195,25 @@ run_preprocess_2Periods <- function(yname,
 #                                       idname,
 #                                       dname = NULL,
 #                                       gname,
-#                                       partition.name,
+#                                       partition_name,
 #                                       xformla = ~1,
 #                                       data,
-#                                       control.group,
-#                                       estMethod = "trad",
+#                                       control_group,
+#                                       est_method = "trad",
 #                                       learners = NULL,
 #                                       weightsname = NULL,
 #                                       boot = FALSE,
-#                                       boot.type = "multiplier",
+#                                       boot_type = "multiplier",
 #                                       nboot = NULL,
 #                                       inffunc = FALSE) {
 #   # add code here
 #   out <- list(preprocessed_data = cleaned_data,
 #               xformula = xformla,
-#               estMethod = estMethod,
+#               est_method = est_method,
 #               learners = learners,
 #               weightsname = weightsname,
 #               boot = boot,
-#               boot.type = boot.type,
+#               boot_type = boot_type,
 #               nboot = nboot,
 #               inffunc = inffunc)
 #
