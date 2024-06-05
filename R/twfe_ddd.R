@@ -1,21 +1,23 @@
+# Complementary function to run TWFE DDD estimator
+NULL
 #' TWFE DDD estimator, with panel data and 2 periods
 #'
-#' This function implements a two-way fixed effect regression for assessing the average
+#' @description
+#' \code{twfe_ddd} function implements a two-way fixed effect regression for assessing the average
 #' treatment effect on the treated (ATT) using a triple differences (DDD) specification
-#' in panel data settings across two time periods. The function takes preprocessed
-#' data structured specifically for this analysis.
+#' in panel data settings across two time periods.
 #'
-#' @import stats
-#' @param did_preprocessed A list containing preprocessed data and specifications for the DDD estimation.
-#'        Expected elements include:
-#'        - `preprocessed_data`: the data table containing the variables needed for the analysis.
+#' @param yname A character string specifying the name of the outcome variable in the data.
+#' @param tname A character string specifying the name of the time variable in the data.
+#' @param dname A character string specifying the name of the state variable in the data.
+#' @param partition_name A character string specifying the name of the partition variable in the data.
+#' @param xformla A formula specifying the covariates to be included in the regression.
+#' @param data A data frame containing the preprocessed data.
 #'
-#' @keywords internal
 #' @return A list with the estimated ATT, standard error, upper and lower confidence intervals, and influence function.
-#' @noRd
+# #' @noRd
+#' @import stats
 #' @export
-NULL
-
 
 twfe_ddd <- function(yname, tname, dname,
                     partition_name, xformla = ~1, data) {
