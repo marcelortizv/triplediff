@@ -1,6 +1,6 @@
 # ------------------------------------------------------------------------
 # Purpose: Simulate finite sample performance of estimators based on DGPs
-# Date: 05/29/2024
+# Date: 06/05/2024
 # ------------------------------------------------------------------------
 
 
@@ -12,12 +12,13 @@ library(data.table)
 library(DRDID)
 PAT <- Sys.getenv("GITHUB_PAT")
 install_github("marcelortizv/triplediff", auth_token = PAT, ref = "monte-carlo-simulations")
+library(triplediff)
 
 # Clear memory
 rm(list=ls())
 
 # Setting parameters
-nrep <- 10    # Monte Carlo replications
+nrep <- 1000    # Monte Carlo replications
 
 # Set the Working Directory
 # address <- "set/here/your/working/directory/for/panel"
@@ -60,6 +61,24 @@ do_one_sim <- function(seed, n, dgp_type){
   #Length of confidence interval
   len_twfe <- twfe$uci - twfe$lci
 
+  # -----------------------------------------
+  # Diff of 2 DRDID
+  # -----------------------------------------
+  #subset data based on partition
+  drdid_partition1 <- data[data$partition == 1,]
+  drdid_partition0 <- data[data$partition == 0,]
+
+  # run drdid among obs with partition value equal to 1
+  drdid_2 <- DRDID::drdid(yname = "y", tname="time", idname="id", dname="state",
+                          xformla = ~cov1 + cov2 + cov3 + cov4,
+                          data = drdid_partition1, panel = TRUE)
+  # run drdid among obs with partition value equal to 0
+  drdid_1 <-  DRDID::drdid(yname = "y", tname="time", idname="id", dname="state",
+                           xformla = ~cov1 + cov2 + cov3 + cov4,
+                           data = drdid_partition0, panel = TRUE)
+  drdid <- drdid_2$ATT - drdid_1$ATT
+
+
   summary <- cbind(
             # true ATT
             att.true = att.true,
@@ -78,10 +97,24 @@ do_one_sim <- function(seed, n, dgp_type){
             cp_twfe = cp_twfe,
             len_twfe = len_twfe,
 
+            # Diff of 2 DRDID
+            drdid = drdid,
+
             # Semiparametric Efficiency Bound
             eff_bound = eff)
 
   return(summary)
+}
+
+# Function to calculate the performance metrics
+calculate_metrics <- function(estimator, true_att, var_estimator, cp, len) {
+  avg_estimator <- mean(estimator, na.rm = TRUE)
+  bias <- avg_estimator - mean(true_att, na.rm = TRUE)
+  rmse <- sqrt(mean((estimator - true_att)^2, na.rm = TRUE))
+  mean_var <- mean(var_estimator, na.rm = TRUE)
+  mean_cp <- mean(cp, na.rm = TRUE)
+  mean_len <- mean(len, na.rm = TRUE)
+  c(avg_estimator, bias, rmse, mean_var, mean_cp, mean_len)
 }
 
 
@@ -89,8 +122,7 @@ do_one_sim <- function(seed, n, dgp_type){
 param_grid <- expand.grid(
   seed = 1:nrep,
   #set sample size
-  #n = c(500, 1000, 100000),
-  n = 500,
+  n = c(1000, 5000, 10000),
   dgp_type = c(1, 2, 3, 4)
 )
 
@@ -121,7 +153,8 @@ results_sims <- foreach(i = 1:nrow(param_grid), .combine = rbind, .init = data.f
     var_twfe = est[[8]],
     cp_twfe = est[[9]],
     len_twfe = est[[10]],
-    eff_bound = est[[11]]
+    drdid = est[[11]],
+    eff_bound = est[[12]]
   )
 }
 
@@ -133,19 +166,53 @@ stopCluster(cl)
 # Creating summary table
 # ------------------------------------------------------------------------
 
+# Initialize a list to store the summary tables
+summary_tables <- list()
 
-PAT <- Sys.getenv("GITHUB_PAT")
-install_github("marcelortizv/triplediff", auth_token = PAT, ref = "monte-carlo-simulations")
+# Iterate through each dgp_type
+for (dgp in unique(results_sims$dgp_type)) {
+  # Filter data for the current dgp_type
+  dgp_data <- results_sims[results_sims$dgp_type == dgp,]
+
+  # Initialize a data frame to store summary for current dgp
+  dgp_summary <- data.frame()
+
+  # Iterate through each sample size
+  for (n in unique(dgp_data$n)) {
+    # Filter data for the current sample size
+    n_data <- dgp_data[dgp_data$n == n, ]
+
+    # Compute the metrics for each estimator
+    drddd_metrics <- calculate_metrics(n_data$drddd_att, n_data$att_true, n_data$var_drddd, n_data$cp_drddd, n_data$len_drddd)
+    twfe_metrics <- calculate_metrics(n_data$twfe_att, n_data$att_true, n_data$var_twfe, n_data$cp_twfe, n_data$len_twfe)
+    # Note: DRDID does not have a variance column, using twfe var as a placeholder
+    drdid_metrics <- calculate_metrics(n_data$drdid, n_data$att_true, n_data$var_twfe, n_data$cp_twfe, n_data$len_twfe)
+    # Combine the metrics into a summary table
+    n_summary <- data.frame(
+      estimator = c("DRDDD", "TWFE", "DRDID"),
+      sample_size = n,
+      avg_estimator = c(drddd_metrics[1], twfe_metrics[1], drdid_metrics[1]),
+      bias = c(drddd_metrics[2], twfe_metrics[2], drdid_metrics[2]),
+      rmse = c(drddd_metrics[3], twfe_metrics[3], drdid_metrics[3]),
+      mean_variance = c(drddd_metrics[4], twfe_metrics[4], drdid_metrics[4]),
+      mean_coverage_prob = c(drddd_metrics[5], twfe_metrics[5], drdid_metrics[5]),
+      mean_length = c(drddd_metrics[6], twfe_metrics[6], drdid_metrics[6])
+    )
+
+    # Append the summary for the current sample size to the dgp summary
+    dgp_summary <- rbind(dgp_summary, n_summary)
+  }
+
+  # Add the dgp summary to the list
+  summary_tables[[paste0("DGP_Type_", dgp)]] <- dgp_summary
+}
+
+# If you want to save the summary tables as CSV files
+for (dgp in names(summary_tables)) {
+  write.csv(summary_tables[[dgp]], paste0(address, "/simulations/", dgp, "_summary.csv"), row.names = FALSE)
+}
 
 
-# # save data
-# write.csv(results_efficiency, file = paste0(address, "/simulations/", "efficiency_bound_n-1m.csv"), row.names = FALSE)
-#
-# mean_efficiency <- results_efficiency %>%
-#   group_by(dgp_type) %>%
-#   summarise(mean_efficiency = mean(eff_bound, na.rm = TRUE))
-#
-# # Save the result to a CSV file
-# write.csv(mean_efficiency, file = paste0(address, "/simulations/", "eff_bounds_by_dgp_n-1m.csv"), row.names = FALSE)
+
 
 
