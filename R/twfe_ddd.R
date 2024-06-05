@@ -1,0 +1,68 @@
+#' TWFE DDD estimator, with panel data and 2 periods
+#'
+#' This function implements a two-way fixed effect regression for assessing the average
+#' treatment effect on the treated (ATT) using a triple differences (DDD) specification
+#' in panel data settings across two time periods. The function takes preprocessed
+#' data structured specifically for this analysis.
+#'
+#' @import stats
+#' @param did_preprocessed A list containing preprocessed data and specifications for the DDD estimation.
+#'        Expected elements include:
+#'        - `preprocessed_data`: the data table containing the variables needed for the analysis.
+#'
+#' @keywords internal
+#' @return A list with the estimated ATT, standard error, upper and lower confidence intervals, and influence function.
+#' @noRd
+NULL
+
+
+twfe_ddd <- function(yname, tname, dname,
+                    partition_name, xformla = ~1, data) {
+
+  # Extract data
+  y <- data[[yname]]
+  state <- data[[dname]]
+  partition <- data[[partition_name]]
+
+  # Creating a post dummy variable based on tlist[2] (second period = post treatment)
+  tlist <- unique(data[[tname]])[base::order(unique(data[[tname]]))]
+  post <- as.numeric(data[[tname]] == tlist[2])
+
+  # get matrix of covariates based on xformla
+  X <- model.matrix(xformla, data)
+
+  # Estimate TWFE regression
+  twfe <- stats::lm(y ~ X + state + partition + post + state:partition + state:post + partition:post + state:partition:post - 1, x = TRUE)
+
+  twfe_att <- twfe$coefficients["state:partition:post"][[1]]
+
+  # compute influence function
+  inf.twfe <- (twfe$x * twfe$residuals) %*%
+    base::qr.solve(crossprod(twfe$x, twfe$x) / dim(twfe$x)[1])
+
+  sel.theta <- matrix(c(rep(0, dim(inf.twfe)[2])))
+
+  index.theta <- which(dimnames(twfe$x)[[2]]=="state:partition:post",
+                       arr.ind = TRUE)
+
+  sel.theta[index.theta, ] <- 1
+
+  #get the influence function of the TWFE regression
+  twfe_inf_func <- as.vector(inf.twfe %*% sel.theta)
+
+  # Compute standard errors
+  # Estimate of standard error
+  se_twfe <- stats::sd(twfe_inf_func)/sqrt(length(twfe_inf_func))
+  # Estimate of upper boudary of 95% CI
+  ci_upper <- twfe_att + 1.96 * se_twfe
+  # Estimate of lower doundary of 95% CI
+  ci_lower <- twfe_att - 1.96 * se_twfe
+
+
+
+  return(list(ATT = twfe_att,
+              se = se_twfe,
+              uci = ci_upper,
+              lci = ci_lower,
+              inf_func = twfe_inf_func))
+}
