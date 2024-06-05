@@ -10,6 +10,8 @@ library(doParallel)
 library(dplyr)
 library(data.table)
 library(DRDID)
+PAT <- Sys.getenv("GITHUB_PAT")
+install_github("marcelortizv/triplediff", auth_token = PAT, ref = "monte-carlo-simulations")
 
 # Clear memory
 rm(list=ls())
@@ -38,7 +40,7 @@ do_one_sim <- function(seed, n, dgp_type){
   # -----------------------------------------
   # DRDDD Estimator
   # -----------------------------------------
-  drddd <- ddd(yname = "y", tname = "time", idname = "id", dname = "state",
+  drddd <- triplediff::ddd(yname = "y", tname = "time", idname = "id", dname = "state",
                gname = NULL, partition_name = "partition", xformla = ~cov1 + cov2 + cov3 + cov4,
                data = data, est_method = "trad", skip_data_checks = TRUE)
 
@@ -50,7 +52,7 @@ do_one_sim <- function(seed, n, dgp_type){
   # -----------------------------------------
   # TWFE Estimator
   # -----------------------------------------
-  twfe <- twfe_ddd(yname = "y", tname = "time", dname = "state",
+  twfe <- triplediff::twfe_ddd(yname = "y", tname = "time", dname = "state",
                    partition_name = "partition", xformla = ~cov1 + cov2 + cov3 + cov4,
                    data = data)
   # Whether the CI covers the true ATT (coverage probability)
@@ -101,7 +103,7 @@ cl <- makeCluster(numCores - 1) # leave one core free for other tasks
 registerDoParallel(cl)
 
 results_sims <- foreach(i = 1:nrow(param_grid), .combine = rbind, .init = data.frame(),
-                        .packages = c('dplyr', 'data.table', 'DRDID')) %dopar% {
+                        .packages = c('dplyr', 'data.table', 'DRDID', 'triplediff')) %dopar% {
   row <- param_grid[i, ]
   est <- do_one_sim(row$seed + 711*row$dgp_type, row$n, row$dgp_type)
   # Create a data frame to save results for each iteration
@@ -132,6 +134,8 @@ stopCluster(cl)
 # ------------------------------------------------------------------------
 
 
+PAT <- Sys.getenv("GITHUB_PAT")
+install_github("marcelortizv/triplediff", auth_token = PAT, ref = "monte-carlo-simulations")
 
 
 # # save data
