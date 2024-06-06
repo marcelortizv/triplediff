@@ -93,7 +93,7 @@ gen_dgp <- function(size, dgp_type){
   if(dgp_type == 1){
     # both models are functions of Z
     # index for pscores
-    fps1 <- fps(0.3, w1, z)
+    fps1 <- fps(0.2, w1, z)
     fps2 <- fps(0.2, w2, z)
     fps3 <- fps(0.05, w3, z)
 
@@ -105,7 +105,7 @@ gen_dgp <- function(size, dgp_type){
   } else if(dgp_type == 2){
     # Pscore depends on X but Regressions depend on Z
     # index for pscores
-    fps1 <- fps(0.3, w1, x)
+    fps1 <- fps(0.2, w1, x)
     fps2 <- fps(0.2, w2, x)
     fps3 <- fps(0.05, w3, x)
 
@@ -117,7 +117,7 @@ gen_dgp <- function(size, dgp_type){
   } else if(dgp_type == 3){
     # Pscore depends on X but Regressions depend on Z
     # index for pscores
-    fps1 <- fps(0.3, w1, z)
+    fps1 <- fps(0.2, w1, z)
     fps2 <- fps(0.2, w2, z)
     fps3 <- fps(0.05, w3, z)
 
@@ -128,7 +128,7 @@ gen_dgp <- function(size, dgp_type){
   } else if (dgp_type == 4){
     # Both models are functions of X (misspecified)
     # index for pscores
-    fps1 <- fps(0.3, w1, x)
+    fps1 <- fps(0.2, w1, x)
     fps2 <- fps(0.2, w2, x)
     fps3 <- fps(0.05, w3, x)
 
