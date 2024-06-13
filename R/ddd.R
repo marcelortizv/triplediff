@@ -31,11 +31,11 @@ NULL
 #' the user can also provide their own learner. See our vignette on How to construct a use-provided learner for more details (TODO).
 #' @param learners A list of learners to be used in the estimation. It should be a list of two elements,
 #' the first element being the learner for the propensity score and the second element being the learner for the outcome regression.
-#' Default is \code{NULL}.
+#' Default is \code{NULL}, then OLS and MLE Logit is used to estimate nuisances parameters. If \code{est_method = "dml"}, user have to specify \code{learners}.
 #' @param n_folds The number of folds to be used in the cross-fitting. Default is \code{NULL}. If \code{est_method = "dml"}, user have to specify \code{n_folds}.
 #' @param weightsname The name of the column containing the weights. Default is \code{NULL}.
 #' @param boot Logical. If \code{TRUE}, the function computes the bootstrap standard errors. Default is \code{FALSE}.
-#' @param boot_type The type of bootstrap to be used. Default is \code{"multiplier"}. The alternative is \code{"weighted"}.
+#' @param boot_type The type of bootstrap to be used. Default is \code{"multiplier"}. This is valid when \code{boot = TRUE}.
 #' @param nboot The number of bootstrap samples to be used. Default is \code{NULL}. If \code{boot = TRUE}, the default is \code{nboot = 999}.
 #' @param inffunc Logical. If \code{TRUE}, the function returns the influence function. Default is \code{FALSE}.
 #'

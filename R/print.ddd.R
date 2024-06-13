@@ -86,7 +86,6 @@ print.ddd <- function(x, ...) {
   print(x$call.params)
   cat("=========================== DDD Summary ===========================")
   cat("\n", est_method1)
-  cat("\n --------------------------- Fit Results --------------------------\n")
   utils::write.table(format(rbind(header, body), justify= "centre", digits=2, nsmall=2),
                      row.names=FALSE, col.names=FALSE, quote=FALSE, sep=" ")
   cat("\n --------------------------- Data Info   --------------------------")
@@ -96,10 +95,10 @@ print.ddd <- function(x, ...) {
   # add partition variable name
   cat("\n", paste("Partition variable: ", x$argu$partition_name))
   cat("\n", "No. of observations for each partition:")
-  cat("\n", paste("PA = 4: ", x$subgroup_counts$V1[1]))
-  cat("\n", paste("PA = 3: ", x$subgroup_counts$V1[2]))
-  cat("\n", paste("PA = 2: ", x$subgroup_counts$V1[3]))
-  cat("\n", paste("PA = 1: ", x$subgroup_counts$V1[4]))
+  cat("\n", paste("(treat = 1, partition = 1): ", x$subgroup_counts$V1[1]))
+  cat("\n", paste("(treat = 1, partition = 0): ", x$subgroup_counts$V1[2]))
+  cat("\n", paste("(treat = 0, partition = 1): ", x$subgroup_counts$V1[3]))
+  cat("\n", paste("(treat = 0, partition = 0): ", x$subgroup_counts$V1[4]))
 
   # add control group for multiple periods
   if(x$argu$multiple_periods == TRUE){

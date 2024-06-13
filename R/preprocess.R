@@ -116,7 +116,7 @@ run_preprocess_2Periods <- function(yname,
 
   # Flag for not enough observations for each subgroup
   # Calculate the size of each subgroup in the 'subgroup' column
-  subgroup_counts <- cleaned_data[, .N/2, by = subgroup]
+  subgroup_counts <- cleaned_data[, .N/2, by = subgroup][order(-subgroup)]
   # Check if each subgroup has at least 5 observations. Check this threshold if needed.
   sufficient_obs <- all(subgroup_counts$N >= 5)
   # Stop the code if not all subgroups have at least 5 observations
@@ -150,7 +150,7 @@ run_preprocess_2Periods <- function(yname,
     # Get the names of the TRUE values
     var.with.na <- names(missing_flags)[which(unlist(missing_flags))]
     # Print warning messages
-    warning(paste("Some", var.with.na, "contain missing values(NA). We are dropping those observations"))
+    warning(paste("Some", var.with.na, "contain missing values (NA). We are dropping those observations"))
   }
   if(missing_X_flag) warning("Some covariates are missing (NA). We are dropping those observations")
 

@@ -99,8 +99,8 @@ compute_pscore <- function(data, condition_subgroup, xformula) {
   propensity_scores <- predict(model, newdata = uid_condition_data, type = "response")
 
   # Warning for overlap condition
-  if (any(propensity_scores < 0.01) | any(propensity_scores > 0.99)) {
-    stop(paste("Propensity scores for subgroup", condition_subgroup,
+  if (any(propensity_scores < 0.005)) {
+    warning(paste("Propensity scores for comparison subgroup", condition_subgroup,
                   "have poor overlap."))
   }
 

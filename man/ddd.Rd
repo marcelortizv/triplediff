@@ -58,7 +58,7 @@ the user can also provide their own learner. See our vignette on How to construc
 
 \item{learners}{A list of learners to be used in the estimation. It should be a list of two elements,
 the first element being the learner for the propensity score and the second element being the learner for the outcome regression.
-Default is \code{NULL}.}
+Default is \code{NULL}, then OLS and MLE Logit is used to estimate nuisances parameters. If \code{est_method = "dml"}, user have to specify \code{learners}.}
 
 \item{n_folds}{The number of folds to be used in the cross-fitting. Default is \code{NULL}. If \code{est_method = "dml"}, user have to specify \code{n_folds}.}
 
@@ -66,7 +66,7 @@ Default is \code{NULL}.}
 
 \item{boot}{Logical. If \code{TRUE}, the function computes the bootstrap standard errors. Default is \code{FALSE}.}
 
-\item{boot_type}{The type of bootstrap to be used. Default is \code{"multiplier"}. The alternative is \code{"weighted"}.}
+\item{boot_type}{The type of bootstrap to be used. Default is \code{"multiplier"}. This is valid when \code{boot = TRUE}.}
 
 \item{nboot}{The number of bootstrap samples to be used. Default is \code{NULL}. If \code{boot = TRUE}, the default is \code{nboot = 999}.}
 
