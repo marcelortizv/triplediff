@@ -8,14 +8,14 @@
 #' @import stats
 #' @param did_preprocessed A list containing preprocessed data and specifications for the DDD estimation.
 #'        Expected elements include:
-#'        - `preprocessed_data`: the data table containing the variables needed for the analysis.
-#'        - `xformula`: formula object specifying the model for the nuisance functions.
-#'        - `est_method`: the estimation method to use.
-#'        - `learners`: specified machine learning methods for nuisance function estimation.
-#'        - `boot`: logical indicating whether bootstrap should be used for inference.
-#'        - `boot_type`: type of bootstrap to perform.
-#'        - `nboot`: number of bootstrap replicates.
-#'        - `inffunc`: logical indicating whether return or not influence function.
+#'        - `preprocessed_data`: A data table containing the data with variables needed for the analysis.
+#'        - `xformula`: The formula for the covariates to be included in the model. It should be of the form \code{~ x1 + x2}.
+#'        Default is \code{xformla = ~1} (no covariates).
+#'        - `boot`: Logical. If \code{TRUE}, the function computes the bootstrap standard errors. Default is \code{FALSE}.
+#'        - `boot_type`: The type of bootstrap to be used. Default is \code{"multiplier"}.
+#'        - `nboot`: The number of bootstrap samples to be used. Default is \code{NULL}. If \code{boot = TRUE}, the default is \code{nboot = 999}.
+#'        - `subgroup_counts`: A matrix containing the number of observations in each subgroup.
+#'        - `inffunc`: Logical. If \code{TRUE}, the function returns the influence function. Default is \code{FALSE}.
 #'
 #' @keywords internal
 #' @return A list with the estimated ATT, standard error, upper and lower confidence intervals, and influence function.
@@ -27,8 +27,6 @@ att_dr <- function(did_preprocessed) {
 
   data <- did_preprocessed$preprocessed_data
   xformula <- did_preprocessed$xformula
-  est_method <- did_preprocessed$est_method
-  learners <- did_preprocessed$learners
   boot <- did_preprocessed$boot
   boot_type <- did_preprocessed$boot_type
   nboot <- did_preprocessed$nboot
@@ -101,6 +99,11 @@ att_dr <- function(did_preprocessed) {
   # ------------------------------------------------------------------------------
   # Return results
   # ------------------------------------------------------------------------------
+
+  # Return null if inffunc is FALSE
+  if (inffunc == FALSE){
+    inf_func <- NULL
+  }
 
   ret <- (list(ATT = dr_ddd,
               se = se_ddd,

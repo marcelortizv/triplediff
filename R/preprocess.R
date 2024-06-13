@@ -256,7 +256,7 @@ run_preprocess_2Periods <- function(yname,
     # Get the names of the TRUE values
     var.with.na <- names(missing_flags)[which(unlist(missing_flags))]
     # Print warning messages
-    warning(paste("Some", var.with.na, "contain missing values(NA). We are dropping those observations"))
+    warning(paste("Some", var.with.na, "contain missing values (NA). We are dropping those observations"))
   }
   if(missing_X_flag) warning("Some covariates are missing (NA). We are dropping those observations")
 

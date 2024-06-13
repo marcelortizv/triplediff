@@ -10,11 +10,14 @@
 #' @import mlr3learners
 #' @param did_preprocessed A list containing preprocessed data and specifications for the DDD estimation.
 #'        Expected elements include:
-#'        - `preprocessed_data`: the data table containing the variables needed for the analysis.
-#'        - `xformula`: formula object specifying the model for the nuisance functions.
-#'        - `est_method`: the estimation method to use.
-#'        - `learners`: specified machine learning methods for nuisance function estimation.
-#'        - `n_folds`: the number of folds for cross-fitting
+#'        - `preprocessed_data`: A data table containing the data with variables needed for the analysis.
+#'        - `xformula`: The formula for the covariates to be included in the model. It should be of the form \code{~ x1 + x2}.
+#'        Default is \code{xformla = ~1} (no covariates).
+#'        - `learners`: A list of learners to be used in the estimation. It should be a list of two elements,
+#'        the first element being the learner for the propensity score and the second element being the learner for the outcome regression.
+#'        Default is \code{NULL}, then OLS and MLE Logit is used to estimate nuisances parameters. If \code{est_method = "dml"}, user have to specify \code{learners}.
+#'        - `n_folds`: The number of folds to be used in the cross-fitting. Default is \code{NULL}. If \code{est_method = "dml"}, user have to specify \code{n_folds}.
+#'        - `subgroup_counts`: A matrix containing the number of observations in each subgroup.
 #'
 #' @keywords internal
 #' @return A list with the estimated ATT, standard error, upper and lower confidence intervals, and n_folds.
@@ -26,7 +29,6 @@ att_dml <- function(did_preprocessed) {
 
   data <- did_preprocessed$preprocessed_data
   xformula <- did_preprocessed$xformula
-  est_method <- did_preprocessed$est_method
   learners <- did_preprocessed$learners
   n_folds <- did_preprocessed$n_folds
   subgroup_counts <- did_preprocessed$subgroup_counts
