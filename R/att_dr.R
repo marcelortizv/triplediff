@@ -59,9 +59,9 @@ att_dr <- function(did_preprocessed) {
   n3 <- subgroup_counts$V1[1] + subgroup_counts$V1[2]
   n2 <- subgroup_counts$V1[1] + subgroup_counts$V1[3]
   n1 <- subgroup_counts$V1[1] + subgroup_counts$V1[4]
-  w3 <- sqrt(n/n3)
-  w2 <- sqrt(n/n2)
-  w1 <- sqrt(n/n1)
+  w3 <- n/n3
+  w2 <- n/n2
+  w1 <- n/n1
   # rescaling influence function
   inf_func = w3*dr_att_inf_func_3$inf_func - w2*dr_att_inf_func_2$inf_fun + w3*dr_att_inf_func_1$inf_func
 
@@ -89,7 +89,7 @@ att_dr <- function(did_preprocessed) {
     }
 
   } else {
-    se_ddd <- stats::sd(inf_func)/sqrt(nrow(data))
+    se_ddd <- stats::sd(inf_func)/sqrt(n)
     # estimate upper bound at 95% confidence level
     ci_upper <- dr_ddd + 1.96 * se_ddd
     # estimate lower bound at 95% confidence level

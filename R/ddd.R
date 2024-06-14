@@ -305,7 +305,7 @@ ddd <- function(yname, tname, idname, dname, gname, partition_name, xformla,
           lci = att_dr$lci,
           uci = att_dr$uci,
           nboot = att_dr$nboot,
-          att.inf.func = att_dr$inf.func,
+          att_inf_func = att_dr$inf_func,
           subgroup_counts = att_dr$subgroup_counts,
           call.params = call.params,
           argu = argu
