@@ -158,9 +158,9 @@ compute_outcome_regression <- function(data, condition_subgroup, xformula){
   y0 = condition_data[condition_data$post == 0, y]
   deltaY = y1 - y0
   # get covariates including the intercept (conditioning in pre-treatment period since covariates are invariant)
-  cov <- stats::model.matrix(xformula, data = condition_data[condition_data$post == 0])
+  covX <- stats::model.matrix(xformula, data = condition_data[condition_data$post == 0])
   # compute OR delta
-  or_delta = as.vector(tcrossprod(reg.coeff, as.matrix(cov)))
+  or_delta = as.vector(tcrossprod(reg.coeff, as.matrix(covX)))
   # compute regression adjustment
   # reg_adjust = deltaY - or_delta
   return(list(deltaY = deltaY, or_delta = or_delta))
@@ -218,10 +218,10 @@ compute_did <- function(data, condition_subgroup, pscores, reg_adjustment, xform
   ##########################
 
   # Influence function related to the estimation of pscores
-  cov = stats::model.matrix(xformula, data = condition_data)
-  M2 <- base::colMeans(w_control * (deltaY - or_delta - att_control) * cov, na.rm = TRUE) # reg_adjust = deltaY - m_delta(x)
+  covX = stats::model.matrix(xformula, data = condition_data)
+  M2 <- base::colMeans(w_control * (deltaY - or_delta - att_control) * covX, na.rm = TRUE) # reg_adjust = deltaY - m_delta(x)
 
-  score_ps <- i_weights * (PA4 - pscore) * cov
+  score_ps <- i_weights * (PA4 - pscore) * covX
   # asymptotic linear representation of logit's beta
   score_ps_no_na <- na.omit(score_ps) # Exclude rows with NA values
   asy_lin_rep_ps <- score_ps_no_na %*% hessian
@@ -229,13 +229,13 @@ compute_did <- function(data, condition_subgroup, pscores, reg_adjustment, xform
 
   # Influence function related to the estimation of pscores
 
-  M1 <- base::colMeans(w_treat * cov, na.rm = TRUE)
-  M3 <- base::colMeans(w_control * cov, na.rm = TRUE)
+  M1 <- base::colMeans(w_treat * covX, na.rm = TRUE)
+  M3 <- base::colMeans(w_control * covX, na.rm = TRUE)
 
   # Influence function related to the estimation of regression model
-  or_x <- i_weights * PAa * cov
-  or_ex <- i_weights * PAa * (deltaY - or_delta) * cov
-  XpX <- crossprod(or_x, cov)/nrow(condition_data)
+  or_x <- i_weights * PAa * covX
+  or_ex <- i_weights * PAa * (deltaY - or_delta) * covX
+  XpX <- crossprod(or_x, covX)/nrow(condition_data)
 
   #asymptotic linear representation of the beta
   asy_linear_or <- t(solve(XpX, t(or_ex)))

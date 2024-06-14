@@ -3,7 +3,113 @@
 #' @import BMisc
 NULL
 #--------------------------------------------------
-# Function the pre-process the data to use on ddd estimator
+# Function to pre-process the data to use on ddd estimator
+
+run_nopreprocess_2periods <- function(yname,
+                                      tname,
+                                      idname,
+                                      dname,
+                                      gname = NULL,
+                                      partition_name,
+                                      xformla = ~1,
+                                      data,
+                                      control_group = NULL,
+                                      est_method = "trad",
+                                      learners = NULL,
+                                      n_folds = NULL,
+                                      weightsname = NULL,
+                                      boot = FALSE,
+                                      boot_type = "multiplier",
+                                      nboot = NULL,
+                                      inffunc = FALSE){
+  # Check if 'dta' is a data.table
+  if (!"data.table" %in% class(data)) {
+    # converting data to data.table
+    dta <- data.table::as.data.table(data)
+  }
+  dta<-data
+
+  arg_names <- setdiff(names(formals()), "data")
+  args <- mget(arg_names, sys.frame(sys.nframe()))
+
+  # set weights
+  weights <- base::ifelse(is.null(weightsname), rep(1,nrow(dta)), dta[,weightsname])
+  dta$weights <- weights
+
+  # Flag for xformla
+  if (is.null(xformla)) {
+    xformla <- ~1
+  }
+
+  # Creating a post dummy variable based on tlist[2] (second period = post treatment)
+  tlist <- unique(dta[[args$tname]])[base::order(unique(dta[[args$tname]]))]
+  dta$post <- as.numeric(dta[[tname]] == tlist[2])
+
+  # sort data based on idnam and tname and make it balanced
+  data.table::setorderv(dta, c(idname, tname), c(1,1))
+  dta <- BMisc::makeBalancedPanel(dta, idname, tname)
+
+  #-------------------------------------
+  # Generate the output for estimation
+  # -------------------------------------
+
+  cleaned_data <- data.table::data.table(id = dta[[idname]],
+                                         y = dta[[yname]],
+                                         post = dta$post,
+                                         treat = dta[[dname]],
+                                         partition = dta[[partition_name]],
+                                         weights = dta$weights)
+
+  # creating subgroup variable
+  # 4 if (partition ==1 & treat == 1); 3 if (partition ==0 & treat == 1); 2 if (partition ==1 & treat == 0); 1 if (partition ==0 & treat == 0)
+  cleaned_data$subgroup <- ifelse((cleaned_data$partition == 1) & (cleaned_data$treat == 1), 4,
+                                  ifelse((cleaned_data$partition == 0) & (cleaned_data$treat == 1), 3,
+                                         ifelse((cleaned_data$partition == 1) & (cleaned_data$treat == 0), 2, 1)))
+
+  # Flag for not enough observations for each subgroup
+  # Calculate the size of each subgroup in the 'subgroup' column
+  subgroup_counts <- cleaned_data[, .N/2, by = subgroup][order(-subgroup)]
+
+  # adding covariates
+  if (!is.null(xformla)) {
+    cleaned_data <- cbind(cleaned_data, stats::model.matrix(xformla,
+                                                            data = dta,
+                                                            na.action = na.pass))
+  }
+
+  # Remove rows with missing values
+  cleaned_data <- na.omit(cleaned_data)
+
+  # Remove collinear variables
+  # Convert the remaining columns to a matrix
+  cov_m <- as.matrix(cleaned_data[, -c(1:7)])
+  # Use the qr() function to detect collinear columns
+  qr_m <- qr(cov_m, tol = 1e-6)
+  # Get the rank of the matrix
+  rank_m <- qr_m$rank
+  # Get the indices of the non-collinear columns
+  non_collinear_indices <- qr_m$pivot[seq_len(rank_m)]
+  # Drop the collinear columns from the data.table
+  cleaned_data <- cleaned_data[, c(seq(1,7,1), non_collinear_indices + 7), with = FALSE]
+
+  # drop the intercept
+  cleaned_data[, 8 := NULL]
+
+  out <- list(preprocessed_data = cleaned_data,
+              xformula = xformla,
+              est_method = est_method,
+              learners = learners,
+              n_folds = n_folds,
+              boot = boot,
+              boot_type = boot_type,
+              nboot = nboot,
+              inffunc = inffunc,
+              subgroup_counts = subgroup_counts)
+
+  return(out)
+
+}
+
 
 # Preprocess function for 2 periods case
 run_preprocess_2Periods <- function(yname,
@@ -171,8 +277,6 @@ run_preprocess_2Periods <- function(yname,
 
   # drop the intercept
   cleaned_data[, 8 := NULL]
-
-  # TODO: Add subgroup_counts to the output to present information about the subgroups
 
   out <- list(preprocessed_data = cleaned_data,
               xformula = xformla,

@@ -54,8 +54,16 @@ att_dr <- function(did_preprocessed) {
   dr_att_inf_func_2 <- compute_did(data, condition_subgroup = 2, pscores, reg_adjust, xformula) # S=\infty, L=B
   dr_att_inf_func_1 <- compute_did(data, condition_subgroup = 1, pscores, reg_adjust, xformula) # S=\infty, L=A
 
-  dr_ddd = dr_att_inf_func_3$dr_att - dr_att_inf_func_2$dr_att + dr_att_inf_func_1$dr_att
-  inf_func = dr_att_inf_func_3$inf_func - dr_att_inf_func_2$inf_fun + dr_att_inf_func_1$inf_func
+  dr_ddd <- dr_att_inf_func_3$dr_att - dr_att_inf_func_2$dr_att + dr_att_inf_func_1$dr_att
+  n <- data[, .N/2]
+  n3 <- subgroup_counts$V1[1] + subgroup_counts$V1[2]
+  n2 <- subgroup_counts$V1[1] + subgroup_counts$V1[3]
+  n1 <- subgroup_counts$V1[1] + subgroup_counts$V1[4]
+  w3 <- n/n3
+  w2 <- n/n2
+  w1 <- n/n1
+  # rescaling influence function
+  inf_func = w3*dr_att_inf_func_3$inf_func - w2*dr_att_inf_func_2$inf_fun + w3*dr_att_inf_func_1$inf_func
 
   # ---------------------------------------------------------------------
   # Compute Variance
@@ -81,7 +89,7 @@ att_dr <- function(did_preprocessed) {
     }
 
   } else {
-    se_ddd <- stats::sd(inf_func)/sqrt(nrow(data))
+    se_ddd <- stats::sd(inf_func)/sqrt(n)
     # estimate upper bound at 95% confidence level
     ci_upper <- dr_ddd + 1.96 * se_ddd
     # estimate lower bound at 95% confidence level

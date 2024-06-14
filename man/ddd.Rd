@@ -21,7 +21,8 @@ ddd(
   boot = FALSE,
   boot_type = "multiplier",
   nboot = NULL,
-  inffunc = FALSE
+  inffunc = FALSE,
+  skip_data_checks = FALSE
 )
 }
 \arguments{
@@ -71,6 +72,8 @@ Default is \code{NULL}, then OLS and MLE Logit is used to estimate nuisances par
 \item{nboot}{The number of bootstrap samples to be used. Default is \code{NULL}. If \code{boot = TRUE}, the default is \code{nboot = 999}.}
 
 \item{inffunc}{Logical. If \code{TRUE}, the function returns the influence function. Default is \code{FALSE}.}
+
+\item{skip_data_checks}{Logical. If \code{TRUE}, the function skips the data checks and go straight to estimation. Default is \code{FALSE}.}
 }
 \value{
 A list with the following elements:
@@ -112,7 +115,8 @@ ddd(yname = "outcome", tname = "year", idname = "id", dname = "treat",
     gname = NULL, partition_name = "partition", xformla = ~x1 + x2,
     data = sim_data, control_group = NULL,
     est_method = "trad", learners = NULL, n_folds = NULL, weightsname = NULL, boot = FALSE,
-    boot_type = "multiplier", nboot = NULL, inffunc = FALSE)
+    boot_type = "multiplier", nboot = NULL,
+    inffunc = FALSE, skip_data_checks = FALSE)
 
 #----------------------------------------------------------
 # DML Triple Diff with covariates and 2 time periods
@@ -131,7 +135,8 @@ ddd(yname = "outcome", tname = "year", idname = "id", dname = "treat",
     gname = NULL, partition_name = "partition", xformla = ~x1 + x2,
     data = sim_data, control_group = NULL,
     est_method = "dml", learners = learners, n_folds = 5, weightsname = NULL, boot = FALSE,
-    boot_type = "multiplier", nboot = NULL, inffunc = FALSE)
+    boot_type = "multiplier", nboot = NULL,
+    inffunc = FALSE, skip_data_checks = FALSE)
 
 #----------------------------------------------------------
 # Triple Diff with multiple time periods
@@ -142,7 +147,8 @@ ddd(yname = "outcome", tname = "year", idname = "id", dname = NULL,
     gname = "group", partition_name = "partition", xformla = ~x1 + x2,
     data = sim_data, control_group = "notyettreated",
     est_method = "trad", learners = NULL, weightsname = NULL, boot = FALSE,
-    boot_type = "multiplier", nboot = NULL, inffunc = FALSE)
+    boot_type = "multiplier", nboot = NULL,
+    inffunc = FALSE, skip_data_checks = FALSE)
 }
 
 #----------------------------------------------------------

@@ -38,6 +38,7 @@ NULL
 #' @param boot_type The type of bootstrap to be used. Default is \code{"multiplier"}. This is valid when \code{boot = TRUE}.
 #' @param nboot The number of bootstrap samples to be used. Default is \code{NULL}. If \code{boot = TRUE}, the default is \code{nboot = 999}.
 #' @param inffunc Logical. If \code{TRUE}, the function returns the influence function. Default is \code{FALSE}.
+#' @param skip_data_checks Logical. If \code{TRUE}, the function skips the data checks and go straight to estimation. Default is \code{FALSE}.
 #'
 #' @return A list with the following elements:
 #' \item{ATT}{The average treatment effect on the treated.}
@@ -73,7 +74,8 @@ NULL
 #'     gname = NULL, partition_name = "partition", xformla = ~x1 + x2,
 #'     data = sim_data, control_group = NULL,
 #'     est_method = "trad", learners = NULL, n_folds = NULL, weightsname = NULL, boot = FALSE,
-#'     boot_type = "multiplier", nboot = NULL, inffunc = FALSE)
+#'     boot_type = "multiplier", nboot = NULL,
+#'     inffunc = FALSE, skip_data_checks = FALSE)
 #'
 #' #----------------------------------------------------------
 #' # DML Triple Diff with covariates and 2 time periods
@@ -92,7 +94,8 @@ NULL
 #'     gname = NULL, partition_name = "partition", xformla = ~x1 + x2,
 #'     data = sim_data, control_group = NULL,
 #'     est_method = "dml", learners = learners, n_folds = 5, weightsname = NULL, boot = FALSE,
-#'     boot_type = "multiplier", nboot = NULL, inffunc = FALSE)
+#'     boot_type = "multiplier", nboot = NULL,
+#'     inffunc = FALSE, skip_data_checks = FALSE)
 #'
 #' #----------------------------------------------------------
 #' # Triple Diff with multiple time periods
@@ -103,7 +106,8 @@ NULL
 #'     gname = "group", partition_name = "partition", xformla = ~x1 + x2,
 #'     data = sim_data, control_group = "notyettreated",
 #'     est_method = "trad", learners = NULL, weightsname = NULL, boot = FALSE,
-#'     boot_type = "multiplier", nboot = NULL, inffunc = FALSE)
+#'     boot_type = "multiplier", nboot = NULL,
+#'     inffunc = FALSE, skip_data_checks = FALSE)
 #' }
 #'
 #' #----------------------------------------------------------
@@ -116,7 +120,7 @@ ddd <- function(yname, tname, idname, dname, gname, partition_name, xformla,
                 data, control_group = NULL,
                 est_method = "trad", learners = NULL, n_folds = NULL,
                 weightsname = NULL, boot = FALSE, boot_type = "multiplier",
-                nboot = NULL, inffunc = FALSE) {
+                nboot = NULL, inffunc = FALSE, skip_data_checks = FALSE) {
 
 
   #------------------------------------------
@@ -144,82 +148,108 @@ ddd <- function(yname, tname, idname, dname, gname, partition_name, xformla,
   # Run preprocess and validation checks
   #------------------------------------------
 
-  if ((multiple_periods) && (est_method=="trad")) {
-    # dp <- run_preprocess_multPeriods(yname = yname,
-    #                                  tname = tname,
-    #                                  idname = idname,
-    #                                  dname = NULL,
-    #                                  gname = gname,
-    #                                  partition_name = partition_name,
-    #                                  xformla = xformla,
-    #                                  data = data,
-    #                                  control_group = control_group,
-    #                                  est_method = "trad",
-    #                                  learners = NULL,
-    #                                  n_folds = NULL,
-    #                                  weightsname = weightsname,
-    #                                  boot = boot,
-    #                                  boot_type = boot_type,
-    #                                  nboot = nboot,
-    #                                  inffunc = inffunc)
-    stop("Triple Diff with multiple time periods is not yet supported")
-  } else if ((multiple_periods) && (est_method=="dml")) {
-    # dp <- run_preprocess_multPeriods(yname = yname,
-    #                                  tname = tname,
-    #                                  idname = idname,
-    #                                  dname = NULL,
-    #                                  gname = gname,
-    #                                  partition_name = partition_name,
-    #                                  xformla = xformla,
-    #                                  data = data,
-    #                                  control_group = control_group,
-    #                                  est_method = "dml",
-    #                                  learners = learners,
-    #                                  n_folds = n_folds,
-    #                                  weightsname = weightsname,
-    #                                  boot = boot,
-    #                                  boot_type = boot_type,
-    #                                  nboot = nboot,
-    #                                  inffunc = inffunc)
-    stop("Triple Diff with multiple time periods and DML is not yet supported")
-  } else if ((!multiple_periods) && (est_method=="trad")) {
-    dp <- run_preprocess_2Periods(yname = yname,
-                                 tname = tname,
-                                 idname = idname,
-                                 dname = dname,
-                                 gname = NULL,
-                                 partition_name = partition_name,
-                                 xformla = xformla,
-                                 data = data,
-                                 control_group = NULL,
-                                 est_method = "trad",
-                                 learners = NULL,
-                                 n_folds = NULL,
-                                 weightsname = weightsname,
-                                 boot = boot,
-                                 boot_type = boot_type,
-                                 nboot = nboot,
-                                 inffunc = inffunc)
-  } else if ((!multiple_periods) && (est_method=="dml")) {
-    dp <- run_preprocess_2Periods(yname = yname,
-                                 tname = tname,
-                                 idname = idname,
-                                 dname = dname,
-                                 gname = NULL,
-                                 partition_name = partition_name,
-                                 xformla = xformla,
-                                 data = data,
-                                 control_group = NULL,
-                                 est_method = "dml",
-                                 learners = learners,
-                                 n_folds = n_folds,
-                                 weightsname = weightsname,
-                                 boot = boot,
-                                 boot_type = boot_type,
-                                 nboot = nboot,
-                                 inffunc = inffunc)
-    #stop("Triple Diff with 2 periods and DML is not yet supported")
+  if (skip_data_checks){
+    if (!multiple_periods){
+      dp <- run_nopreprocess_2periods(yname = yname,
+                                      tname = tname,
+                                      idname = idname,
+                                      dname = dname,
+                                      gname = NULL,
+                                      partition_name = partition_name,
+                                      xformla = xformla,
+                                      data = data,
+                                      control_group = NULL,
+                                      est_method = "trad",
+                                      learners = NULL,
+                                      n_folds = NULL,
+                                      weightsname = weightsname,
+                                      boot = boot,
+                                      boot_type = boot_type,
+                                      nboot = nboot,
+                                      inffunc = inffunc)
+    } else {
+      stop("Triple Diff with multiple time periods is not yet supported")
+    }
+
+  } else {
+    if ((multiple_periods) && (est_method=="trad")) {
+      # dp <- run_preprocess_multPeriods(yname = yname,
+      #                                  tname = tname,
+      #                                  idname = idname,
+      #                                  dname = NULL,
+      #                                  gname = gname,
+      #                                  partition_name = partition_name,
+      #                                  xformla = xformla,
+      #                                  data = data,
+      #                                  control_group = control_group,
+      #                                  est_method = "trad",
+      #                                  learners = NULL,
+      #                                  n_folds = NULL,
+      #                                  weightsname = weightsname,
+      #                                  boot = boot,
+      #                                  boot_type = boot_type,
+      #                                  nboot = nboot,
+      #                                  inffunc = inffunc)
+      stop("Triple Diff with multiple time periods is not yet supported")
+    } else if ((multiple_periods) && (est_method=="dml")) {
+      # dp <- run_preprocess_multPeriods(yname = yname,
+      #                                  tname = tname,
+      #                                  idname = idname,
+      #                                  dname = NULL,
+      #                                  gname = gname,
+      #                                  partition_name = partition_name,
+      #                                  xformla = xformla,
+      #                                  data = data,
+      #                                  control_group = control_group,
+      #                                  est_method = "dml",
+      #                                  learners = learners,
+      #                                  n_folds = n_folds,
+      #                                  weightsname = weightsname,
+      #                                  boot = boot,
+      #                                  boot_type = boot_type,
+      #                                  nboot = nboot,
+      #                                  inffunc = inffunc)
+      stop("Triple Diff with multiple time periods and DML is not yet supported")
+    } else if ((!multiple_periods) && (est_method=="trad")) {
+      dp <- run_preprocess_2Periods(yname = yname,
+                                    tname = tname,
+                                    idname = idname,
+                                    dname = dname,
+                                    gname = NULL,
+                                    partition_name = partition_name,
+                                    xformla = xformla,
+                                    data = data,
+                                    control_group = NULL,
+                                    est_method = "trad",
+                                    learners = NULL,
+                                    n_folds = NULL,
+                                    weightsname = weightsname,
+                                    boot = boot,
+                                    boot_type = boot_type,
+                                    nboot = nboot,
+                                    inffunc = inffunc)
+    } else if ((!multiple_periods) && (est_method=="dml")) {
+      dp <- run_preprocess_2Periods(yname = yname,
+                                    tname = tname,
+                                    idname = idname,
+                                    dname = dname,
+                                    gname = NULL,
+                                    partition_name = partition_name,
+                                    xformla = xformla,
+                                    data = data,
+                                    control_group = NULL,
+                                    est_method = "dml",
+                                    learners = learners,
+                                    n_folds = n_folds,
+                                    weightsname = weightsname,
+                                    boot = boot,
+                                    boot_type = boot_type,
+                                    nboot = nboot,
+                                    inffunc = inffunc)
+    }
   }
+
+
 
   #------------------------------------------
   # Run the estimation
@@ -275,7 +305,7 @@ ddd <- function(yname, tname, idname, dname, gname, partition_name, xformla,
           lci = att_dr$lci,
           uci = att_dr$uci,
           nboot = att_dr$nboot,
-          att.inf.func = att_dr$inf.func,
+          att_inf_func = att_dr$inf_func,
           subgroup_counts = att_dr$subgroup_counts,
           call.params = call.params,
           argu = argu
