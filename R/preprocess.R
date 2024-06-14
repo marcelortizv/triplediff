@@ -68,7 +68,7 @@ run_nopreprocess_2periods <- function(yname,
 
   # Flag for not enough observations for each subgroup
   # Calculate the size of each subgroup in the 'subgroup' column
-  subgroup_counts <- cleaned_data[, .N/2, by = subgroup]
+  subgroup_counts <- cleaned_data[, .N/2, by = subgroup][order(-subgroup)]
 
   # adding covariates
   if (!is.null(xformla)) {
