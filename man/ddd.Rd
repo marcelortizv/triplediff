@@ -10,15 +10,16 @@ ddd(
   idname,
   dname,
   gname,
-  partition.name,
+  partition_name,
   xformla,
   data,
-  control.group = NULL,
-  estMethod = "trad",
+  control_group = NULL,
+  est_method = "trad",
   learners = NULL,
+  n_folds = NULL,
   weightsname = NULL,
   boot = FALSE,
-  boot.type = "multiplier",
+  boot_type = "multiplier",
   nboot = NULL,
   inffunc = FALSE
 )
@@ -37,7 +38,7 @@ It is mutually exclusive with \code{gname}.}
 for treated units and defines which group the unit belongs to. It takes value 0 for untreated units. If \code{gname} is specified,
 we assume that the treatment is staggered. It is mutually exclusive with \code{dname}.}
 
-\item{partition.name}{The name of the column containing the partition variable (e.g., the subgroup identifier). This is an indicator variable that is 1 for
+\item{partition_name}{The name of the column containing the partition variable (e.g., the subgroup identifier). This is an indicator variable that is 1 for
 the units targeted for treatment and 0 otherwise.}
 
 \item{xformla}{The formula for the covariates to be included in the model. It should be of the form \code{~ x1 + x2}.
@@ -45,25 +46,27 @@ Default is \code{xformla = ~1} (no covariates).}
 
 \item{data}{A data frame or data table containing the data.}
 
-\item{control.group}{The control group to be used in the estimation. Default is \code{control.group = "nevertreated"} which sets as control group
+\item{control_group}{The control group to be used in the estimation. Default is \code{control_group = "nevertreated"} which sets as control group
 the units that never participate in the treatment and does not change across groups or time periods. The alternative is
-\code{control.group = "notyettreated"} which sets as control group the units that have not yet participated in the treatment. This includes never
+\code{control_group = "notyettreated"} which sets as control group the units that have not yet participated in the treatment. This includes never
 treated units and units that will be treated in the future.}
 
-\item{estMethod}{The estimation method to be used. Default is \code{"trad"} (traditional). It computes propensity score using logistic regression
+\item{est_method}{The estimation method to be used. Default is \code{"trad"} (traditional). It computes propensity score using logistic regression
 and outcome regression using OLS. The alternative is \code{"dml"} (double machine learning). It allows the user to compute propensity score using a
 machine learning algorithm and outcome regression using a different machine learning algorithm. We provide some wrappers for popular learners but
 the user can also provide their own learner. See our vignette on How to construct a use-provided learner for more details (TODO).}
 
 \item{learners}{A list of learners to be used in the estimation. It should be a list of two elements,
 the first element being the learner for the propensity score and the second element being the learner for the outcome regression.
-Default is \code{NULL}.}
+Default is \code{NULL}, then OLS and MLE Logit is used to estimate nuisances parameters. If \code{est_method = "dml"}, user have to specify \code{learners}.}
+
+\item{n_folds}{The number of folds to be used in the cross-fitting. Default is \code{NULL}. If \code{est_method = "dml"}, user have to specify \code{n_folds}.}
 
 \item{weightsname}{The name of the column containing the weights. Default is \code{NULL}.}
 
 \item{boot}{Logical. If \code{TRUE}, the function computes the bootstrap standard errors. Default is \code{FALSE}.}
 
-\item{boot.type}{The type of bootstrap to be used. Default is \code{"multiplier"}. The alternative is \code{"weighted"}.}
+\item{boot_type}{The type of bootstrap to be used. Default is \code{"multiplier"}. This is valid when \code{boot = TRUE}.}
 
 \item{nboot}{The number of bootstrap samples to be used. Default is \code{NULL}. If \code{boot = TRUE}, the default is \code{nboot = 999}.}
 
@@ -91,7 +94,7 @@ TBA
 # Triple Diff with covariates and 2 time periods
 #----------------------------------------------------------
 seed = 123
-num_ids = 100
+num_ids = 500
 time = 2
 initial.year = 2019
 treatment.year = 2020
@@ -102,11 +105,33 @@ sim_data = generate_test_panel(seed = seed,
                               initial.year = initial.year,
                               treatment.year = treatment.year)
 
+#----------------------------------------------------------
+# Triple Diff with covariates and 2 time periods
+#----------------------------------------------------------
 ddd(yname = "outcome", tname = "year", idname = "id", dname = "treat",
-    gname = NULL, partition.name = "partition", xformla = ~x1 + x2,
-    data = sim_data, control.group = NULL,
-    estMethod = "trad", learners = NULL, weightsname = NULL, boot = FALSE,
-    boot.type = "multiplier", nboot = NULL, inffunc = FALSE)
+    gname = NULL, partition_name = "partition", xformla = ~x1 + x2,
+    data = sim_data, control_group = NULL,
+    est_method = "trad", learners = NULL, n_folds = NULL, weightsname = NULL, boot = FALSE,
+    boot_type = "multiplier", nboot = NULL, inffunc = FALSE)
+
+#----------------------------------------------------------
+# DML Triple Diff with covariates and 2 time periods
+#----------------------------------------------------------
+library(mlr3)
+library(mlr3learners)
+
+learner_rf <- lrn("classif.ranger", predict_type = "prob", num.trees = 100,
+                 min.node.size = 1, importance = 'impurity')
+
+learner_regr <- lrn("regr.xgboost")
+
+learners <- list(ml_pa = learner_rf, ml_md = learner_regr)
+
+ddd(yname = "outcome", tname = "year", idname = "id", dname = "treat",
+    gname = NULL, partition_name = "partition", xformla = ~x1 + x2,
+    data = sim_data, control_group = NULL,
+    est_method = "dml", learners = learners, n_folds = 5, weightsname = NULL, boot = FALSE,
+    boot_type = "multiplier", nboot = NULL, inffunc = FALSE)
 
 #----------------------------------------------------------
 # Triple Diff with multiple time periods
@@ -114,11 +139,14 @@ ddd(yname = "outcome", tname = "year", idname = "id", dname = "treat",
 
 \dontrun{
 ddd(yname = "outcome", tname = "year", idname = "id", dname = NULL,
-    gname = "group", partition.name = "partition", xformla = ~x1 + x2,
-    data = sim_data, control.group = "notyettreated",
-    estMethod = "trad", learners = NULL, weightsname = NULL, boot = FALSE,
-    boot.type = "multiplier", nboot = NULL, inffunc = FALSE)
+    gname = "group", partition_name = "partition", xformla = ~x1 + x2,
+    data = sim_data, control_group = "notyettreated",
+    est_method = "trad", learners = NULL, weightsname = NULL, boot = FALSE,
+    boot_type = "multiplier", nboot = NULL, inffunc = FALSE)
 }
 
+#----------------------------------------------------------
+# DML Triple Diff with multiple time periods
+#----------------------------------------------------------
 
 }
