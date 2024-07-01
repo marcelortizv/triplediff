@@ -24,7 +24,8 @@ Imports:
     mlr3tuning (>= 0.20.0),
     parglm (>= 0.1.7),
     Rcpp (>= 1.0.12),
-    speedglm (>= 0.3-5)
+    speedglm (>= 0.3-5),
+    tidyr (>= 1.3.0)
 LinkingTo: 
     Rcpp (>= 1.0.12)
 Suggests: 
