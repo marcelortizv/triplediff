@@ -26,14 +26,15 @@ run_nopreprocess_2periods <- function(yname,
   if (!"data.table" %in% class(data)) {
     # converting data to data.table
     dta <- data.table::as.data.table(data)
+  } else {
+    dta <- data
   }
-  dta<-data
 
   arg_names <- setdiff(names(formals()), "data")
   args <- mget(arg_names, sys.frame(sys.nframe()))
 
   # set weights
-  weights <- base::ifelse(is.null(weightsname), rep(1,nrow(dta)), dta[,weightsname])
+  base::ifelse(is.null(weightsname), weights <- rep(1,nrow(dta)), weights <- dta[,weightsname])
   dta$weights <- weights
 
   # Flag for xformla
@@ -153,8 +154,9 @@ run_preprocess_2Periods <- function(yname,
   if (!"data.table" %in% class(data)) {
     # converting data to data.table
     dta <- data.table::as.data.table(data)
+  } else {
+    dta <- data
   }
-  dta<-data
 
 
   # Capture all arguments except 'data'
@@ -164,7 +166,7 @@ run_preprocess_2Periods <- function(yname,
   validate_args_2Periods(args, dta)
 
   # set weights
-  weights <- base::ifelse(is.null(weightsname), rep(1,nrow(dta)), dta[,weightsname])
+  base::ifelse(is.null(weightsname), weights <- rep(1,nrow(dta)), weights <- dta[,weightsname])
   dta$weights <- weights
 
   # Check if weights are unique by idname
@@ -293,35 +295,269 @@ run_preprocess_2Periods <- function(yname,
 }
 
 # Preprocess function for multiple periods case.
-# TODO: Implement the function
-# run_preprocess_multPeriods <-function(yname,
-#                                       tname,
-#                                       idname,
-#                                       dname = NULL,
-#                                       gname,
-#                                       partition_name,
-#                                       xformla = ~1,
-#                                       data,
-#                                       control_group,
-#                                       est_method = "trad",
-#                                       learners = NULL,
-#                                       weightsname = NULL,
-#                                       boot = FALSE,
-#                                       boot_type = "multiplier",
-#                                       nboot = NULL,
-#                                       inffunc = FALSE) {
-#   # add code here
-#   out <- list(preprocessed_data = cleaned_data,
-#               xformula = xformla,
-#               est_method = est_method,
-#               learners = learners,
-#               weightsname = weightsname,
-#               boot = boot,
-#               boot_type = boot_type,
-#               nboot = nboot,
-#               inffunc = inffunc)
-#
-#   return(out)
-# }
+run_preprocess_multPeriods <- function(yname,
+                                       tname,
+                                       idname,
+                                       dname = NULL,
+                                       gname,
+                                       partition_name,
+                                       xformla = ~1,
+                                       data,
+                                       control_group,
+                                       clustervars = NULL,
+                                       est_method = "trad",
+                                       learners = NULL,
+                                       weightsname = NULL,
+                                       boot = FALSE,
+                                       boot_type = "multiplier",
+                                       nboot = NULL,
+                                       inffunc = FALSE){
+  # Flag for est_method
+  if (est_method!="trad" && est_method!="dml") {
+    warning("est_method = ",est_method,  " is not supported. Using 'trad'.")
+    est_method <- "trad"
+  }
+
+  # Check if 'dta' is a data.table
+  if (!"data.table" %in% class(data)) {
+    # converting data to data.table
+    dta <- data.table::as.data.table(data)
+  } else {
+    dta <- data
+  }
+
+  # Capture all arguments except 'data'
+  arg_names <- setdiff(names(formals()), "data")
+  args <- mget(arg_names, sys.frame(sys.nframe()))
+  # Run argument checks
+  validate_args_multPeriods(args, dta)
+
+  # set in-blank xformla if no covariates are provided
+  if (is.null(xformla)) {
+    xformla <- ~1
+  }
+
+  # drop irrelevant columns in data
+  cols_to_keep <- c(idname, tname, yname, gname, partition_name, weightsname, clustervars)
+
+  model_frame <- model.frame(xformla, data = dta, na.action = na.pass)
+  # Subset the data.table to keep only relevant columns
+  dta <- dta[, ..cols_to_keep]
+
+  # Bind the model frame columns
+  dta <- cbind(dta, as.data.table(model_frame))
+
+  # Check if any covariates were missing
+  n_orig <- dta[, .N]
+  dta <- dta[complete.cases(dta)]
+  n_new <- dta[, .N]
+  n_diff <- n_orig - n_new
+  if (n_diff != 0) {
+    warning(paste0("dropped ", n_diff, " rows from original data due to missing data"))
+  }
+
+  # set weights
+  base::ifelse(is.null(weightsname), weights <- rep(1, n_new), weights <- dta[,weightsname])
+  dta$weights <- weights
+
+
+  # get a list of dates from min to max
+  tlist <- sort(unique(dta[[tname]]))
+
+  # Identify groups with treatment time bigger than the maximum treatment time
+  # calculate the maximum treatment time
+  max_treatment_time <- max(tlist, na.rm = TRUE)
+  dta[, asif_never_treated := (get(gname) > max_treatment_time)]
+  # replace NA values with FALSE in the logical vector
+  dta[is.na(asif_never_treated), asif_never_treated := FALSE]
+  # set gname to 0 for those groups considered as never treated
+  dta[asif_never_treated == TRUE, (gname) := 0]
+  # remove the temporary column
+  dta[, asif_never_treated := NULL]
+
+  # get list of treated groups (by time) from min to max
+  glist <- sort(unique(dta[[gname]]))
+
+  # Check if there is a never treated group
+  if (0 %in% glist == FALSE) {
+    if (control_group == "nevertreated") {
+      stop("There is no available never-treated group")
+    } else {
+      # Drop all time periods with time periods >= latest treated
+      latest_treated_time <- max(glist)
+      # with anticipation?
+      #latest_treated_time <- max(glist) - anticipation
+      dta <- dta[get(tname) < latest_treated_time]
+
+      tlist <- sort(unique(dta[[tname]]))
+      glist <- sort(unique(dta[[gname]]))
+
+      # don't compute ATT(g,t) for groups that are only treated at end
+      # and only play a role as a comparison group
+      glist <- glist[glist < max(glist)]
+    }
+  }
+
+  # Get the first period
+  first_period <- tlist[1]
+
+  # Filter the treated groups
+  # glist <- glist[glist > 0 & glist > (first_period + anticipation)]
+  glist <- glist[glist > 0 & glist > first_period]
+
+  # Check for groups treated in the first periods and drop them
+  # identify groups treated in the first period
+  dta[, treated_first_period := (get(gname) <= first_period) & (get(gname) != 0)]
+  dta[is.na(treated_first_period), treated_first_period := FALSE]
+
+  # count the number of units treated in the first period
+  nfirstperiod <- uniqueN(dta[treated_first_period == TRUE, get(idname)])
+
+  # handle units treated in the first period
+  if (nfirstperiod > 0) {
+    warning(paste0("Dropped ", nfirstperiod, " units that were already treated in the first period."))
+    dta <- dta[get(gname) %in% c(0, glist)]
+
+    # update tlist and glist
+    tlist <- sort(unique(dta[[tname]]))
+    glist <- sort(unique(dta[[gname]]))
+    glist <- glist[glist > 0]
+
+    # Drop groups treated in the first period or before
+    first_period <- tlist[1]
+    #glist <- glist[glist > first_period + anticipation]
+    glist <- glist[glist > first_period]
+  }
+  # remove the temporary column
+  dta[, treated_first_period := NULL]
+
+  # ----------------------------------------------------------------
+  # panel data only
+  # ----------------------------------------------------------------
+
+  # Check for complete cases
+  keepers <- complete.cases(dta)
+  n <- uniqueN(dta[[idname]])
+  n_keep <- uniqueN(dta[keepers, get(idname)])
+
+  if (nrow(dta[keepers, ]) < nrow(dta)) {
+    warning(paste0("Dropped ", (n - n_keep), " observations that had missing data."))
+    dta <- dta[keepers, ]
+  }
+
+  # Make it a balanced data set
+  n_old <- uniqueN(dta[[idname]])
+  dta <- BMisc::makeBalancedPanel(dta, idname, tname)
+  n <- uniqueN(dta[[idname]])
+
+  #-------------------------------------
+  # Generate the output for estimation
+  # ------------------------------------
+  cleaned_data <- data.table::data.table(id = dta[[idname]],
+                                         y = dta[[yname]],
+                                         first_treat = dta[[gname]],
+                                         period = dta[[tname]],
+                                         partition = dta[[partition_name]],
+                                         weights = dta$weights)
+
+  if (n < n_old) {
+    warning(paste0("Dropped ", n_old - n, " observations while converting to balanced panel."))
+  }
+
+  # If drop all data, you do not have a panel.
+  if (nrow(cleaned_data) == 0) {
+    stop("All observations dropped to convert data to balanced panel. Consider setting `panel = FALSE` and/or revisiting 'idname'.")
+  }
+
+  n <- nrow(cleaned_data[period == tlist[1], ])
+
+  # Check if groups is empty
+  if(length(glist)==0){
+    stop("No valid groups. The variable in 'gname' should be expressed as the time a unit is first treated (0 if never-treated).")
+  }
+
+  # Check if there are enough time periods
+  if (length(tlist) == 2) {
+    stop("The type of ddd specified only have two time periods. Change type of ddd for two time periods")
+  }
+
+  # Check for small comparison groups
+  # Calculate the size of each group in the 'treat' column
+  gsize <- cleaned_data[, .N / length(tlist), by = "first_treat"]
+  # Calculate the required size
+  reqsize <- length(BMisc::rhs.vars(xformla)) + 5
+  # Identify groups to warn about
+  small_groups <- gsize[V1 < reqsize]
+  # Warn if some groups are small
+  if (nrow(small_groups) > 0) {
+    gpaste <- paste(small_groups[, treat], collapse = ",")
+    warning(paste0("Be aware that there are some small groups in your dataset.\n  Check groups: ", gpaste, "."))
+
+    if (0 %in% small_groups[, treat] & control_group == "nevertreated") {
+      stop("Never treated group is too small, try setting control_group = \"notyettreated\"")
+    }
+  }
+
+  # How many time periods
+  nT <- length(tlist)
+  # How many treated groups
+  nG <- length(glist)
+
+  # Create subgroup variable based on the control_group option
+  cleaned_data[, subgroup := NA_integer_]
+
+  if (control_group == "nevertreated") {
+    cleaned_data[
+      (first_treat == 0 & partition == 0), subgroup := 1
+    ]
+    cleaned_data[
+      (first_treat == 0 & partition == 1), subgroup := 2
+    ]
+    cleaned_data[
+      (first_treat > 0 & partition == 0), subgroup := 3
+    ]
+    cleaned_data[
+      (first_treat > 0 & partition == 1), subgroup := 4
+    ]
+  } else if (control_group == "notyettreated") {
+    cleaned_data[
+      (first_treat > period & partition == 0), subgroup := 1
+    ]
+    cleaned_data[
+      (first_treat > period & partition == 1), subgroup := 2
+    ]
+    cleaned_data[
+      (first_treat == period & partition == 0), subgroup := 3
+    ]
+    cleaned_data[
+      (first_treat == period & partition == 1), subgroup := 4
+    ]
+  }
+
+  # adding covariates
+  if (!is.null(xformla)) {
+    cleaned_data <- cbind(cleaned_data, stats::model.matrix(xformla,
+                                                            data = dta,
+                                                            na.action = na.pass))
+  }
+  # drop the intercept
+  cleaned_data[, "(Intercept)" := NULL]
+
+  # order dataset wrt idname and tname
+  setorder(cleaned_data, "id", "period")
+
+  out <- list(preprocessed_data = cleaned_data,
+              xformula = xformla,
+              est_method = est_method,
+              control_group = control_group,
+              clustervars = clustervars,
+              n = n,
+              nG = nG,
+              nT = nT,
+              tlist = tlist,
+              glist = glist)
+
+  return(out)
+}
 
 
