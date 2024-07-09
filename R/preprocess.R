@@ -304,6 +304,7 @@ run_preprocess_multPeriods <- function(yname,
                                        xformla = ~1,
                                        data,
                                        control_group,
+                                       base_period,
                                        clustervars = NULL,
                                        est_method = "trad",
                                        learners = NULL,
@@ -312,6 +313,19 @@ run_preprocess_multPeriods <- function(yname,
                                        boot_type = "multiplier",
                                        nboot = NULL,
                                        inffunc = FALSE){
+
+  #-------------------------------------
+  # Error checking
+  #-------------------------------------
+
+  # Flag for boot_type
+  if (boot){
+    if (boot_type!="multiplier") {
+      warning("boot_type = ",boot_type,  " is not supported. Using 'multiplier'.")
+      boot_type <- "multiplier"
+    }
+  }
+
   # Flag for est_method
   if (est_method!="trad" && est_method!="dml") {
     warning("est_method = ",est_method,  " is not supported. Using 'trad'.")
@@ -338,7 +352,7 @@ run_preprocess_multPeriods <- function(yname,
   }
 
   # drop irrelevant columns in data
-  cols_to_keep <- c(idname, tname, yname, gname, partition_name, weightsname, clustervars)
+  cols_to_keep <- c(idname, tname, yname, gname, partition_name, weightsname)
 
   model_frame <- model.frame(xformla, data = dta, na.action = na.pass)
   # Subset the data.table to keep only relevant columns
@@ -358,6 +372,10 @@ run_preprocess_multPeriods <- function(yname,
 
   # set weights
   base::ifelse(is.null(weightsname), weights <- rep(1, n_new), weights <- dta[,weightsname])
+
+  if ("weights" %in% colnames(data)){
+    stop("`ddd` tried to use column named \"weights\" internally, but there was already a column with this name.")
+  }
   dta$weights <- weights
 
 
@@ -503,37 +521,6 @@ run_preprocess_multPeriods <- function(yname,
   # How many treated groups
   nG <- length(glist)
 
-  # Create subgroup variable based on the control_group option
-  cleaned_data[, subgroup := NA_integer_]
-
-  if (control_group == "nevertreated") {
-    cleaned_data[
-      (first_treat == 0 & partition == 0), subgroup := 1
-    ]
-    cleaned_data[
-      (first_treat == 0 & partition == 1), subgroup := 2
-    ]
-    cleaned_data[
-      (first_treat > 0 & partition == 0), subgroup := 3
-    ]
-    cleaned_data[
-      (first_treat > 0 & partition == 1), subgroup := 4
-    ]
-  } else if (control_group == "notyettreated") {
-    cleaned_data[
-      (first_treat > period & partition == 0), subgroup := 1
-    ]
-    cleaned_data[
-      (first_treat > period & partition == 1), subgroup := 2
-    ]
-    cleaned_data[
-      (first_treat == period & partition == 0), subgroup := 3
-    ]
-    cleaned_data[
-      (first_treat == period & partition == 1), subgroup := 4
-    ]
-  }
-
   # adding covariates
   if (!is.null(xformla)) {
     cleaned_data <- cbind(cleaned_data, stats::model.matrix(xformla,
@@ -549,15 +536,20 @@ run_preprocess_multPeriods <- function(yname,
   out <- list(preprocessed_data = cleaned_data,
               xformula = xformla,
               est_method = est_method,
+              boot = boot,
+              boot_type = boot_type,
+              nboot = nboot,
               control_group = control_group,
-              clustervars = clustervars,
+              based_period = based_period,
               n = n,
-              nG = nG,
-              nT = nT,
+              cohorts = nG,
+              time_periods = nT,
               tlist = tlist,
               glist = glist)
 
   return(out)
 }
+
+
 
 

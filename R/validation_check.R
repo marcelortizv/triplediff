@@ -11,6 +11,7 @@ validate_args_2Periods <- function(args, dta){
   partition_name <- args$partition_name
   xformla <- args$xformla
   est_method <- args$est_method
+  base_period <- args$base_period
   learners <- args$learners
   n_folds <- args$n_folds
   weightsname <- args$weightsname
@@ -19,6 +20,10 @@ validate_args_2Periods <- function(args, dta){
   nboot <- args$nboot
   inffunc <- args$inffunc
 
+  # Flag for based period: not in c("universal", "varying"), stop
+  if (!base_period %in% c("universal", "varying")) {
+    stop("base_period must be either 'universal' or 'varying'.")
+  }
 
   # Flag for yname
   if (!is.element(yname, base::colnames(dta))) {

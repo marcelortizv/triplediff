@@ -768,7 +768,6 @@ gen_dgp_mult_periods <- function(size, tperiods, dgp_type){
                              names_prefix="Y",
                              values_to="Y")
   ddf$period <- as.numeric(ddf$period)
-  ddf$treat <- 1*(ddf$G > 0)*(ddf$L == 1)
   ddf <- ddf[order(ddf$id, ddf$period),] # reorder data
   ddf <- subset(ddf, G != 1)
 
