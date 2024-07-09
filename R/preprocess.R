@@ -1,5 +1,5 @@
 #' @import data.table
-#' @import stats
+#' @importFrom stats model.matrix
 #' @import BMisc
 NULL
 #--------------------------------------------------
@@ -305,9 +305,9 @@ run_preprocess_multPeriods <- function(yname,
                                        data,
                                        control_group,
                                        base_period,
-                                       clustervars = NULL,
                                        est_method = "trad",
                                        learners = NULL,
+                                       n_folds = NULL,
                                        weightsname = NULL,
                                        boot = FALSE,
                                        boot_type = "multiplier",
@@ -551,5 +551,28 @@ run_preprocess_multPeriods <- function(yname,
 }
 
 
+# Process results inside att_gt_dr function
+process_attgt <- function(attgt_list){
+  groups <- length(unique(unlist(BMisc::getListElement(attgt_list, "group"))))
+  time_periods <- length(unique(unlist(BMisc::getListElement(attgt_list, "year"))))
+
+  # empty vectors to hold results
+  group <- c()
+  att <- c()
+  periods <- c()
+
+  i <- 1
+  # extract results and populate vectors
+  for (g in 1:groups) {
+    for (t in 1:time_periods) {
+      group[i] <- attgt_list[[i]]$group
+      periods[i] <- attgt_list[[i]]$year
+      att[i] <- attgt_list[[i]]$att
+      i <- i + 1
+    }
+  }
+
+  return(list(group = group, att = att, periods = periods))
+}
 
 

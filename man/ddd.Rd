@@ -14,6 +14,7 @@ ddd(
   xformla,
   data,
   control_group = NULL,
+  base_period = NULL,
   est_method = "trad",
   learners = NULL,
   n_folds = NULL,
@@ -51,6 +52,11 @@ Default is \code{xformla = ~1} (no covariates).}
 the units that never participate in the treatment and does not change across groups or time periods. The alternative is
 \code{control_group = "notyettreated"} which sets as control group the units that have not yet participated in the treatment. This includes never
 treated units and units that will be treated in the future.}
+
+\item{base_period}{#' Choose between a "varying" or "universal" base period. Both yield the same post-treatment ATT(g,t) estimates.
+Varying base period: Computes pseudo-ATT in pre-treatment periods by comparing outcome changes for a group to its comparison group from t-1 to t, repeatedly changing t.
+Universal base period: Fixes the base period to (g-1), reporting average changes from t to (g-1) for a group relative to its comparison group, similar to event study regressions.
+Varying base period reports ATT(g,t) right before treatment. Universal base period normalizes the estimate before treatment to 0, adding one extra estimate in an earlier period.}
 
 \item{est_method}{The estimation method to be used. Default is \code{"trad"} (traditional). It computes propensity score using logistic regression
 and outcome regression using OLS. The alternative is \code{"dml"} (double machine learning). It allows the user to compute propensity score using a
@@ -113,7 +119,7 @@ sim_data = generate_test_panel(seed = seed,
 #----------------------------------------------------------
 ddd(yname = "outcome", tname = "year", idname = "id", dname = "treat",
     gname = NULL, partition_name = "partition", xformla = ~x1 + x2,
-    data = sim_data, control_group = NULL,
+    data = sim_data, control_group = NULL, base_period = NULL,
     est_method = "trad", learners = NULL, n_folds = NULL, weightsname = NULL, boot = FALSE,
     boot_type = "multiplier", nboot = NULL,
     inffunc = FALSE, skip_data_checks = FALSE)
@@ -133,7 +139,7 @@ learners <- list(ml_pa = learner_rf, ml_md = learner_regr)
 
 ddd(yname = "outcome", tname = "year", idname = "id", dname = "treat",
     gname = NULL, partition_name = "partition", xformla = ~x1 + x2,
-    data = sim_data, control_group = NULL,
+    data = sim_data, control_group = NULL, base_period = NULL,
     est_method = "dml", learners = learners, n_folds = 5, weightsname = NULL, boot = FALSE,
     boot_type = "multiplier", nboot = NULL,
     inffunc = FALSE, skip_data_checks = FALSE)

@@ -20,10 +20,6 @@ validate_args_2Periods <- function(args, dta){
   nboot <- args$nboot
   inffunc <- args$inffunc
 
-  # Flag for based period: not in c("universal", "varying"), stop
-  if (!base_period %in% c("universal", "varying")) {
-    stop("base_period must be either 'universal' or 'varying'.")
-  }
 
   # Flag for yname
   if (!is.element(yname, base::colnames(dta))) {
@@ -151,6 +147,11 @@ validate_args_multPeriods <- function(args, dta){
   boot <- args$boot
   boot_type <- args$boot_type
   nboot <- args$nboot
+
+  # Flag for based period: not in c("universal", "varying"), stop
+  if (!base_period %in% c("universal", "varying")) {
+    stop("base_period must be either 'universal' or 'varying'.")
+  }
 
   # Flag for control group types
   if(!(control_group %in% c("nevertreated","notyettreated"))){

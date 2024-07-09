@@ -76,7 +76,7 @@ NULL
 #' #----------------------------------------------------------
 #' ddd(yname = "outcome", tname = "year", idname = "id", dname = "treat",
 #'     gname = NULL, partition_name = "partition", xformla = ~x1 + x2,
-#'     data = sim_data, control_group = NULL,
+#'     data = sim_data, control_group = NULL, base_period = NULL,
 #'     est_method = "trad", learners = NULL, n_folds = NULL, weightsname = NULL, boot = FALSE,
 #'     boot_type = "multiplier", nboot = NULL,
 #'     inffunc = FALSE, skip_data_checks = FALSE)
@@ -96,7 +96,7 @@ NULL
 #'
 #' ddd(yname = "outcome", tname = "year", idname = "id", dname = "treat",
 #'     gname = NULL, partition_name = "partition", xformla = ~x1 + x2,
-#'     data = sim_data, control_group = NULL,
+#'     data = sim_data, control_group = NULL, base_period = NULL,
 #'     est_method = "dml", learners = learners, n_folds = 5, weightsname = NULL, boot = FALSE,
 #'     boot_type = "multiplier", nboot = NULL,
 #'     inffunc = FALSE, skip_data_checks = FALSE)

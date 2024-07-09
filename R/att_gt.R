@@ -1,3 +1,34 @@
+#' Doubly robust DDD estimator for ATT, with panel data and multiple periods
+#'
+#' This function implements a doubly robust estimator for assessing the average
+#' treatment effect on the treated (ATT) using a triple differences (DDD) approach
+#' in panel data settings with staggered treatment adoption. The function takes preprocessed
+#' data structured specifically for this analysis.
+#'
+#' @importFrom Matrix Matrix
+#' @param did_preprocessed A list containing preprocessed data and specifications for the DDD estimation.
+#'        Expected elements include:
+#'        - `preprocessed_data`: A data table containing the data with variables needed for the analysis.
+#'        - `xformula`: The formula for the covariates to be included in the model. It should be of the form \code{~ x1 + x2}.
+#'        Default is \code{xformla = ~1} (no covariates).
+#'        - `boot`: Logical. If \code{TRUE}, the function computes the bootstrap standard errors. Default is \code{FALSE}.
+#'        - `boot_type`: The type of bootstrap to be used. Default is \code{"multiplier"}.
+#'        - `nboot`: The number of bootstrap samples to be used. Default is \code{NULL}. If \code{boot = TRUE}, the default is \code{nboot = 999}.
+#'        - `subgroup_counts`: A matrix containing the number of observations in each subgroup.
+#'        - `control_group`: A character string indicating the control group. Default is \code{"nevertreated"}.
+#'        - `n`: The number of uique ID observations in the data.
+#'        - `cohorts`: A vector containing the number of cohorts
+#'        - `time_periods`: A vector containing the number of time periods
+#'        - `tlist`: A vector containing the time periods
+#'        - `glist`: A vector containing the groups
+#'        - `base_period`: A character string indicating the base period. Default is \code{"universal"}.
+#'
+#' @keywords internal
+#' @return A list with the estimated ATT, standard error, upper and lower confidence intervals, and influence function.
+#' @noRd
+NULL
+# ------------------------------------------------------------------------------
+
 att_gt_dr <- function(did_preprocessed){
   data <- did_preprocessed$preprocessed_data
   xformla <- did_preprocessed$xformula
@@ -8,6 +39,9 @@ att_gt_dr <- function(did_preprocessed){
   tlist <- did_preprocessed$tlist
   glist <- did_preprocessed$glist
   base_period <- did_preprocessed$base_period
+  boot <- did_preprocessed$boot
+  boot_type <- did_preprocessed$boot_type
+  nboot <- did_preprocessed$nboot
 
   attgt_list <- list()
 
