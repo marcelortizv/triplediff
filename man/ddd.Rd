@@ -116,10 +116,8 @@ sim_data = generate_test_panel(seed = seed,
 
 ddd(yname = "outcome", tname = "year", idname = "id", dname = "treat",
     gname = NULL, partition_name = "partition", xformla = ~x1 + x2,
-    data = sim_data, control_group = NULL, base_period = NULL,
-    est_method = "trad", learners = NULL, n_folds = NULL, weightsname = NULL, boot = FALSE,
-    boot_type = "multiplier", nboot = NULL,
-    inffunc = FALSE, skip_data_checks = FALSE)
+    data = sim_data, control_group = NULL,
+    est_method = "trad")
 
 #----------------------------------------------------------
 # DML Triple Diff with covariates and 2 time periods
@@ -136,10 +134,8 @@ learners <- list(ml_pa = learner_rf, ml_md = learner_regr)
 
 ddd(yname = "outcome", tname = "year", idname = "id", dname = "treat",
     gname = NULL, partition_name = "partition", xformla = ~x1 + x2,
-    data = sim_data, control_group = NULL, base_period = NULL,
-    est_method = "dml", learners = learners, n_folds = 5, weightsname = NULL, boot = FALSE,
-    boot_type = "multiplier", nboot = NULL,
-    inffunc = FALSE, skip_data_checks = FALSE)
+    data = sim_data, control_group = NULL,
+    est_method = "dml", learners = learners, n_folds = 3)
 
 #----------------------------------------------------------
 # Triple Diff with multiple time periods
@@ -147,10 +143,9 @@ ddd(yname = "outcome", tname = "year", idname = "id", dname = "treat",
 data <- gen_dgp_mult_periods(size = 1000, tperiods = 4, dgp_type = 1)
 
 ddd(yname = "Y", tname = "period", idname = "id", dname = NULL,
-    gname = "G", partition_name = "L", xformla = ~X,
-    data = data, control_group = "nevertreated", base_period = "varying",
-    est_method = "trad", learners = NULL, n_folds = NULL, weightsname = NULL, boot = FALSE,
-    boot_type = "multiplier", nboot = NULL, inffunc = FALSE)
+gname = "G", partition_name = "L", xformla = ~X,
+data = data, control_group = "nevertreated", base_period = "varying",
+est_method = "trad")
 
 #----------------------------------------------------------
 # DML Triple Diff with multiple time periods
