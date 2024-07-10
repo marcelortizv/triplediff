@@ -147,6 +147,7 @@ validate_args_multPeriods <- function(args, dta){
   boot <- args$boot
   boot_type <- args$boot_type
   nboot <- args$nboot
+  base_period <- args$base_period
 
   # Flag for based period: not in c("universal", "varying"), stop
   if (!base_period %in% c("universal", "varying")) {

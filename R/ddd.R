@@ -138,12 +138,12 @@ ddd <- function(yname, tname, idname, dname, gname, partition_name, xformla,
     stop("Only one of dname or gname should be provided")
   } else if (!is.null(dname)){
     multiple_periods <- FALSE
-  } else if(!is.null(gname)){
+  } else if (!is.null(gname)){
     multiple_periods <- TRUE
   }
 
   # Flag for est_method
-  if ((est_method!="dml") && (est_method!="trad")) {
+  if ((est_method != "dml") && (est_method != "trad")) {
     warning("est_method = ", est_method, " is not supported. Using 'trad'.")
     est_method <- "trad"
   }
@@ -176,7 +176,7 @@ ddd <- function(yname, tname, idname, dname, gname, partition_name, xformla,
     }
 
   } else {
-    if ((multiple_periods) && (est_method=="trad")) {
+    if ((multiple_periods) && (est_method =="trad")) {
       dp <- run_preprocess_multPeriods(yname = yname,
                                        tname = tname,
                                        idname = idname,
@@ -196,7 +196,7 @@ ddd <- function(yname, tname, idname, dname, gname, partition_name, xformla,
                                        nboot = nboot,
                                        inffunc = inffunc)
       # stop("Triple Diff with multiple time periods is not yet supported")
-    } else if ((multiple_periods) && (est_method=="dml")) {
+    } else if ((multiple_periods) && (est_method == "dml")) {
       # dp <- run_preprocess_multPeriods(yname = yname,
       #                                  tname = tname,
       #                                  idname = idname,
@@ -216,7 +216,7 @@ ddd <- function(yname, tname, idname, dname, gname, partition_name, xformla,
       #                                  nboot = nboot,
       #                                  inffunc = inffunc)
       stop("Triple Diff with multiple time periods and DML is not yet supported")
-    } else if ((!multiple_periods) && (est_method=="trad")) {
+    } else if ((!multiple_periods) && (est_method == "trad")) {
       dp <- run_preprocess_2Periods(yname = yname,
                                     tname = tname,
                                     idname = idname,
@@ -234,7 +234,7 @@ ddd <- function(yname, tname, idname, dname, gname, partition_name, xformla,
                                     boot_type = boot_type,
                                     nboot = nboot,
                                     inffunc = inffunc)
-    } else if ((!multiple_periods) && (est_method=="dml")) {
+    } else if ((!multiple_periods) && (est_method == "dml")) {
       dp <- run_preprocess_2Periods(yname = yname,
                                     tname = tname,
                                     idname = idname,
@@ -255,29 +255,33 @@ ddd <- function(yname, tname, idname, dname, gname, partition_name, xformla,
     }
   }
 
-
-
   #------------------------------------------
   # Run the estimation
   #------------------------------------------
 
-  # 2 time periods case: trad or dml
-  if (multiple_periods == FALSE){
+  # # 2 time periods case: trad or dml
+  # if (multiple_periods == FALSE){
+  #   if (est_method == "trad"){
+  #     att_dr <- att_dr(dp)
+  #   } else {
+  #     att_dml <- att_dml(dp)
+  #   }
+  # }#RUN DML ESTIMATION
+
+  # multiple time periods case: trad or dml
+  if (multiple_periods){
+    if (est_method == "trad"){
+      att_gt_dr <- att_gt_dr(dp)
+    } else {
+      stop("DML for multiple time periods is not yet supported")
+      # TODO: IMPLEMENT att_gt_dml PROCEDURE AND ADJUST PARAMETERS
+      # att_gt_dml <- att_gt_dml(dp)
+    }
+  } else {
     if (est_method == "trad"){
       att_dr <- att_dr(dp)
     } else {
       att_dml <- att_dml(dp)
-    }
-  }#RUN DML ESTIMATION
-
-  # multiple time periods case: trad or dml
-  if (multiple_periods == TRUE){
-    if (est_method == "trad"){
-      att_gt_dr <- att_gt_dr(dp)
-    } else {
-      #TODO: IMPLEMENT att_gt_dml PROCEDURE AND ADJUST PARAMETERS
-      # att_gt_dml <- att_gt_dml(dp)
-      stop("DML for multiple time periods is not yet supported")
     }
   }#RUN DML ESTIMATION
 

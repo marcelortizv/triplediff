@@ -151,11 +151,12 @@ att_gt_dr <- function(did_preprocessed){
       subgroup_counts <- cohort_data[, .N/2, by = subgroup][order(-subgroup)]
 
       # Reassign dp object and run att_dr
-      dp$preprocessed_data <- cohort_data
-      dp$subgroup_counts <- subgroup_counts
-      dp$boot <- FALSE # forcing false to avoid bootstrapping inside att_dr() function.
+      did_preprocessed$preprocessed_data <- cohort_data
+      did_preprocessed$subgroup_counts <- subgroup_counts
+      did_preprocessed$boot <- FALSE # forcing false to avoid bootstrapping inside att_dr() function.
+      did_preprocessed$inffunc <- TRUE # forcing true to recover influence function
 
-      att_gt <- att_dr(dp)
+      att_gt <- att_dr(did_preprocessed)
 
       # adjust influence function
       att_gt$inf_func <- (size/size_gt) * att_gt$inf_func
@@ -182,7 +183,7 @@ att_gt_dr <- function(did_preprocessed){
 
   # COMPUTE STD ERRORS; EITHER ANALYTICS OR BOOTSTRAP
   if (!boot){
-    n <- dp$n
+    n <- did_preprocessed$n
     V <- Matrix::t(inf_func_mat)%*%inf_func_mat/n
     se_gt_ddd <- sqrt(Matrix::diag(V)/n)
 
@@ -198,15 +199,15 @@ att_gt_dr <- function(did_preprocessed){
   # Return results
   # ------------------------------------------------------------------------------
 
+  # TODO; ADD INFO ABOUT BOOTSTRAP MULTIPLIER
   ret <- (list(ATT = att_gt_ddd,
                se = se_gt_ddd,
                uci = ci_upper,
                lci = ci_lower,
                groups = groups,
                periods = periods,
-               # TODO; ADD INFO ABOUT BOOTSTRAP MULTIPLIER
                cohort_size = cohort_size
-  ))
+              ))
 
   return(ret)
 }

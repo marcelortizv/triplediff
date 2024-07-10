@@ -46,7 +46,7 @@ print.ddd <- function(x, ...) {
 
   if (x$argu$multiple_periods == TRUE){
     if (x$argu$est_method[1] == 'trad') {
-      est_method1 <- "DRDDD estimator for the ATT(gt): \n"
+      est_method1 <- "DRDDD estimator for the ATT(g,t): \n"
       est_method2 <- "Outcome Regression estimated using: OLS"
       est_method3 <- "Propensity score estimated using: Maximum Likelihood"
     } else {
@@ -97,12 +97,13 @@ print.ddd <- function(x, ...) {
   } else {
     cat("\n", "No. of observations per cohort:")
     for (i in 1:nrow(x$cohort_size)) {
-       cat(paste0("Cohort ", x$cohort_size$first_treat[i], ": ", x$cohort_size$V1[i], "\n"), sep = "")
+       cat("\n", paste0("  Cohort ", x$cohort_size$first_treat[i], ": ", x$cohort_size$V1[i]), sep = "")
       }
   }
   # add control group for multiple periods
   if(x$argu$multiple_periods == TRUE){
-    cat("\n", paste("Control group: ", x$argu$control_group))
+    ifelse(x$argu$control_group == "nevertreated", control_type <- "Never Treated", control_type <- "Not yet Treated")
+    cat("\n", paste("Control group: ", control_type))
   }
   # TODO: ADD number of observations in each partition
   # TODO: ADD number of covariates and some examples
