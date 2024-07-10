@@ -614,15 +614,37 @@ set_params <- function(time_periods){
 
 }
 
+# ---------------------------------------------------------------------
+# Generate data for multiple treatment periods
+# ---------------------------------------------------------------------
+
+#' Function that generates panel data with staggered treatment assignment for multiple periods
+#' @description
+#' Function to generate data with staggered treatment adoption.
+#'
+#' @param size number of units
+#' @param tperiods number of periods
+#' @param dgp_type type of DGP to generate.
+#'           1 if both nuisance functions are correct,
+#'           2 if only the outcome model is correct,
+#'           3 if only the pscore is correct,
+#'           4 if both nuisance functions are incorrect
+#'
+#' @return A data.table with the following columns:
+#'
+#' - id: ID
+#' - state: State variable
+#' - year: Time variable
+#' - partition: Partition variable
+#' - x1: Covariate 1
+#' - x2: Covariate 2
+#' - treat: Treatment variable
+#' - outcome: Outcome variable
+
+#' @export
+
 gen_dgp_mult_periods <- function(size, tperiods, dgp_type){
-  # Function that generates panel data with staggered treatment assignment for multiple periods
-  # size: number of observations
-  # tperiods: number of periods
-  # dgp_type: type of DGP to generate.
-  #           1 if both nuisance functions are correct,
-  #           2 if only the outcome model is correct,
-  #           3 if only the pscore is correct,
-  #           4 if both nuisance functions are incorrect
+
   # Simulate W (covariate)
   W <- matrix(rnorm(size), ncol = 1)
 

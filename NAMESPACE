@@ -3,6 +3,7 @@
 S3method(print,ddd)
 S3method(summary,ddd)
 export(ddd)
+export(gen_dgp_mult_periods)
 export(generate_test_panel)
 export(twfe_ddd)
 import(BMisc)
