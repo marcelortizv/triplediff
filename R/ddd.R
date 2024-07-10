@@ -273,12 +273,12 @@ ddd <- function(yname, tname, idname, dname, gname, partition_name, xformla,
   # multiple time periods case: trad or dml
   if (multiple_periods == TRUE){
     if (est_method == "trad"){
-      #TODO: IMPLEMENT att_gt_dr PROCEDURE AND ADJUST PARAMETERS
-      # att_gt_dr <- att_gt_dr(dp)
-    }
-  } else {
+      att_gt_dr <- att_gt_dr(dp)
+    } else {
       #TODO: IMPLEMENT att_gt_dml PROCEDURE AND ADJUST PARAMETERS
       # att_gt_dml <- att_gt_dml(dp)
+      stop("DML for multiple time periods is not yet supported")
+    }
   }#RUN DML ESTIMATION
 
   #------------------------------------------
@@ -330,29 +330,32 @@ ddd <- function(yname, tname, idname, dname, gname, partition_name, xformla,
   }# RETURNING LIST FOR 2 PERIODS CASE
 
   # multiple time periods case: trad or dml
-  # if (multiple_periods == TRUE){
-  #   if (est_method == "trad"){
-  #     ret <- list(
-  #       ATT = att_gt_dr$ATT,
-  #       se = att_gt_dr$se,
-  #       lci = att_gt_dr$lci,
-  #       uci = att_gt_dr$uci,
-  #       att.inf.func = att_gt_dr$inf.func,
-  #       call.params = call.params,
-  #       argu = argu
-  #     )
-  #   } else {
-  #     ret <- list(
-  #       ATT = att_gt_dml$ATT,
-  #       se = att_gt_dml$se,
-  #       lci = att_gt_dml$lci,
-  #       uci = att_gt_dml$uci,
-  #       att.inf.func = att_gt_dml$inf.func,
-  #       call.params = call.params,
-  #       argu = argu
-  #     )
-  #   }
-  # }#RETURNING LIST FOR MULTIPLE PERIODS CASE
+  if (multiple_periods == TRUE){
+    if (est_method == "trad"){
+      ret <- list(
+        ATT = att_gt_dr$ATT, # this is a vector of attgt
+        se = att_gt_dr$se, # this is a vector of std. error for each attgt
+        lci = att_gt_dr$lci, #this a vector
+        uci = att_gt_dr$uci, # this is a vector
+        groups = att_gt_dr$groups,
+        periods = att_gt_dr$periods,
+        cohort_size = att_gt_dr$cohort_size,
+        call.params = call.params,
+        argu = argu
+      )
+    }
+    # } else {
+    #   ret <- list(
+    #     ATT = att_gt_dml$ATT,
+    #     se = att_gt_dml$se,
+    #     lci = att_gt_dml$lci,
+    #     uci = att_gt_dml$uci,
+    #     att.inf.func = att_gt_dml$inf.func,
+    #     call.params = call.params,
+    #     argu = argu
+    #   )
+    # }
+  }#RETURNING LIST FOR MULTIPLE PERIODS CASE
 
   # define a class
   class(ret) <- "ddd"

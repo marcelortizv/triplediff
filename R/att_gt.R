@@ -42,6 +42,13 @@ att_gt_dr <- function(did_preprocessed){
   boot <- did_preprocessed$boot
   boot_type <- did_preprocessed$boot_type
   nboot <- did_preprocessed$nboot
+  cohort_size <- did_preprocessed$cohort_size
+
+  # Currently no supporting bootstrap std errors
+  if (boot){
+    warning("Multiple periods triplediff do not support bootstrap standard errors currently. Changing to analytical standard errors.")
+    boot <- FALSE
+  }
 
   attgt_list <- list()
 
@@ -167,14 +174,39 @@ att_gt_dr <- function(did_preprocessed){
     } # end of tlist loop
   } # end of glist loop
 
-  # TODO; PREPROCESS attgt_list AND inf_func_mat
+  # PREPROCESS attgt_list AND inf_func_mat
+  attgt_res <- process_attgt(attgt_list)
+  groups <- attgt_res$group
+  periods <- attgt_res$periods
+  att_gt_ddd <- attgt_res$att
 
-  # TODO; COMPUTE STD ERRORS; EITHER ANALYTICA
+  # COMPUTE STD ERRORS; EITHER ANALYTICS OR BOOTSTRAP
+  if (!boot){
+    n <- dp$n
+    V <- Matrix::t(inf_func_mat)%*%inf_func_mat/n
+    se_gt_ddd <- sqrt(Matrix::diag(V)/n)
 
-  # TODO; COMPUTE CONFIDENCE BANDS
+    # Zero standard error replaced by NA
+    se_gt_ddd[se_gt_ddd <= sqrt(.Machine$double.eps)*10] <- NA
+  } # TODO; IMPLEMENT MULTIPLIER BOOTSTRAP WITH CLUSTER STANDARD ERRORS
 
-  # TODO; RETURN RESULTS
+  # compute confidence intervals
+  ci_upper <- att_gt_ddd + qnorm(1 - 0.05/2)*se_gt_ddd
+  ci_lower <- att_gt_ddd - qnorm(1 - 0.05/2)*se_gt_ddd
 
-  ret <- list()
+  # ------------------------------------------------------------------------------
+  # Return results
+  # ------------------------------------------------------------------------------
+
+  ret <- (list(ATT = att_gt_ddd,
+               se = se_gt_ddd,
+               uci = ci_upper,
+               lci = ci_lower,
+               groups = groups,
+               periods = periods,
+               # TODO; ADD INFO ABOUT BOOTSTRAP MULTIPLIER
+               cohort_size = cohort_size
+  ))
+
   return(ret)
 }

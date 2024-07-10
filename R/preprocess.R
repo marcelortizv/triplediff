@@ -501,7 +501,7 @@ run_preprocess_multPeriods <- function(yname,
 
   # Check for small comparison groups
   # Calculate the size of each group in the 'treat' column
-  gsize <- cleaned_data[, .N / length(tlist), by = "first_treat"]
+  gsize <- cleaned_data[, .N / length(tlist), by = first_treat][order(-first_treat)]
   # Calculate the required size
   reqsize <- length(BMisc::rhs.vars(xformla)) + 5
   # Identify groups to warn about
@@ -544,6 +544,7 @@ run_preprocess_multPeriods <- function(yname,
               n = n,
               cohorts = nG,
               time_periods = nT,
+              cohort_size = gsize,
               tlist = tlist,
               glist = glist)
 
