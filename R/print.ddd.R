@@ -30,7 +30,12 @@ print.ddd <- function(x, ...) {
         "t value",
         "Pr(>|t|)",
         "[95% Conf.",
-        "Interval]")
+        "Interval]")#,
+    #    "")
+    # sig <- (x$uci < 0) | (x$lci > 0)
+    # sig[is.na(sig)] <- FALSE
+    # sig_text <- ifelse(sig, "*", "")
+
     body <- cbind(
       round(x$ATT, digits = 4),
       round(x$se, digits = 4),
@@ -39,7 +44,8 @@ print.ddd <- function(x, ...) {
         x$ATT / x$se
       ))), digits = 4),
       round(x$lci, digits = 4),
-      round(x$uci, digits = 4)
+      round(x$uci, digits = 4)#,
+    #  sig_text
     )
     colnames(body) <- header
   }
@@ -63,14 +69,21 @@ print.ddd <- function(x, ...) {
         "ATT(g,t)",
         "Std. Error",
         "[95% Conf.",
-        "Interval]")
+        "Interval]",
+        "")
+
+    sig <- (x$uci < 0) | (x$lci > 0)
+    sig[is.na(sig)] <- FALSE
+    sig_text <- ifelse(sig, "*", "")
+
     body <- cbind.data.frame(
       x$groups,
       x$periods,
       round(x$ATT, digits = 4),
       round(x$se, digits = 4),
       round(x$lci, digits = 4),
-      round(x$uci, digits = 4)
+      round(x$uci, digits = 4),
+      sig_text
     )
     colnames(body) <- header
   }
@@ -82,12 +95,16 @@ print.ddd <- function(x, ...) {
   cat("\n", est_method1)
   utils::write.table(format(rbind(header, body), justify= "centre", digits=2, nsmall=2),
                      row.names=FALSE, col.names=FALSE, quote=FALSE, sep=" ")
+  if (x$argu$multiple_periods == TRUE){
+    cat("\n")
+    cat(" Note: * indicates that confidence interval does not contain zero.")
+  }
   cat("\n --------------------------- Data Info   --------------------------")
   # Panel data
   cat("\n", "Panel data")
-  cat("\n", paste("Outcome variable: ", x$argu$yname))
+  cat("\n", paste("Outcome variable:", x$argu$yname))
   # add partition variable name
-  cat("\n", paste("Partition variable: ", x$argu$partition_name))
+  cat("\n", paste("Partition variable:", x$argu$partition_name))
   if(x$argu$multiple_periods == FALSE){
     cat("\n", "No. of observations for each partition:")
     cat("\n", paste("(treat = 1, partition = 1): ", x$subgroup_counts$V1[1]))
@@ -95,10 +112,15 @@ print.ddd <- function(x, ...) {
     cat("\n", paste("(treat = 0, partition = 1): ", x$subgroup_counts$V1[3]))
     cat("\n", paste("(treat = 0, partition = 0): ", x$subgroup_counts$V1[4]))
   } else {
-    cat("\n", "No. of observations per cohort:")
+    cat("\n", "No. of observations per treatment group:")
     for (i in 1:nrow(x$cohort_size)) {
-       cat("\n", paste0("  Cohort ", x$cohort_size$first_treat[i], ": ", x$cohort_size$V1[i]), sep = "")
+
+      if (x$cohort_size$first_treat[i] == 0) {
+        cat("\n", paste0("  Group that remains untreated: ", x$cohort_size$V1[i]), sep = "")
+      } else {
+        cat("\n", paste0("  Group starting treatment at period ", x$cohort_size$first_treat[i], ": ", x$cohort_size$V1[i]), sep = "")
       }
+    }
   }
   # add control group for multiple periods
   if(x$argu$multiple_periods == TRUE){
@@ -134,4 +156,5 @@ print.ddd <- function(x, ...) {
   }
   cat("\n ==================================================================")
   cat("\n See Ortiz-Villavicencio and Sant'Anna (2024) for details.")
+
 }
