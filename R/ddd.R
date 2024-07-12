@@ -12,23 +12,21 @@ NULL
 #' @param tname The name of the column containing the time periods.
 #' @param idname The name of the column containing the unit id.
 #' @param dname The name of the column containing the treatment indicator dummy (1 if treated in the post-treatment period, 0 otherwise).
-#' It is mutually exclusive with \code{gname}.
+#' It is mutually exclusive with \code{gname}. If \code{dname} is provided, \code{gname} is ignored.
 #' @param gname The name of the column containing the first period when a particular observation is treated. It is a positive number
-#' for treated units and defines which group the unit belongs to. It takes value 0 for untreated units. If \code{gname} is specified,
-#' we assume that the treatment is staggered. It is mutually exclusive with \code{dname}.
+#' for treated units and defines which group the unit belongs to. It takes value 0 or Inf for untreated units. If \code{gname} is specified,
+#' we assume that the treatment is staggered. It is mutually exclusive with \code{dname}. If \code{gname} is provided, \code{dname} is ignored.
 #' @param partition_name The name of the column containing the partition variable (e.g., the subgroup identifier). This is an indicator variable that is 1 for
 #' the units targeted for treatment and 0 otherwise.
 #' @param xformla The formula for the covariates to be included in the model. It should be of the form \code{~ x1 + x2}.
 #' Default is \code{xformla = ~1} (no covariates).
 #' @param data A data frame or data table containing the data.
-#' @param control_group The control group to be used in the estimation. Default is \code{control_group = "nevertreated"} which sets as control group
-#' the units that never participate in the treatment and does not change across groups or time periods. The alternative is
-#' \code{control_group = "notyettreated"} which sets as control group the units that have not yet participated in the treatment. This includes never
-#' treated units and units that will be treated in the future.
-#' @param base_period #' Choose between a "varying" or "universal" base period. Both yield the same post-treatment ATT(g,t) estimates.
+#' @param control_group The control group to be used in the estimation. Default is \code{control_group = "notyettreated"} which sets as control group the units that have not yet participated in the treatment.
+#' The alternative is \code{control_group = "nevertreated"} which sets as control group the units that never participate in the treatment and does not change across groups or time periods.
+#' @param base_period Choose between a "varying" or "universal" base period. Both yield the same post-treatment ATT(g,t) estimates.
 #' Varying base period: Computes pseudo-ATT in pre-treatment periods by comparing outcome changes for a group to its comparison group from t-1 to t, repeatedly changing t.
 #' Universal base period: Fixes the base period to (g-1), reporting average changes from t to (g-1) for a group relative to its comparison group, similar to event study regressions.
-#' Varying base period reports ATT(g,t) right before treatment. Universal base period normalizes the estimate before treatment to 0, adding one extra estimate in an earlier period.
+#' Varying base period reports ATT(g,t) right before treatment. Universal base period normalizes the estimate before treatment to be 0, adding one extra estimate in an earlier period.
 #' @param est_method The estimation method to be used. Default is \code{"trad"} (traditional). It computes propensity score using logistic regression
 #' and outcome regression using OLS. The alternative is \code{"dml"} (double machine learning). It allows the user to compute propensity score using a
 #' machine learning algorithm and outcome regression using a different machine learning algorithm. We provide some wrappers for popular learners but
@@ -125,18 +123,24 @@ ddd <- function(yname, tname, idname, dname, gname, partition_name, xformla,
   # Check what's the setting: 2 time periods or multiple time periods
   if (is.null(dname) && is.null(gname)) {
     stop("Either dname or gname should be provided")
-  } else if (!is.null(dname) && !is.null(gname)) {
-    stop("Only one of dname or gname should be provided")
   } else if (!is.null(dname)){
     multiple_periods <- FALSE
+    gname <- NULL
   } else if (!is.null(gname)){
     multiple_periods <- TRUE
+    dname <- NULL
   }
 
   # Flag for est_method
   if ((est_method != "dml") && (est_method != "trad")) {
     warning("est_method = ", est_method, " is not supported. Using 'trad'.")
     est_method <- "trad"
+  }
+
+  # Flag for control group in multiple periods
+  if (multiple_periods && is.null(control_group)) {
+      warning("control_group should be provided for multiple time periods. Using 'notyettreated'")
+      control_group <- "notyettreated"
   }
 
   #------------------------------------------
@@ -262,7 +266,7 @@ ddd <- function(yname, tname, idname, dname, gname, partition_name, xformla,
   # multiple time periods case: trad or dml
   if (multiple_periods){
     if (est_method == "trad"){
-      att_gt_dr <- att_gt_dr(dp)
+      att_gt_dr <- att_gt(dp)
     } else {
       stop("DML for multiple time periods is not yet supported")
       # TODO: IMPLEMENT att_gt_dml PROCEDURE AND ADJUST PARAMETERS

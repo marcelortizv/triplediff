@@ -15,9 +15,9 @@
 #'        - `boot_type`: The type of bootstrap to be used. Default is \code{"multiplier"}.
 #'        - `nboot`: The number of bootstrap samples to be used. Default is \code{NULL}. If \code{boot = TRUE}, the default is \code{nboot = 999}.
 #'        - `subgroup_counts`: A matrix containing the number of observations in each subgroup.
-#'        - `control_group`: A character string indicating the control group. Default is \code{"nevertreated"}.
-#'        - `n`: The number of uique ID observations in the data.
-#'        - `cohorts`: A vector containing the number of cohorts
+#'        - `control_group`: A character string indicating the control group. Default is \code{"notyettreated"}.
+#'        - `n`: The number of unique ID observations in the data.
+#'        - `cohorts`: A vector containing the number of treated cohorts
 #'        - `time_periods`: A vector containing the number of time periods
 #'        - `tlist`: A vector containing the time periods
 #'        - `glist`: A vector containing the groups
@@ -29,9 +29,10 @@
 NULL
 # ------------------------------------------------------------------------------
 
-att_gt_dr <- function(did_preprocessed){
+att_gt <- function(did_preprocessed){
   data <- did_preprocessed$preprocessed_data
   xformla <- did_preprocessed$xformula
+  est_method <- did_preprocessed$est_method
   control_group <- did_preprocessed$control_group
   n <- did_preprocessed$n
   cohorts <- did_preprocessed$cohorts
@@ -105,7 +106,7 @@ att_gt_dr <- function(did_preprocessed){
       if (base_period == "universal") {
         if (tlist[pret] == tlist[t + tfac]) {
           attgt_list[[counter]] <- list(att = 0, group = glist[g], year = tlist[t + tfac], post = 0)
-          inf_func_mat[, counter] <- rep(0,n)
+          inf_func_mat[, counter] <- rep(0, n)
           counter <- counter + 1
           next
         }
@@ -124,7 +125,7 @@ att_gt_dr <- function(did_preprocessed){
       # filter data for treated and control groups in each (g,t) cell. Save index
 
       # get total number of units
-      size = uniqueN(cohort_data[, id])
+      n_size = uniqueN(cohort_data[, id])
 
       # index of unit in current cell (g,t) when treat = 1 and control = 1
       index_units_in_gt <- cohort_data[, treat == 1 | control == 1]
@@ -156,17 +157,17 @@ att_gt_dr <- function(did_preprocessed){
       did_preprocessed$boot <- FALSE # forcing false to avoid bootstrapping inside att_dr() function.
       did_preprocessed$inffunc <- TRUE # forcing true to recover influence function
 
-      att_gt <- att_dr(did_preprocessed)
+      attgt_inf_func <- att_dr(did_preprocessed)
 
       # adjust influence function
-      att_gt$inf_func <- (size/size_gt) * att_gt$inf_func
+      attgt_inf_func$inf_func <- (n_size/size_gt) * attgt_inf_func$inf_func
       # save results in a list
-      attgt_list[[counter]] <- list(att = att_gt$ATT, group = glist[g], year = tlist[t + tfac], post = post_treat)
+      attgt_list[[counter]] <- list(att = attgt_inf_func$ATT, group = glist[g], year = tlist[t + tfac], post = post_treat)
 
       # recover influence function
-      inff <- rep(0, size)
+      inff <- rep(0, n_size)
       # avoid repetition in index
-      inff[index_units_in_gt[seq(1, length(index_units_in_gt), by = 2)]] <- att_gt$inf_func
+      inff[index_units_in_gt[seq(1, length(index_units_in_gt), by = 2)]] <- attgt_inf_func$inf_func
       # save in influence function matrix
       inf_func_mat[, counter] <- inff
       # update counter
