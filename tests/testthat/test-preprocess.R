@@ -54,6 +54,11 @@ test_that("Testing error handling in run_preprocess_2periods() function", {
   partition_not_binary_df = copy(two_periods_no_errors_df)
   partition_not_binary_df$partition = rnorm(nrow(partition_not_binary_df))
 
+  # Providing weights columns and one of them is null
+  weights_null_df = copy(two_periods_no_errors_df)
+  weights_null_df$weights = rep(1, nrow(weights_null_df))
+  weights_null_df[weights_null_df$id == 1]$weights = NA
+
   # ------------------------------
   # Warnings
   # ------------------------------
@@ -193,6 +198,13 @@ test_that("Testing error handling in run_preprocess_2periods() function", {
                    gname = NULL, partition_name = "partition", xformla = ~x1 + x2,
                    data = partition_not_numeric_df, control_group = NULL, base_period = NULL, est_method = "trad", learners = NULL,
                    weightsname = NULL, boot = FALSE, boot_type = "multiplier", nboot = NULL,
+                   inffunc = FALSE, skip_data_checks = FALSE))
+
+  # Test 20: Weights columns contains Null values
+  expect_error(ddd(yname = "outcome", tname = "year", idname = "id", dname = "treat",
+                   gname = NULL, partition_name = "partition", xformla = ~x1 + x2,
+                   data = weights_null_df, control_group = NULL, base_period = NULL, est_method = "trad", learners = NULL,
+                   weightsname = "weights", boot = FALSE, boot_type = "multiplier", nboot = NULL,
                    inffunc = FALSE, skip_data_checks = FALSE))
 
 })
