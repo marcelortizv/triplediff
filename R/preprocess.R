@@ -382,6 +382,9 @@ run_preprocess_multPeriods <- function(yname,
   # get a list of dates from min to max
   tlist <- sort(unique(dta[[tname]]))
 
+  # Coerce control group identified with Inf as zero
+  dta[get(gname) == Inf, (gname) := 0]
+
   # Identify groups with treatment time bigger than the maximum treatment time
   # calculate the maximum treatment time
   max_treatment_time <- max(tlist, na.rm = TRUE)
