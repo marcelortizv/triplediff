@@ -11,6 +11,7 @@ validate_args_2Periods <- function(args, dta){
   partition_name <- args$partition_name
   xformla <- args$xformla
   est_method <- args$est_method
+  base_period <- args$base_period
   learners <- args$learners
   n_folds <- args$n_folds
   weightsname <- args$weightsname
@@ -128,8 +129,109 @@ validate_args_2Periods <- function(args, dta){
 
 }
 
-# TODO: ADD ARGUMENTS VALIDATION FOR MULTIPLE PERIODS SETTING
-# validate_args_multPeriods <- function(args, dta){
-#   # TODO: Identify what code is repetitive and generate validate_general_args() to use in both functions
-#   # add code
-# }
+
+validate_args_multPeriods <- function(args, dta){
+
+  # get args
+  yname <- args$yname
+  tname <- args$tname
+  idname <- args$idname
+  gname <- args$gname
+  control_group <- args$control_group
+  partition_name <- args$partition_name
+  xformla <- args$xformla
+  est_method <- args$est_method
+  learners <- args$learners
+  n_folds <- args$n_folds
+  weightsname <- args$weightsname
+  boot <- args$boot
+  boot_type <- args$boot_type
+  nboot <- args$nboot
+  base_period <- args$base_period
+
+  # Flag for based period: not in c("universal", "varying"), stop
+  if (!base_period %in% c("universal", "varying")) {
+    stop("base_period must be either 'universal' or 'varying'.")
+  }
+
+  # Flag for control group types
+  if(!(control_group %in% c("nevertreated","notyettreated"))){
+    stop("control_group must be either 'nevertreated' or 'notyettreated'")
+  }
+
+  # Flag for yname
+  if (!is.element(yname, base::colnames(dta))) {
+    stop("yname = ",yname,  " could not be found in the data provided.")
+  }
+
+  # Flag for tname
+  if (!is.element(tname, base::colnames(dta))) {
+    stop("tname = ",tname,  " could not be found in the data provided.")
+  }
+
+  # check if times periods are numeric
+  if (!all(sapply(dta[, ..tname], is.numeric))) {
+    stop("tname = ",tname,  " is not numeric. Please convert it")
+  }
+
+  # Flag for gname
+  if ( !is.element(gname, base::colnames(dta))) {
+    stop("gname = ",gname,  " could not be found in the data provided.")
+  }
+
+  # check if gname is numeric
+  if (!all(sapply(dta[, ..gname], is.numeric))) {
+    stop("gname = ",gname,  " is not numeric. Please convert it")
+  }
+
+  # Flag for partition_name
+  if ( !is.element(partition_name, base::colnames(dta))) {
+    stop("partition_name = ",partition_name,  " could not be found in the data provided.")
+  }
+
+  # check if partition_name is numeric
+  if (!all(sapply(dta[, ..partition_name], is.numeric))) {
+    stop("partition_name = ",partition_name,  " is not numeric. Please convert it")
+  }
+
+  # Check if partition values are binary
+  plist <- unique(dta[[partition_name]])[base::order(unique(dta[[partition_name]]))]
+  if (length(plist) != 2) {
+    stop("partition_name =", partition_name, " must have only two values (0 and 1). Please check partition_name")
+  }
+
+  # Check if idname is in the data
+  if ( !is.element(idname, base::colnames(dta))) {
+    stop("idname = ",idname,  " could not be found in the data provided.")
+  }
+
+  #  check if idname is numeric
+  if (!all(sapply(dta[, ..idname], is.numeric))) {
+    stop("data[, idname] must be numeric. Please convert it.")
+  }
+
+  # Check if any combination of idname and tname is duplicated
+  n_id_year = anyDuplicated(dta[, .(idname, tname)])
+  # If any combination is duplicated, stop execution and throw an error
+  if (n_id_year > 0) {
+    stop("The value of idname must be unique (by tname)")
+  }
+
+  # Flag for weightsname
+  if(!is.null(weightsname)){
+    if ( !is.element(weightsname, base::colnames(dta))) {
+      stop("weightsname = ", weightsname, " could not be found in the data provided.")
+    }
+  }
+
+  # Faster and useful checks to make sere we have a well-balanced panel.
+
+  # Check if partition is unique by idname
+  checkPartitionUniqueness(dta, idname, partition_name)
+
+  # Check if gname is unique by idname
+  checkTreatmentUniqueness(dta, idname, gname)
+
+  #TODO: ADD MORE CHECKS IF NEEDED FOR DML
+
+}

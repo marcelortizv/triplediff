@@ -14,6 +14,7 @@ ddd(
   xformla,
   data,
   control_group = NULL,
+  base_period = NULL,
   est_method = "trad",
   learners = NULL,
   n_folds = NULL,
@@ -33,11 +34,11 @@ ddd(
 \item{idname}{The name of the column containing the unit id.}
 
 \item{dname}{The name of the column containing the treatment indicator dummy (1 if treated in the post-treatment period, 0 otherwise).
-It is mutually exclusive with \code{gname}.}
+It is mutually exclusive with \code{gname}. If \code{dname} is provided, \code{gname} is ignored.}
 
 \item{gname}{The name of the column containing the first period when a particular observation is treated. It is a positive number
-for treated units and defines which group the unit belongs to. It takes value 0 for untreated units. If \code{gname} is specified,
-we assume that the treatment is staggered. It is mutually exclusive with \code{dname}.}
+for treated units and defines which group the unit belongs to. It takes value 0 or Inf for untreated units. If \code{gname} is specified,
+we assume that the treatment is staggered. It is mutually exclusive with \code{dname}. If \code{gname} is provided, \code{dname} is ignored.}
 
 \item{partition_name}{The name of the column containing the partition variable (e.g., the subgroup identifier). This is an indicator variable that is 1 for
 the units targeted for treatment and 0 otherwise.}
@@ -47,10 +48,13 @@ Default is \code{xformla = ~1} (no covariates).}
 
 \item{data}{A data frame or data table containing the data.}
 
-\item{control_group}{The control group to be used in the estimation. Default is \code{control_group = "nevertreated"} which sets as control group
-the units that never participate in the treatment and does not change across groups or time periods. The alternative is
-\code{control_group = "notyettreated"} which sets as control group the units that have not yet participated in the treatment. This includes never
-treated units and units that will be treated in the future.}
+\item{control_group}{The control group to be used in the estimation. Default is \code{control_group = "notyettreated"} which sets as control group the units that have not yet participated in the treatment.
+The alternative is \code{control_group = "nevertreated"} which sets as control group the units that never participate in the treatment and does not change across groups or time periods.}
+
+\item{base_period}{Choose between a "varying" or "universal" base period. Both yield the same post-treatment ATT(g,t) estimates.
+Varying base period: Computes pseudo-ATT in pre-treatment periods by comparing outcome changes for a group to its comparison group from t-1 to t, repeatedly changing t.
+Universal base period: Fixes the base period to (g-1), reporting average changes from t to (g-1) for a group relative to its comparison group, similar to event study regressions.
+Varying base period reports ATT(g,t) right before treatment. Universal base period normalizes the estimate before treatment to be 0, adding one extra estimate in an earlier period.}
 
 \item{est_method}{The estimation method to be used. Default is \code{"trad"} (traditional). It computes propensity score using logistic regression
 and outcome regression using OLS. The alternative is \code{"dml"} (double machine learning). It allows the user to compute propensity score using a
@@ -108,15 +112,10 @@ sim_data = generate_test_panel(seed = seed,
                               initial.year = initial.year,
                               treatment.year = treatment.year)
 
-#----------------------------------------------------------
-# Triple Diff with covariates and 2 time periods
-#----------------------------------------------------------
 ddd(yname = "outcome", tname = "year", idname = "id", dname = "treat",
     gname = NULL, partition_name = "partition", xformla = ~x1 + x2,
     data = sim_data, control_group = NULL,
-    est_method = "trad", learners = NULL, n_folds = NULL, weightsname = NULL, boot = FALSE,
-    boot_type = "multiplier", nboot = NULL,
-    inffunc = FALSE, skip_data_checks = FALSE)
+    est_method = "trad")
 
 #----------------------------------------------------------
 # DML Triple Diff with covariates and 2 time periods
@@ -134,22 +133,17 @@ learners <- list(ml_pa = learner_rf, ml_md = learner_regr)
 ddd(yname = "outcome", tname = "year", idname = "id", dname = "treat",
     gname = NULL, partition_name = "partition", xformla = ~x1 + x2,
     data = sim_data, control_group = NULL,
-    est_method = "dml", learners = learners, n_folds = 5, weightsname = NULL, boot = FALSE,
-    boot_type = "multiplier", nboot = NULL,
-    inffunc = FALSE, skip_data_checks = FALSE)
+    est_method = "dml", learners = learners, n_folds = 3)
 
 #----------------------------------------------------------
 # Triple Diff with multiple time periods
 #----------------------------------------------------------
+data <- gen_dgp_mult_periods(size = 1000, tperiods = 4, dgp_type = 1)
 
-\dontrun{
-ddd(yname = "outcome", tname = "year", idname = "id", dname = NULL,
-    gname = "group", partition_name = "partition", xformla = ~x1 + x2,
-    data = sim_data, control_group = "notyettreated",
-    est_method = "trad", learners = NULL, weightsname = NULL, boot = FALSE,
-    boot_type = "multiplier", nboot = NULL,
-    inffunc = FALSE, skip_data_checks = FALSE)
-}
+ddd(yname = "Y", tname = "period", idname = "id", dname = NULL,
+gname = "G", partition_name = "L", xformla = ~X,
+data = data, control_group = "nevertreated", base_period = "varying",
+est_method = "trad")
 
 #----------------------------------------------------------
 # DML Triple Diff with multiple time periods

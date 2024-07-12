@@ -1,5 +1,5 @@
 #' Function to compute nuisances parameters and did
-#' @import stats
+#' @importFrom stats update
 #' @import parglm
 #' @import speedglm
 #' @import data.table

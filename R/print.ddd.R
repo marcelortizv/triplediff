@@ -30,7 +30,12 @@ print.ddd <- function(x, ...) {
         "t value",
         "Pr(>|t|)",
         "[95% Conf.",
-        "Interval]")
+        "Interval]")#,
+    #    "")
+    # sig <- (x$uci < 0) | (x$lci > 0)
+    # sig[is.na(sig)] <- FALSE
+    # sig_text <- ifelse(sig, "*", "")
+
     body <- cbind(
       round(x$ATT, digits = 4),
       round(x$se, digits = 4),
@@ -39,47 +44,49 @@ print.ddd <- function(x, ...) {
         x$ATT / x$se
       ))), digits = 4),
       round(x$lci, digits = 4),
-      round(x$uci, digits = 4)
+      round(x$uci, digits = 4)#,
+    #  sig_text
     )
     colnames(body) <- header
   }
 
-  # TODO: Fix this when multiple_periods is done
-  # if (x$argu$multiple_periods == TRUE){
-  #   if (x$argu$est_method[1] == 'trad') {
-  #     est_method1 <- "DRDDD estimator for the ATT(gt): \n"
-  #     est_method2 <- "Outcome Regression estimated using: OLS"
-  #     est_method3 <- "Propensity score estimated using: Maximum Likelihood"
-  #   } else {
-  #     est_method1 <- "DMLDDD estimator for the ATT(gt): \n"
-  #     #TODO: Add the method used to estimate OR and PS (name should be contained in "learners")
-  #     est_method2 <- paste("Outcome Regression estimated using:", x$argu$learners[1]$name)
-  #     est_method3 <- paste("Propensity score estimated using:", x$argu$learners[1]$name)
-  #   }
-  #
-  #   # Front-end Summary Table
-  #   header <-
-  #     c("Group",
-  #       "Time",
-  #       "ATT(g,t)",
-  #       "Std. Error",
-  #       # "t value",
-  #       # "Pr(>|t|)",
-  #       "[95% Conf.",
-  #       "Interval]")
-  #   #TODO: Adjust the bod to take into account the group and time variables
-  #   body <- cbind(
-  #     round(x$ATT, digits = 4),
-  #     round(x$se, digits = 4),
-  #     round(x$ATT / x$se, digits = 4),
-  #     round(2 * (stats::pnorm(-abs(
-  #       x$ATT / x$se
-  #     ))), digits = 4),
-  #     round(x$lci, digits = 4),
-  #     round(x$uci, digits = 4)
-  #   )
-  #   colnames(body) <- header
-  # }
+  if (x$argu$multiple_periods == TRUE){
+    if (x$argu$est_method[1] == 'trad') {
+      est_method1 <- "DRDDD estimator for the ATT(g,t): \n"
+      est_method2 <- "Outcome Regression estimated using: OLS"
+      est_method3 <- "Propensity score estimated using: Maximum Likelihood"
+    } else {
+      est_method1 <- "DMLDDD estimator for the ATT(gt): \n"
+      #TODO: Add the method used to estimate OR and PS (name should be contained in "learners")
+      est_method2 <- paste("Outcome Regression estimated using:", x$argu$learners[1]$name)
+      est_method3 <- paste("Propensity score estimated using:", x$argu$learners[1]$name)
+    }
+
+    # Front-end Summary Table
+    header <-
+      c("Group",
+        "Time",
+        "ATT(g,t)",
+        "Std. Error",
+        "[95% Conf.",
+        "Interval]",
+        "")
+
+    sig <- (x$uci < 0) | (x$lci > 0)
+    sig[is.na(sig)] <- FALSE
+    sig_text <- ifelse(sig, "*", "")
+
+    body <- cbind.data.frame(
+      x$groups,
+      x$periods,
+      round(x$ATT, digits = 4),
+      round(x$se, digits = 4),
+      round(x$lci, digits = 4),
+      round(x$uci, digits = 4),
+      sig_text
+    )
+    colnames(body) <- header
+  }
 
   # Printing results in console
   cat(" Call:\n")
@@ -88,21 +95,37 @@ print.ddd <- function(x, ...) {
   cat("\n", est_method1)
   utils::write.table(format(rbind(header, body), justify= "centre", digits=2, nsmall=2),
                      row.names=FALSE, col.names=FALSE, quote=FALSE, sep=" ")
+  if (x$argu$multiple_periods == TRUE){
+    cat("\n")
+    cat(" Note: * indicates that confidence interval does not contain zero.")
+  }
   cat("\n --------------------------- Data Info   --------------------------")
   # Panel data
   cat("\n", "Panel data")
-  cat("\n", paste("Outcome variable: ", x$argu$yname))
+  cat("\n", paste("Outcome variable:", x$argu$yname))
   # add partition variable name
-  cat("\n", paste("Partition variable: ", x$argu$partition_name))
-  cat("\n", "No. of observations for each partition:")
-  cat("\n", paste("(treat = 1, partition = 1): ", x$subgroup_counts$V1[1]))
-  cat("\n", paste("(treat = 1, partition = 0): ", x$subgroup_counts$V1[2]))
-  cat("\n", paste("(treat = 0, partition = 1): ", x$subgroup_counts$V1[3]))
-  cat("\n", paste("(treat = 0, partition = 0): ", x$subgroup_counts$V1[4]))
+  cat("\n", paste("Partition variable:", x$argu$partition_name))
+  if(x$argu$multiple_periods == FALSE){
+    cat("\n", "No. of observations for each partition:")
+    cat("\n", paste("(treat = 1, partition = 1): ", x$subgroup_counts$V1[1]))
+    cat("\n", paste("(treat = 1, partition = 0): ", x$subgroup_counts$V1[2]))
+    cat("\n", paste("(treat = 0, partition = 1): ", x$subgroup_counts$V1[3]))
+    cat("\n", paste("(treat = 0, partition = 0): ", x$subgroup_counts$V1[4]))
+  } else {
+    cat("\n", "No. of observations per treatment group:")
+    for (i in 1:nrow(x$cohort_size)) {
 
+      if (x$cohort_size$first_treat[i] == 0) {
+        cat("\n", paste0("  Group that remains untreated: ", x$cohort_size$V1[i]), sep = "")
+      } else {
+        cat("\n", paste0("  Group starting treatment at period ", x$cohort_size$first_treat[i], ": ", x$cohort_size$V1[i]), sep = "")
+      }
+    }
+  }
   # add control group for multiple periods
   if(x$argu$multiple_periods == TRUE){
-    cat("\n", paste("Control group: ", x$argu$control.group))
+    ifelse(x$argu$control_group == "nevertreated", control_type <- "Never Treated", control_type <- "Not yet Treated")
+    cat("\n", paste("Control group: ", control_type))
   }
   # TODO: ADD number of observations in each partition
   # TODO: ADD number of covariates and some examples
@@ -133,4 +156,5 @@ print.ddd <- function(x, ...) {
   }
   cat("\n ==================================================================")
   cat("\n See Ortiz-Villavicencio and Sant'Anna (2024) for details.")
+
 }
