@@ -34,8 +34,15 @@ run_nopreprocess_2periods <- function(yname,
   args <- mget(arg_names, sys.frame(sys.nframe()))
 
   # set weights
-  base::ifelse(is.null(weightsname), weights <- rep(1,nrow(dta)), weights <- dta[,weightsname])
+  base::ifelse(is.null(weightsname), weights <- rep(1, nrow(dta)), weights <- dta[[weightsname]])
+  # Check for missing values in the weights vector
+  if (anyNA(weights)) {
+    stop("There are missing values in the weights column. Please check them.")
+  }
+  # enforcing normalization of weights
+  weights <- weights/mean(weights)
   dta$weights <- weights
+
 
   # Flag for xformla
   if (is.null(xformla)) {
@@ -166,7 +173,13 @@ run_preprocess_2Periods <- function(yname,
   validate_args_2Periods(args, dta)
 
   # set weights
-  base::ifelse(is.null(weightsname), weights <- rep(1,nrow(dta)), weights <- dta[,weightsname])
+  base::ifelse(is.null(weightsname), weights <- rep(1, nrow(dta)), weights <- dta[[weightsname]])
+  # Check for missing values in the weights vector
+  if (anyNA(weights)) {
+    stop("There are missing values in the weights column. Please check them.")
+  }
+  # enforcing normalization of weights
+  weights <- weights/mean(weights)
   dta$weights <- weights
 
   # Check if weights are unique by idname
@@ -351,7 +364,7 @@ run_preprocess_multPeriods <- function(yname,
     xformla <- ~1
   }
 
-  # drop irrelevant columns in data
+  # keep relevant columns in data
   cols_to_keep <- c(idname, tname, yname, gname, partition_name, weightsname)
 
   model_frame <- model.frame(xformla, data = dta, na.action = na.pass)
@@ -371,13 +384,10 @@ run_preprocess_multPeriods <- function(yname,
   }
 
   # set weights
-  base::ifelse(is.null(weightsname), weights <- rep(1, n_new), weights <- dta[,weightsname])
-
-  if ("weights" %in% colnames(data)){
-    stop("`ddd` tried to use column named \"weights\" internally, but there was already a column with this name.")
-  }
+  base::ifelse(is.null(weightsname), weights <- rep(1, n_new), weights <- dta[[weightsname]])
+  # enforcing normalization of weights. At this point we already drop any missing values in weights.
+  weights <- weights/mean(weights)
   dta$weights <- weights
-
 
   # get a list of dates from min to max
   tlist <- sort(unique(dta[[tname]]))

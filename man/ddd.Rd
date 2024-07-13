@@ -67,7 +67,8 @@ Default is \code{NULL}, then OLS and MLE Logit is used to estimate nuisances par
 
 \item{n_folds}{The number of folds to be used in the cross-fitting. Default is \code{NULL}. If \code{est_method = "dml"}, user have to specify \code{n_folds}.}
 
-\item{weightsname}{The name of the column containing the weights. Default is \code{NULL}.}
+\item{weightsname}{The name of the column containing the weights. Default is \code{NULL}. As part of data processing, weights are enforced to be normalized
+and have mean 1 across all observations.}
 
 \item{boot}{Logical. If \code{TRUE}, the function computes the bootstrap standard errors. Default is \code{FALSE}.}
 
