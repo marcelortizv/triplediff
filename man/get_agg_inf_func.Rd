@@ -4,7 +4,7 @@
 \alias{get_agg_inf_func}
 \title{Get an influence function for particular aggregate parameters}
 \usage{
-get_agg_inf_func(att, inf_func, whichones, weights.agg, wif = NULL)
+get_agg_inf_func(att, inf_func, whichones, weights_agg, wif = NULL)
 }
 \arguments{
 \item{att}{vector of group-time average treatment effects}
@@ -15,7 +15,7 @@ get_agg_inf_func(att, inf_func, whichones, weights.agg, wif = NULL)
 \item{whichones}{which elements of att will be used to compute the aggregated
 treatment effect parameter}
 
-\item{weights.agg}{the weights to apply to each element of att(whichones);
+\item{weights_agg}{the weights to apply to each element of att(whichones);
 should have the same dimension as att(whichones)}
 
 \item{wif}{extra influence function term coming from estimating the weights;

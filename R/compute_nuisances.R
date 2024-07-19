@@ -487,7 +487,7 @@ get_weight_influence <- function(keepers, pg, weights, G, group) {
 #'  (matrix)
 #' @param whichones which elements of att will be used to compute the aggregated
 #'  treatment effect parameter
-#' @param weights.agg the weights to apply to each element of att(whichones);
+#' @param weights_agg the weights to apply to each element of att(whichones);
 #'  should have the same dimension as att(whichones)
 #' @param wif extra influence function term coming from estimating the weights;
 #'  should be n x k matrix where k is dimension of whichones
@@ -495,12 +495,12 @@ get_weight_influence <- function(keepers, pg, weights, G, group) {
 #' @return nx1 influence function
 #'
 #' @keywords internal
-get_agg_inf_func <- function(att, inf_func, whichones, weights.agg, wif=NULL) {
+get_agg_inf_func <- function(att, inf_func, whichones, weights_agg, wif=NULL) {
   # enforce weights are in matrix form
-  weights.agg <- as.matrix(weights.agg)
+  weights_agg <- as.matrix(weights_agg)
 
   # multiplies influence function times weights and sums to get vector of weighted IF (of length n)
-  agg_inf_func <- inf_func[,whichones] %*% weights.agg
+  agg_inf_func <- inf_func[,whichones] %*% weights_agg
 
   # Incorporate influence function of the weights
   if (!is.null(wif)) {
@@ -522,13 +522,13 @@ get_agg_inf_func <- function(att, inf_func, whichones, weights.agg, wif=NULL) {
 #'
 #' @keywords internal
 compute_se_agg <- function(influence_function, DIDparams=NULL) {
-  # alp <- .05
+  alpha <- .05
   boot <- FALSE
   n <- length(influence_function)
 
   # if (!is.null(DIDparams)) {
   #   boot <- DIDparams$boot
-  #   alp <- DIDparams$alp
+  #   alpha <- DIDparams$alpha
   #   cband <- DIDparams$cband
   # }
 
@@ -547,9 +547,47 @@ compute_se_agg <- function(influence_function, DIDparams=NULL) {
 #' @description Does the heavy lifting on computing aggregated group-time
 #'  average treatment effects
 
-#' @param call The function call to aggte
+#' @param ddd_obj a ddd object (i.e., the results of the [ddd()] function)
+#' @param type Which type of aggregated treatment effect parameter to compute.
+#'   \code{"simple"} just computes a weighted average of all
+#'   group-time average treatment effects with weights proportional to group
+#'   size.
+#'   \code{"eventstudy"} computes average effects across
+#'   different lengths of exposure to the treatment (event times). Here the overall effect averages the effect of the
+#'   treatment across the positive lengths of exposure. This is the default option;
+#'   \code{"group"} computes average treatment effects across different groups/cohorts; here
+#'   the overall effect averages the effect across different groups using group size as weights;
+#'   \code{"calendar"} computes average treatment effects across different
+#'   time periods, with weights proportional to the group size; here the overall effect averages the effect across each
+#'   time period.
+#' @param balance_e If set (and if one computes event study), it balances
+#'  the sample with respect to event time.  For example, if `balance_e=2`,
+#'  `agg_ddd` will drop groups that are not exposed to treatment for
+#'  at least three periods, the initial period `e=0` as well as the
+#'  next two periods, `e=1` and `e=2`.  This ensures that
+#'  the composition of groups does not change when event time changes.
+#' @param min_e For event studies, this is the smallest event time to compute
+#'  dynamic effects for.  By default, `min_e = -Inf` so that effects at
+#'  all lengths of exposure are computed.
+#' @param max_e For event studies, this is the largest event time to compute
+#'  dynamic effects for.  By default, `max_e = Inf` so that effects at
+#'  all lengths of exposure are computed.
+#' @param na.rm Logical value if we are to remove missing Values from analyses. Defaults is FALSE.
+#' @param boot Boolean for whether or not to compute standard errors using
+#'  the multiplier bootstrap.  If standard errors are clustered, then one
+#'  must set `boot=TRUE`. Default is value set in the ddd object.  If `boot = FALSE`, then analytical
+#'  standard errors are reported.
+#' @param nboot The number of bootstrap iterations to use.  The default is the value set in the ddd object,
+#'  and this is only applicable if `boot=TRUE`.
+#' @param alpha The level of confidence for the confidence intervals.  The default is 0.05. Otherwise, it will
+#' use the value set in the ddd object.
+#' @param cband Boolean for whether or not to compute a uniform confidence
+#'  band that covers all of the group-time average treatment effects
+#'  with fixed probability `1 - alpha`.  In order to compute uniform confidence
+#'  bands, `boot` must also be set to `TRUE`.  The default is
+#'  the value set in the ddd object
 #'
-#' @return Aggregation object (list) of class [`aggddd`]
+#' @return Aggregation object (list) of class [`agg_ddd`]
 #'
 #' @keywords internal
 #'
@@ -562,7 +600,8 @@ compute_aggregation <- function(ddd_obj,
                                 na.rm = FALSE,
                                 boot = FALSE,
                                 nboot = NULL,
-                                cband = NULL){
+                                cband = NULL,
+                                alpha = 0.05){
   # check if the object is of class `ddd`
   if (!inherits(ddd_obj, "ddd")) {
     stop("Object must be of class `ddd`")
@@ -690,7 +729,7 @@ compute_aggregation <- function(ddd_obj,
     simple.if <- get_agg_inf_func(att=ATT,
                                   inf_func=inf_func_mat,
                                   whichones=keepers,
-                                  weights.agg=pg[keepers]/sum(pg[keepers]),
+                                  weights_agg=pg[keepers]/sum(pg[keepers]),
                                   wif=simple.wif)
     # Make it as vector
     simple.if <- as.numeric(simple.if)
@@ -734,7 +773,7 @@ compute_aggregation <- function(ddd_obj,
       inf.func.g <- as.numeric(get_agg_inf_func(att=ATT,
                                                 inf_func=inf_func_mat,
                                                 whichones=whichg,
-                                                weights.agg=pg[whichg]/sum(pg[whichg]),
+                                                weights_agg=pg[whichg]/sum(pg[whichg]),
                                                 wif=NULL))
       se.g <- compute_se_agg(inf.func.g, dp)
       list(inf.func=inf.func.g, se=se.g)
@@ -749,7 +788,7 @@ compute_aggregation <- function(ddd_obj,
 
     # use multiplier bootstrap (across groups) to get critical value
     # for constructing uniform confidence bands
-    selective.crit.val <- stats::qnorm(1 - 0.05/2)
+    selective.crit.val <- stats::qnorm(1 - alpha/2)
     # TODO; ALLOW FOR CONFIDENCE BAND AND MULTIPLIER BOOTSTRAP
     if ((!is.null(cband)) && (cband==TRUE)){
       # if(bstrap == FALSE){
@@ -759,13 +798,13 @@ compute_aggregation <- function(ddd_obj,
       #
       # if(is.na(selective.crit.val) | is.infinite(selective.crit.val)){
       #   warning('Simultaneous critival value is NA. This probably happened because we cannot compute t-statistic (std errors are NA). We then report pointwise conf. intervals.')
-      #   selective.crit.val <- stats::qnorm(1 - 0.05/2)
+      #   selective.crit.val <- stats::qnorm(1 - alpha/2)
       #   dp$cband <- FALSE
       # }
       #
-      # if(selective.crit.val < stats::qnorm(1 - 0.05/2)){
+      # if(selective.crit.val < stats::qnorm(1 - alpha/2)){
       #   warning('Simultaneous conf. band is somehow smaller than pointwise one using normal approximation. Since this is unusual, we are reporting pointwise confidence intervals')
-      #   selective.crit.val <- stats::qnorm(1 - 0.05/2)
+      #   selective.crit.val <- stats::qnorm(1 - alpha/2)
       #   dp$cband <- FALSE
       # }
       #
@@ -790,7 +829,7 @@ compute_aggregation <- function(ddd_obj,
     selective.inf.func <- get_agg_inf_func(att=selective.att.g,
                                            inf_func=selective.inf.func.g,
                                            whichones=(1:length(glist)),
-                                           weights.agg=pgg/sum(pgg),
+                                           weights_agg=pgg/sum(pgg),
                                            wif=selective.wif)
 
 
@@ -850,7 +889,7 @@ compute_aggregation <- function(ddd_obj,
       inf.func.t <- as.numeric(get_agg_inf_func(att=ATT,
                                                 inf_func=inf_func_mat,
                                                 whichones=whicht,
-                                                weights.agg=pgt,
+                                                weights_agg=pgt,
                                                 wif=wif.t))
       se.t <- compute_se_agg(inf.func.t, dp)
       list(inf.func=inf.func.t, se=se.t)
@@ -864,7 +903,7 @@ compute_aggregation <- function(ddd_obj,
 
     # use multiplier boostrap (across groups) to get critical value
     # for constructing uniform confidence bands
-    calendar.crit.val <-  stats::qnorm(1-0.05/2)
+    calendar.crit.val <-  stats::qnorm(1-alpha/2)
     # TODO; ALLOW FOR CONFIDENCE BAND AND MULTIPLIER BOOTSTRAP
     if ((!is.null(cband)) && (cband==TRUE)){
       # if(bstrap == FALSE){
@@ -874,13 +913,13 @@ compute_aggregation <- function(ddd_obj,
       #
       # if(is.na(calendar.crit.val) | is.infinite(calendar.crit.val)){
       #   warning('Simultaneous critival value is NA. This probably happened because we cannot compute t-statistic (std errors are NA). We then report pointwise conf. intervals.')
-      #   calendar.crit.val <- stats::qnorm(1 - alp/2)
+      #   calendar.crit.val <- stats::qnorm(1 - alpha/2)
       #   dp$cband <- FALSE
       # }
       #
-      # if(calendar.crit.val < stats::qnorm(1 - alp/2)){
+      # if(calendar.crit.val < stats::qnorm(1 - alpha/2)){
       #   warning('Simultaneous conf. band is somehow smaller than pointwise one using normal approximation. Since this is unusual, we are reporting pointwise confidence intervals')
-      #   calendar.crit.val <- stats::qnorm(1 - alp/2)
+      #   calendar.crit.val <- stats::qnorm(1 - alpha/2)
       #   dp$cband <- FALSE
       # }
       #
@@ -898,7 +937,7 @@ compute_aggregation <- function(ddd_obj,
     calendar.inf.func <- get_agg_inf_func(att=calendar.att.t,
                                           inf_func=calendar.inf.func.t,
                                           whichones=(1:length(calendar.tlist)),
-                                          weights.agg=rep(1/length(calendar.tlist), length(calendar.tlist)),
+                                          weights_agg=rep(1/length(calendar.tlist), length(calendar.tlist)),
                                           wif=NULL)
     calendar.inf.func <- as.numeric(calendar.inf.func)
     # get overall standard error
@@ -970,7 +1009,7 @@ compute_aggregation <- function(ddd_obj,
       inf.func.e <- as.numeric(get_agg_inf_func(att=ATT,
                                                 inf_func=inf_func_mat,
                                                 whichones=whiche,
-                                                weights.agg=pge,
+                                                weights_agg=pge,
                                                 wif=wif.e))
       se.e <- compute_se_agg(inf.func.e, dp)
       list(inf.func=inf.func.e, se=se.e)
@@ -981,7 +1020,7 @@ compute_aggregation <- function(ddd_obj,
 
     dynamic.inf.func.e <- simplify2array(BMisc::getListElement(dynamic.se.inner, "inf.func"))
 
-    dynamic.crit.val <- stats::qnorm(1 - 0.05/2)
+    dynamic.crit.val <- stats::qnorm(1 - alpha/2)
     # TODO; ALLOW FOR CONFIDENCE BAND AND MULTIPLIER BOOTSTRAP
     if ((!is.null(cband)) && (cband==TRUE)){
       # if(bstrap == FALSE){
@@ -991,13 +1030,13 @@ compute_aggregation <- function(ddd_obj,
       #
       # if(is.na(calendar.crit.val) | is.infinite(calendar.crit.val)){
       #   warning('Simultaneous critival value is NA. This probably happened because we cannot compute t-statistic (std errors are NA). We then report pointwise conf. intervals.')
-      #   calendar.crit.val <- stats::qnorm(1 - alp/2)
+      #   calendar.crit.val <- stats::qnorm(1 - alpha/2)
       #   dp$cband <- FALSE
       # }
       #
-      # if(calendar.crit.val < stats::qnorm(1 - alp/2)){
+      # if(calendar.crit.val < stats::qnorm(1 - alpha/2)){
       #   warning('Simultaneous conf. band is somehow smaller than pointwise one using normal approximation. Since this is unusual, we are reporting pointwise confidence intervals')
-      #   calendar.crit.val <- stats::qnorm(1 - alp/2)
+      #   calendar.crit.val <- stats::qnorm(1 - alpha/2)
       #   dp$cband <- FALSE
       # }
       #
@@ -1014,7 +1053,7 @@ compute_aggregation <- function(ddd_obj,
     dynamic.inf.func <- get_agg_inf_func(att=dynamic.att.e[epos],
                                          inf_func=as.matrix(dynamic.inf.func.e[,epos]),
                                          whichones=(1:sum(epos)),
-                                         weights.agg=(rep(1/sum(epos), sum(epos))),
+                                         weights_agg=(rep(1/sum(epos), sum(epos))),
                                          wif=NULL)
 
     dynamic.inf.func <- as.numeric(dynamic.inf.func)

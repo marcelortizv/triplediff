@@ -5,7 +5,7 @@
 #' @export
 #' @noRd
 # Define new summary function
-summary.aggddd <- function(object, ...){
-  aggddd.obj <- object
-  print(aggddd.obj)
+summary.agg_ddd <- function(object, ...){
+  agg_ddd.obj <- object
+  print(agg_ddd.obj)
 }

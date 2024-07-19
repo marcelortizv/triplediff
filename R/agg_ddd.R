@@ -1,7 +1,7 @@
 # Main function for aggregations steps in triplediff
 NULL
 #' Aggregate Group-Time Average Treatment Effects in Staggered Triple-Differences Designs
-#' Aggregation procedures 
+#' Aggregation procedures
 #' @description
 #' \code{agg_ddd} is a function that take group-time average treatment effects
 #'  and aggregate them into a smaller number of summary parameters in staggered triple differences designs.
@@ -12,7 +12,7 @@ NULL
 #' @param type Which type of aggregated treatment effect parameter to compute.
 #'   \code{"simple"} just computes a weighted average of all
 #'   group-time average treatment effects with weights proportional to group
-#'   size. 
+#'   size.
 #'   \code{"eventstudy"} computes average effects across
 #'   different lengths of exposure to the treatment (event times). Here the overall effect averages the effect of the
 #'   treatment across the positive lengths of exposure. This is the default option;
@@ -26,7 +26,7 @@ NULL
 #'  `agg_ddd` will drop groups that are not exposed to treatment for
 #'  at least three periods, the initial period `e=0` as well as the
 #'  next two periods, `e=1` and `e=2`.  This ensures that
-#'  the composition of groups does not change when event time changes. 
+#'  the composition of groups does not change when event time changes.
 #' @param min_e For event studies, this is the smallest event time to compute
 #'  dynamic effects for.  By default, `min_e = -Inf` so that effects at
 #'  all lengths of exposure are computed.
@@ -40,7 +40,8 @@ NULL
 #'  standard errors are reported.
 #' @param nboot The number of bootstrap iterations to use.  The default is the value set in the ddd object,
 #'  and this is only applicable if `boot=TRUE`.
-#'
+#' @param alpha The level of confidence for the confidence intervals.  The default is 0.05. Otherwise, it will
+#' use the value set in the ddd object.
 #' @param cband Boolean for whether or not to compute a uniform confidence
 #'  band that covers all of the group-time average treatment effects
 #'  with fixed probability `0.95`.  In order to compute uniform confidence
@@ -54,25 +55,25 @@ NULL
 #' #----------------------------------------------------------
 #' # Triple Diff with multiple time periods
 #' #----------------------------------------------------------
-#' \dontrun{
+#'
 #' data <- gen_dgp_mult_periods(size = 1000, tperiods = 4, dgp_type = 1)
 #'
 #' out <- ddd(yname = "Y", tname = "period", idname = "id", dname = NULL,
 #'             gname = "G", partition_name = "L", xformla = ~X,
 #'             data = data, control_group = "nevertreated", base_period = "varying",
 #'             est_method = "trad")
-#' ** Simple aggregation **
-#' agg_ddd(out, type = "simple")
+#' # Simple aggregation
+#' agg_ddd(out, type = "simple", alpha = 0.10)
 #'
-#' ** Event study aggregation **
-#' agg_ddd(out, type = "eventstudy")
+#' # Event study aggregation
+#' agg_ddd(out, type = "eventstudy", alpha = 0.10)
 #'
-#' ** Group aggregation **
-#' agg_ddd(out, type = "group")
+#' # Group aggregation
+#' agg_ddd(out, type = "group", alpha = 0.10)
 #'
-#' ** Calendar aggregation **
-#' agg_ddd(out, type = "calendar")
-#' }
+#' # Calendar aggregation
+#' agg_ddd(out, type = "calendar", alpha = 0.10)
+#'
 #'
 #' @export
 
@@ -85,7 +86,8 @@ agg_ddd <- function(ddd_obj,
                    na.rm = FALSE,
                    boot = FALSE,
                    nboot = NULL,
-                   cband = NULL) {
+                   cband = NULL,
+                   alpha = 0.05) {
 
  call <- match.call()
  # Record all arguments used in the function
@@ -93,7 +95,8 @@ agg_ddd <- function(ddd_obj,
  argu <- list(
    boot = args$boot,
    nboot = args$nboot,
-   cband = args$cband
+   cband = args$cband,
+   alpha = args$alpha
  )
 
  aggte_ddd <- compute_aggregation(ddd_obj = ddd_obj,
@@ -104,10 +107,11 @@ agg_ddd <- function(ddd_obj,
                             na.rm = na.rm,
                             boot = boot,
                             nboot = nboot,
-                            cband = cband
+                            cband = cband,
+                            alpha = alpha
                             )
 
- ret <- list(aggte = aggte_ddd,
+ ret <- list(aggte_ddd = aggte_ddd,
              call.params = call,
              argu = argu)
 

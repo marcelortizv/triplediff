@@ -99,9 +99,9 @@ NULL
 #' data <- gen_dgp_mult_periods(size = 1000, tperiods = 4, dgp_type = 1)
 #'
 #' ddd(yname = "Y", tname = "period", idname = "id", dname = NULL,
-#' gname = "G", partition_name = "L", xformla = ~X,
-#' data = data, control_group = "nevertreated", base_period = "varying",
-#' est_method = "trad")
+#'      gname = "G", partition_name = "L", xformla = ~X,
+#'      data = data, control_group = "nevertreated", base_period = "varying",
+#'      est_method = "trad")
 #'
 #' #----------------------------------------------------------
 #' # DML Triple Diff with multiple time periods

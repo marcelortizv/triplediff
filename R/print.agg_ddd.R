@@ -8,12 +8,12 @@
 #' @export
 #' @noRd
 
-print.aggddd <- function(x, ...) {
+print.agg_ddd <- function(x, ...) {
 
-  pointwise_cval <- qnorm(1-0.05/2)
-  overall_cband_upper <- x$aggte$overall.att + pointwise_cval*x$aggte$overall.se
-  overall_cband_lower <- x$aggte$overall.att - pointwise_cval*x$aggte$overall.se
-  out1 <- cbind.data.frame(x$aggte$overall.att, x$aggte$overall.se, overall_cband_lower, overall_cband_upper)
+  pointwise_cval <- qnorm(1-x$argu$alpha/2)
+  overall_cband_upper <- x$aggte_ddd$overall.att + pointwise_cval*x$aggte_ddd$overall.se
+  overall_cband_lower <- x$aggte_ddd$overall.att - pointwise_cval*x$aggte_ddd$overall.se
+  out1 <- cbind.data.frame(x$aggte_ddd$overall.att, x$aggte_ddd$overall.se, overall_cband_lower, overall_cband_upper)
   out1 <- round(out1, 4)
   overall_sig <- (overall_cband_upper < 0) | (overall_cband_lower > 0)
   overall_sig[is.na(overall_sig)] <- FALSE
@@ -31,12 +31,7 @@ print.aggddd <- function(x, ...) {
 
   # Front-end Summary Table
   cat("\n")
-  header <-
-    c(" ATT",
-      "Std. Error",
-      "[95% Conf.",
-      "Interval]",
-      "")
+  header <- c("ATT","   Std. Error", paste0("    [ ",100*(1-x$argu$alpha),"% "), "Conf. Int.]","")
   colnames(out1) <- header
 
   # utils::write.table(format(rbind(header, out1), justify= "centre", digits=2, nsmall=2),
@@ -44,29 +39,29 @@ print.aggddd <- function(x, ...) {
   print(out1, row.names=FALSE)
 
   # handle cases depending on type
-  if (x$aggte$type %in% c("group","eventstudy","calendar")) {
+  if (x$aggte_ddd$type %in% c("group","eventstudy","calendar")) {
 
     # header
-    if (x$aggte$type=="eventstudy") { c1name <- "Event time"; cat("\n", "Event Study:") }
-    if (x$aggte$type=="group") { c1name <- "Group"; cat("\n", "Group Effects:") }
-    if (x$aggte$type=="calendar") { c1name <- "Time"; cat("\n", "Calendar Effects:") }
+    if (x$aggte_ddd$type=="eventstudy") { c1name <- "Event time"; cat("\n", "Event Study:") }
+    if (x$aggte_ddd$type=="group") { c1name <- "Group"; cat("\n", "Group Effects:") }
+    if (x$aggte_ddd$type=="calendar") { c1name <- "Time"; cat("\n", "Calendar Effects:") }
 
     cat("\n")
-    cband_text1a <- paste0(100*(1-0.05),"% ")
+    cband_text1a <- paste0(100*(1-x$argu$alpha),"% ")
     # cband_text1b <- ifelse(x$argu$boot,
     #                        ifelse(x$argu$cband, "Simult. ", "Pointwise "),
     #                        "Pointwise ")
     cband_text1b <- "Pointwise "
     cband_text1 <- paste0("[", cband_text1a, cband_text1b)
 
-    cband_lower <- x$aggte$att.egt - x$aggte$crit.val.egt * x$aggte$se.egt
-    cband_upper <- x$aggte$att.egt + x$aggte$crit.val.egt * x$aggte$se.egt
+    cband_lower <- x$aggte_ddd$att.egt - x$aggte_ddd$crit.val.egt * x$aggte_ddd$se.egt
+    cband_upper <- x$aggte_ddd$att.egt + x$aggte_ddd$crit.val.egt * x$aggte_ddd$se.egt
 
     sig <- (cband_upper < 0) | (cband_lower > 0)
     sig[is.na(sig)] <- FALSE
     sig_text <- ifelse(sig, "*", "")
 
-    out2 <- cbind.data.frame(x$aggte$egt, x$aggte$att.egt, x$aggte$se.egt, cband_lower, cband_upper)
+    out2 <- cbind.data.frame(x$aggte_ddd$egt, x$aggte_ddd$att.egt, x$aggte_ddd$se.egt, cband_lower, cband_upper)
     out2 <- round(out2, 4)
     out2 <- cbind.data.frame(out2, sig_text)
 
@@ -81,11 +76,12 @@ print.aggddd <- function(x, ...) {
   cat(" Note: * indicates that confidence interval does not contain zero.")
 
   cat("\n --------------------------- Data Info   --------------------------")
-  cat("\n", paste("Outcome variable:", x$aggte$yname))
+  cat("\n", paste("Outcome variable:", x$aggte_ddd$yname))
   # add partition variable name
-  cat("\n", paste("Partition variable:", x$aggte$partition_name))
-  ifelse(x$aggte$control_group == "nevertreated", control_type <- "Never Treated", control_type <- "Not yet Treated")
+  cat("\n", paste("Partition variable:", x$aggte_ddd$partition_name))
+  ifelse(x$aggte_ddd$control_group == "nevertreated", control_type <- "Never Treated", control_type <- "Not yet Treated")
   cat("\n", paste("Control group: ", control_type))
+  cat("\n", paste("Level of significance: ", x$argu$alpha))
 
   # Analytical vs bootstrapped standard errors
   cat("\n --------------------------- Std. Errors  -------------------------")

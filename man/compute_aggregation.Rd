@@ -13,14 +13,62 @@ compute_aggregation(
   na.rm = FALSE,
   boot = FALSE,
   nboot = NULL,
-  cband = NULL
+  cband = NULL,
+  alpha = 0.05
 )
 }
 \arguments{
-\item{call}{The function call to aggte}
+\item{ddd_obj}{a ddd object (i.e., the results of the \code{\link[=ddd]{ddd()}} function)}
+
+\item{type}{Which type of aggregated treatment effect parameter to compute.
+\code{"simple"} just computes a weighted average of all
+group-time average treatment effects with weights proportional to group
+size.
+\code{"eventstudy"} computes average effects across
+different lengths of exposure to the treatment (event times). Here the overall effect averages the effect of the
+treatment across the positive lengths of exposure. This is the default option;
+\code{"group"} computes average treatment effects across different groups/cohorts; here
+the overall effect averages the effect across different groups using group size as weights;
+\code{"calendar"} computes average treatment effects across different
+time periods, with weights proportional to the group size; here the overall effect averages the effect across each
+time period.}
+
+\item{balance_e}{If set (and if one computes event study), it balances
+the sample with respect to event time.  For example, if \code{balance_e=2},
+\code{agg_ddd} will drop groups that are not exposed to treatment for
+at least three periods, the initial period \code{e=0} as well as the
+next two periods, \code{e=1} and \code{e=2}.  This ensures that
+the composition of groups does not change when event time changes.}
+
+\item{min_e}{For event studies, this is the smallest event time to compute
+dynamic effects for.  By default, \code{min_e = -Inf} so that effects at
+all lengths of exposure are computed.}
+
+\item{max_e}{For event studies, this is the largest event time to compute
+dynamic effects for.  By default, \code{max_e = Inf} so that effects at
+all lengths of exposure are computed.}
+
+\item{na.rm}{Logical value if we are to remove missing Values from analyses. Defaults is FALSE.}
+
+\item{boot}{Boolean for whether or not to compute standard errors using
+the multiplier bootstrap.  If standard errors are clustered, then one
+must set \code{boot=TRUE}. Default is value set in the ddd object.  If \code{boot = FALSE}, then analytical
+standard errors are reported.}
+
+\item{nboot}{The number of bootstrap iterations to use.  The default is the value set in the ddd object,
+and this is only applicable if \code{boot=TRUE}.}
+
+\item{cband}{Boolean for whether or not to compute a uniform confidence
+band that covers all of the group-time average treatment effects
+with fixed probability \code{1 - alpha}.  In order to compute uniform confidence
+bands, \code{boot} must also be set to \code{TRUE}.  The default is
+the value set in the ddd object}
+
+\item{alpha}{The level of confidence for the confidence intervals.  The default is 0.05. Otherwise, it will
+use the value set in the ddd object.}
 }
 \value{
-Aggregation object (list) of class \code{\link{aggddd}}
+Aggregation object (list) of class \code{\link{agg_ddd}}
 }
 \description{
 Does the heavy lifting on computing aggregated group-time
