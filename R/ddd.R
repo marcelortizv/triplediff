@@ -338,7 +338,12 @@ ddd <- function(yname, tname, idname, dname, gname, partition_name, xformla,
         uci = att_gt_dr$uci, # this is a vector
         groups = att_gt_dr$groups,
         periods = att_gt_dr$periods,
+        tlist = att_gt_dr$tlist,
+        glist = att_gt_dr$glist,
         cohort_size = att_gt_dr$cohort_size,
+        n = att_gt_dr$n,
+        inf_func_mat = att_gt_dr$inf_func_mat,
+        first_period_dta = att_gt_dr$first_period_dta,
         call.params = call.params,
         argu = argu
       )
