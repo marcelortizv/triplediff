@@ -45,6 +45,8 @@ att_gt <- function(did_preprocessed){
   nboot <- did_preprocessed$nboot
   cohort_size <- did_preprocessed$cohort_size
 
+  orig_data <- copy(data)
+
   # Currently no supporting bootstrap std errors
   if (boot){
     warning("Multiple periods triplediff do not support bootstrap standard errors currently. Changing to analytical standard errors.")
@@ -200,6 +202,8 @@ att_gt <- function(did_preprocessed){
   # Return results
   # ------------------------------------------------------------------------------
 
+  # we need this for aggregation
+  first_period_dta <- orig_data[period == tlist[1]]
   # TODO; ADD INFO ABOUT BOOTSTRAP MULTIPLIER
   ret <- (list(ATT = att_gt_ddd,
                se = se_gt_ddd,
@@ -207,7 +211,12 @@ att_gt <- function(did_preprocessed){
                lci = ci_lower,
                groups = groups,
                periods = periods,
-               cohort_size = cohort_size
+               tlist = tlist,
+               glist = glist,
+               cohort_size = cohort_size,
+               n = n,
+               inf_func_mat = inf_func_mat,
+               first_period_dta = first_period_dta
               ))
 
   return(ret)

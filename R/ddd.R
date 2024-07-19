@@ -99,9 +99,9 @@ NULL
 #' data <- gen_dgp_mult_periods(size = 1000, tperiods = 4, dgp_type = 1)
 #'
 #' ddd(yname = "Y", tname = "period", idname = "id", dname = NULL,
-#' gname = "G", partition_name = "L", xformla = ~X,
-#' data = data, control_group = "nevertreated", base_period = "varying",
-#' est_method = "trad")
+#'      gname = "G", partition_name = "L", xformla = ~X,
+#'      data = data, control_group = "nevertreated", base_period = "varying",
+#'      est_method = "trad")
 #'
 #' #----------------------------------------------------------
 #' # DML Triple Diff with multiple time periods
@@ -338,7 +338,12 @@ ddd <- function(yname, tname, idname, dname, gname, partition_name, xformla,
         uci = att_gt_dr$uci, # this is a vector
         groups = att_gt_dr$groups,
         periods = att_gt_dr$periods,
+        tlist = att_gt_dr$tlist,
+        glist = att_gt_dr$glist,
         cohort_size = att_gt_dr$cohort_size,
+        n = att_gt_dr$n,
+        inf_func_mat = att_gt_dr$inf_func_mat,
+        first_period_dta = att_gt_dr$first_period_dta,
         call.params = call.params,
         argu = argu
       )
