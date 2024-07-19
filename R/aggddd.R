@@ -1,36 +1,32 @@
 # Main function for aggregations steps in triplediff
 NULL
-#' Aggregate Group-Time Average Treatment Effects.
-#' Aggregation procedures are based on Callaway, Brantly and Pedro H.C. Sant'Anna.
-#' "Difference-in-Differences with Multiple Time Periods." Journal of Econometrics,
-#' Vol. 225, No. 2, pp. 200-230, 2021.
+#' Aggregate Group-Time Average Treatment Effects in Staggered Triple-Differences Designs
+#' Aggregation procedures 
 #' @description
-#' \code{aggddd} is a function that take group-time average treatment effects
-#'  and aggregate them into a smaller number of parameters.  This method is only valid
-#'  when there are multiple time periods and staggered treatment adoption. There are
-#'  several possible aggregations including "simple", "eventstudy", "group",
-#'  and "calendar."  Default is \code{"simple"}.
+#' \code{agg_ddd} is a function that take group-time average treatment effects
+#'  and aggregate them into a smaller number of summary parameters in staggered triple differences designs.
+#'  There are several possible aggregations including "simple", "eventstudy", "group",
+#'  and "calendar."  Default is \code{"eventstudy"}.
 #'
 #' @param ddd_obj a ddd object (i.e., the results of the [ddd()] function)
 #' @param type Which type of aggregated treatment effect parameter to compute.
 #'   \code{"simple"} just computes a weighted average of all
 #'   group-time average treatment effects with weights proportional to group
-#'   size.  This is the default option;
+#'   size. 
 #'   \code{"eventstudy"} computes average effects across
-#'   different lengths of exposure to the treatment and is similar to an
-#'   "event study". Here the overall effect averages the effect of the
-#'   treatment across all positive lengths of exposure;
-#'   \code{"group"} computes average treatment effects across different groups; here
-#'   the overall effect averages the effect across different groups; and
+#'   different lengths of exposure to the treatment (event times). Here the overall effect averages the effect of the
+#'   treatment across the positive lengths of exposure. This is the default option;
+#'   \code{"group"} computes average treatment effects across different groups/cohorts; here
+#'   the overall effect averages the effect across different groups using group size as weights;
 #'   \code{"calendar"} computes average treatment effects across different
-#'   time periods; here the overall effect averages the effect across each
+#'   time periods, with weights proportional to the group size; here the overall effect averages the effect across each
 #'   time period.
 #' @param balance_e If set (and if one computes event study), it balances
-#'  the sample with respect to event time.  For example, if `balance.e=2`,
-#'  `aggddd` will drop groups that are not exposed to treatment for
-#'  at least three periods. (the initial period when `e=0` as well as the
-#'  next two periods when `e=1` and the `e=2`).  This ensures that
-#'  the composition of groups does not change when event time changes.
+#'  the sample with respect to event time.  For example, if `balance_e=2`,
+#'  `agg_ddd` will drop groups that are not exposed to treatment for
+#'  at least three periods, the initial period `e=0` as well as the
+#'  next two periods, `e=1` and `e=2`.  This ensures that
+#'  the composition of groups does not change when event time changes. 
 #' @param min_e For event studies, this is the smallest event time to compute
 #'  dynamic effects for.  By default, `min_e = -Inf` so that effects at
 #'  all lengths of exposure are computed.
@@ -51,7 +47,7 @@ NULL
 #'  bands, `boot` must also be set to `TRUE`.  The default is
 #'  the value set in the ddd object
 #'
-#' @return A object (list) of class [`aggddd`] that holds the results from the
+#' @return A object (list) of class [`agg_ddd`] that holds the results from the
 #'  aggregation step.  The object contains the following elements:
 #'
 #' @examples
@@ -66,23 +62,23 @@ NULL
 #'             data = data, control_group = "nevertreated", base_period = "varying",
 #'             est_method = "trad")
 #' ** Simple aggregation **
-#' aggddd(out, type = "simple")
+#' agg_ddd(out, type = "simple")
 #'
 #' ** Event study aggregation **
-#' aggddd(out, type = "eventstudy")
+#' agg_ddd(out, type = "eventstudy")
 #'
 #' ** Group aggregation **
-#' aggddd(out, type = "group")
+#' agg_ddd(out, type = "group")
 #'
 #' ** Calendar aggregation **
-#' aggddd(out, type = "calendar")
+#' agg_ddd(out, type = "calendar")
 #' }
 #'
 #' @export
 
 
-aggddd <- function(ddd_obj,
-                   type = "simple",
+agg_ddd <- function(ddd_obj,
+                   type = "eventstudy",
                    balance_e = NULL,
                    min_e = -Inf,
                    max_e = Inf,
@@ -100,7 +96,7 @@ aggddd <- function(ddd_obj,
    cband = args$cband
  )
 
- aggte <- compute_aggregation(ddd_obj = ddd_obj,
+ aggte_ddd <- compute_aggregation(ddd_obj = ddd_obj,
                             type = type,
                             balance_e = balance_e,
                             min_e = min_e,
@@ -111,12 +107,12 @@ aggddd <- function(ddd_obj,
                             cband = cband
                             )
 
- ret <- list(aggte = aggte,
+ ret <- list(aggte = aggte_ddd,
              call.params = call,
              argu = argu)
 
  # define a class
- class(ret) <- "aggddd"
+ class(ret) <- "agg_ddd"
 
  return(ret)
 
