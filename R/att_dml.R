@@ -17,6 +17,7 @@
 #'        the first element being the learner for the propensity score and the second element being the learner for the outcome regression.
 #'        Default is \code{NULL}, then OLS and MLE Logit is used to estimate nuisances parameters. If \code{est_method = "dml"}, user have to specify \code{learners}.
 #'        - `n_folds`: The number of folds to be used in the cross-fitting. Default is \code{NULL}. If \code{est_method = "dml"}, user have to specify \code{n_folds}.
+#'        - `alpha`: The level of significance for the confidence intervals. Default is \code{0.05}.
 #'        - `subgroup_counts`: A matrix containing the number of observations in each subgroup.
 #'
 #' @keywords internal
@@ -27,10 +28,12 @@ NULL
 
 att_dml <- function(did_preprocessed) {
 
+  # get parameters needed
   data <- did_preprocessed$preprocessed_data
   xformula <- did_preprocessed$xformula
   learners <- did_preprocessed$learners
   n_folds <- did_preprocessed$n_folds
+  alpha <- did_preprocessed$alpha
   subgroup_counts <- did_preprocessed$subgroup_counts
 
   # --------------------------------------------------------------------
@@ -66,10 +69,10 @@ att_dml <- function(did_preprocessed) {
 
   se_dml <- compute_se_dml(scores_3, scores_2, scores_1)
 
-  # estimate upper bound at 95% confidence level
-  ci_upper <- att_dml + 1.96 * se_dml
+  # estimate upper bound at 1-alpha% confidence level
+  ci_upper <- att_dml + qnorm(1-alpha/2) * se_dml
   # estimate lower bound at 95% confidence level
-  ci_lower <- att_dml - 1.96 * se_dml
+  ci_lower <- att_dml - qnorm(1-alpha/2) * se_dml
 
   # ------------------------------------------------------------------------------
   # Return results

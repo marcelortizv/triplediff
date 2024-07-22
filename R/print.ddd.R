@@ -3,17 +3,24 @@
 #' @description Prints a ddd Object
 #'
 #' @param x A ddd object
+#' @param alpha The significance level for confidence intervals (optional)
 #' @param ... Other params (required as generic function, but not used)
 #' @importFrom utils write.table
 #' @export
 #' @noRd
 
+print.ddd <- function(x, alpha = NULL, ...) {
+  # Update confidence interval if alpha is provided and different from the one used in estimation
+  if (!is.null(alpha) && alpha != x$argu$alpha) {
+    x$argu$alpha <- alpha
+    z <- qnorm(1 - alpha / 2)
+    x$lci <- x$ATT - z * x$se
+    x$uci <- x$ATT + z * x$se
+  }
 
-
-print.ddd <- function(x, ...) {
   # Methods used
   if (x$argu$multiple_periods == FALSE){
-    if (x$argu$est_method[1] == 'trad') {
+    if (x$argu$est_method[1] == 'dr') {
       est_method1 <- "DRDDD estimator for the ATT: \n"
       est_method2 <- "Outcome Regression estimated using: OLS"
       est_method3 <- "Propensity score estimated using: Maximum Likelihood"
@@ -24,13 +31,8 @@ print.ddd <- function(x, ...) {
     }
 
     # Front-end Summary Table
-    header <-
-      c("ATT",
-        "Std. Error",
-        "t value",
-        "Pr(>|t|)",
-        "[95% Conf.",
-        "Interval]")#,
+    lev_conf <- paste0("[", round(100 * (1 - x$argu$alpha), digits = 2), "% Conf.")
+    header <- c("ATT", "Std. Error", "t value", "Pr(>|t|)", lev_conf, "Interval]")#,
     #    "")
     # sig <- (x$uci < 0) | (x$lci > 0)
     # sig[is.na(sig)] <- FALSE
@@ -51,26 +53,19 @@ print.ddd <- function(x, ...) {
   }
 
   if (x$argu$multiple_periods == TRUE){
-    if (x$argu$est_method[1] == 'trad') {
+    if (x$argu$est_method[1] == 'dr') {
       est_method1 <- "DRDDD estimator for the ATT(g,t): \n"
       est_method2 <- "Outcome Regression estimated using: OLS"
       est_method3 <- "Propensity score estimated using: Maximum Likelihood"
     } else {
       est_method1 <- "DMLDDD estimator for the ATT(gt): \n"
-      #TODO: Add the method used to estimate OR and PS (name should be contained in "learners")
       est_method2 <- paste("Outcome Regression estimated using:", x$argu$learners[1]$name)
       est_method3 <- paste("Propensity score estimated using:", x$argu$learners[1]$name)
     }
 
     # Front-end Summary Table
-    header <-
-      c("Group",
-        "Time",
-        "ATT(g,t)",
-        "Std. Error",
-        "[95% Conf.",
-        "Interval]",
-        "")
+    lev_conf <- paste0("[", round(100 * (1 - x$argu$alpha), digits = 2), "% Conf.")
+    header <- c("Group", "Time", "ATT(g,t)", "Std. Error", lev_conf, "Interval]", "")
 
     sig <- (x$uci < 0) | (x$lci > 0)
     sig[is.na(sig)] <- FALSE
@@ -102,15 +97,15 @@ print.ddd <- function(x, ...) {
   cat("\n --------------------------- Data Info   --------------------------")
   # Panel data
   cat("\n", "Panel data")
-  cat("\n", paste("Outcome variable:", x$argu$yname))
+  cat("\n", paste0("Outcome variable: ", x$argu$yname))
   # add partition variable name
-  cat("\n", paste("Partition variable:", x$argu$partition_name))
+  cat("\n", paste0("Partition variable: ", x$argu$partition_name))
   if(x$argu$multiple_periods == FALSE){
     cat("\n", "No. of observations for each partition:")
-    cat("\n", paste("(treat = 1, partition = 1): ", x$subgroup_counts$V1[1]))
-    cat("\n", paste("(treat = 1, partition = 0): ", x$subgroup_counts$V1[2]))
-    cat("\n", paste("(treat = 0, partition = 1): ", x$subgroup_counts$V1[3]))
-    cat("\n", paste("(treat = 0, partition = 0): ", x$subgroup_counts$V1[4]))
+    cat("\n", paste0("  (treat = 1, partition = 1): ", x$subgroup_counts$V1[1]))
+    cat("\n", paste0("  (treat = 1, partition = 0): ", x$subgroup_counts$V1[2]))
+    cat("\n", paste0("  (treat = 0, partition = 1): ", x$subgroup_counts$V1[3]))
+    cat("\n", paste0("  (treat = 0, partition = 0): ", x$subgroup_counts$V1[4]))
   } else {
     cat("\n", "No. of observations per treatment group:")
     for (i in 1:nrow(x$cohort_size)) {
@@ -125,9 +120,9 @@ print.ddd <- function(x, ...) {
   # add control group for multiple periods
   if(x$argu$multiple_periods == TRUE){
     ifelse(x$argu$control_group == "nevertreated", control_type <- "Never Treated", control_type <- "Not yet Treated")
-    cat("\n", paste("Control group: ", control_type))
+    cat("\n", paste0("Control group: ", control_type))
   }
-  # TODO: ADD number of observations in each partition
+  cat("\n \n", paste("Level of significance: ", x$argu$alpha))
   # TODO: ADD number of covariates and some examples
 
   cat("\n --------------------------- Algorithm   --------------------------")
@@ -146,10 +141,8 @@ print.ddd <- function(x, ...) {
     boot1 <-
       cat(
         "\n Boostrapped standard error based on",
-        x$nboot,
-        "bootstrap draws. \n Bootstrap Method:",
-        x$argu$boot.type[1],
-        "(Mammen,1993) \n"
+        x$argu$nboot, "reps.",
+        "\n Method: Multiplier Bootstrap."
       )
   } else {
     boot1 <- cat("\n Analytical standard errors.")

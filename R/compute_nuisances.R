@@ -375,6 +375,9 @@ compute_dml_nuisances <- function(data, condition_subgroup, xformula, ml_pa, ml_
   # Subset data for subgroup == 4 or the given condition_subgroup
   condition_data <- data[data$subgroup %in% c(condition_subgroup, 4)]
 
+  # drop period column
+  condition_data <- condition_data[, period := NULL]
+
   # get wide panel
   condition_data <- get_wide_data(condition_data)
 

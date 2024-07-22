@@ -15,13 +15,17 @@ ddd(
   data,
   control_group = NULL,
   base_period = NULL,
-  est_method = "trad",
+  est_method = "dr",
   learners = NULL,
   n_folds = NULL,
   weightsname = NULL,
   boot = FALSE,
-  boot_type = "multiplier",
   nboot = NULL,
+  cluster = NULL,
+  cband = FALSE,
+  alpha = 0.05,
+  use_parallel = FALSE,
+  cores = NULL,
   inffunc = FALSE,
   skip_data_checks = FALSE
 )
@@ -33,10 +37,10 @@ ddd(
 
 \item{idname}{The name of the column containing the unit id.}
 
-\item{dname}{The name of the column containing the treatment indicator dummy (1 if treated in the post-treatment period, 0 otherwise).
+\item{dname}{Valid for 2 time periods only. The name of the column containing the treatment indicator dummy (1 if treated in the post-treatment period, 0 otherwise).
 It is mutually exclusive with \code{gname}. If \code{dname} is provided, \code{gname} is ignored.}
 
-\item{gname}{The name of the column containing the first period when a particular observation is treated. It is a positive number
+\item{gname}{Valid for multiple periods only. The name of the column containing the first period when a particular observation is treated. It is a positive number
 for treated units and defines which group the unit belongs to. It takes value 0 or Inf for untreated units. If \code{gname} is specified,
 we assume that the treatment is staggered. It is mutually exclusive with \code{dname}. If \code{gname} is provided, \code{dname} is ignored.}
 
@@ -48,18 +52,18 @@ Default is \code{xformla = ~1} (no covariates).}
 
 \item{data}{A data frame or data table containing the data.}
 
-\item{control_group}{The control group to be used in the estimation. Default is \code{control_group = "notyettreated"} which sets as control group the units that have not yet participated in the treatment.
+\item{control_group}{Valid for multiple periods only. The control group to be used in the estimation. Default is \code{control_group = "notyettreated"} which sets as control group the units that have not yet participated in the treatment.
 The alternative is \code{control_group = "nevertreated"} which sets as control group the units that never participate in the treatment and does not change across groups or time periods.}
 
-\item{base_period}{Choose between a "varying" or "universal" base period. Both yield the same post-treatment ATT(g,t) estimates.
+\item{base_period}{Valid for multiple periods. Choose between a "varying" or "universal" base period. Both yield the same post-treatment ATT(g,t) estimates.
 Varying base period: Computes pseudo-ATT in pre-treatment periods by comparing outcome changes for a group to its comparison group from t-1 to t, repeatedly changing t.
 Universal base period: Fixes the base period to (g-1), reporting average changes from t to (g-1) for a group relative to its comparison group, similar to event study regressions.
 Varying base period reports ATT(g,t) right before treatment. Universal base period normalizes the estimate before treatment to be 0, adding one extra estimate in an earlier period.}
 
-\item{est_method}{The estimation method to be used. Default is \code{"trad"} (traditional). It computes propensity score using logistic regression
+\item{est_method}{The estimation method to be used. Default is \code{"dr"} (doubly robust). It computes propensity score using logistic regression
 and outcome regression using OLS. The alternative is \code{"dml"} (double machine learning). It allows the user to compute propensity score using a
 machine learning algorithm and outcome regression using a different machine learning algorithm. We provide some wrappers for popular learners but
-the user can also provide their own learner. See our vignette on How to construct a use-provided learner for more details (TODO).}
+the user can also provide their own learner. See our vignette on How to construct a use-provided learner for more details (# TODO).}
 
 \item{learners}{A list of learners to be used in the estimation. It should be a list of two elements,
 the first element being the learner for the propensity score and the second element being the learner for the outcome regression.
@@ -70,32 +74,40 @@ Default is \code{NULL}, then OLS and MLE Logit is used to estimate nuisances par
 \item{weightsname}{The name of the column containing the weights. Default is \code{NULL}. As part of data processing, weights are enforced to be normalized
 and have mean 1 across all observations.}
 
-\item{boot}{Logical. If \code{TRUE}, the function computes the bootstrap standard errors. Default is \code{FALSE}.}
-
-\item{boot_type}{The type of bootstrap to be used. Default is \code{"multiplier"}. This is valid when \code{boot = TRUE}.}
+\item{boot}{Logical. If \code{TRUE}, the function computes standard errors using the multiplier bootstrap. Default is \code{FALSE}.}
 
 \item{nboot}{The number of bootstrap samples to be used. Default is \code{NULL}. If \code{boot = TRUE}, the default is \code{nboot = 999}.}
+
+\item{cluster}{The name of the variable to be used for clustering. The maximum number of cluster variables is 1. Default is \code{NULL}.
+If \code{boot = TRUE}, the function computes the bootstrap standard errors clustering at the unit level setting as cluster variable the one in \code{idname}.}
+
+\item{cband}{Logical. If \code{TRUE}, the function computes a uniform confidence band that covers all of the average treatment effects
+with fixed probability \code{1-alpha}.  In order to compute uniform confidence bands, \code{boot} must also be set to \code{TRUE}.  The default is \code{FALSE}.}
+
+\item{alpha}{The level of significance for the confidence intervals.  Default is \code{0.05}.}
+
+\item{use_parallel}{Logical. If \code{TRUE}, the function runs in parallel processing. Valid only when \code{boot = TRUE}. Default is \code{FALSE}.}
+
+\item{cores}{The number of cores to be used in the parallel processing. Default is \code{NULL}. If \code{use_parallel = TRUE}, the default is \code{cores = 1}.}
 
 \item{inffunc}{Logical. If \code{TRUE}, the function returns the influence function. Default is \code{FALSE}.}
 
 \item{skip_data_checks}{Logical. If \code{TRUE}, the function skips the data checks and go straight to estimation. Default is \code{FALSE}.}
 }
 \value{
-A list with the following elements:
+A \code{ddd} object with the following basic elements:
 \item{ATT}{The average treatment effect on the treated.}
 \item{se}{The standard error of the ATT.}
 \item{uci}{The upper confidence interval of the ATT.}
 \item{lci}{The lower confidence interval of the ATT.}
-\item{inf.func}{The estimate of the influence function.}
+\item{inf_func}{The estimate of the influence function.}
+\item{...}{Other elements that are specific to the estimation method.}
 }
 \description{
 \code{ddd} is the main function for computing the Doubly Robust DDD estimators for the ATT, with panel data.
 It can be used with covariates and/or under multiple time periods. At its core, \code{triplediff} employs
 the doubly robust estimator for the ATT, which is a combination of the propensity score weighting and the outcome regression.
 Furthermore, this package supports the application of machine learning methods for the estimation of the nuisance functions.
-}
-\details{
-TBA
 }
 \examples{
 #----------------------------------------------------------
@@ -116,7 +128,7 @@ sim_data = generate_test_panel(seed = seed,
 ddd(yname = "outcome", tname = "year", idname = "id", dname = "treat",
     gname = NULL, partition_name = "partition", xformla = ~x1 + x2,
     data = sim_data, control_group = NULL,
-    est_method = "trad")
+    est_method = "dr")
 
 #----------------------------------------------------------
 # DML Triple Diff with covariates and 2 time periods
@@ -144,7 +156,7 @@ data <- gen_dgp_mult_periods(size = 1000, tperiods = 4, dgp_type = 1)
 ddd(yname = "Y", tname = "period", idname = "id", dname = NULL,
      gname = "G", partition_name = "L", xformla = ~X,
      data = data, control_group = "nevertreated", base_period = "varying",
-     est_method = "trad")
+     est_method = "dr")
 
 #----------------------------------------------------------
 # DML Triple Diff with multiple time periods

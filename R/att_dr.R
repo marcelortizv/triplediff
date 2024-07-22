@@ -11,8 +11,7 @@
 #'        - `preprocessed_data`: A data table containing the data with variables needed for the analysis.
 #'        - `xformula`: The formula for the covariates to be included in the model. It should be of the form \code{~ x1 + x2}.
 #'        Default is \code{xformla = ~1} (no covariates).
-#'        - `boot`: Logical. If \code{TRUE}, the function computes the bootstrap standard errors. Default is \code{FALSE}.
-#'        - `boot_type`: The type of bootstrap to be used. Default is \code{"multiplier"}.
+#'        - `boot`: Logical. If \code{TRUE}, the function use the multiplier bootstrap to compute standard errors. Default is \code{FALSE}.
 #'        - `nboot`: The number of bootstrap samples to be used. Default is \code{NULL}. If \code{boot = TRUE}, the default is \code{nboot = 999}.
 #'        - `subgroup_counts`: A matrix containing the number of observations in each subgroup.
 #'        - `inffunc`: Logical. If \code{TRUE}, the function returns the influence function. Default is \code{FALSE}.
@@ -28,8 +27,12 @@ att_dr <- function(did_preprocessed) {
   data <- did_preprocessed$preprocessed_data
   xformula <- did_preprocessed$xformula
   boot <- did_preprocessed$boot
-  boot_type <- did_preprocessed$boot_type
   nboot <- did_preprocessed$nboot
+  cluster <- did_preprocessed$cluster
+  alpha <- did_preprocessed$alpha
+  cband <- did_preprocessed$cband
+  use_parallel <- did_preprocessed$use_parallel
+  cores <- did_preprocessed$cores
   inffunc <- did_preprocessed$inffunc
   subgroup_counts <- did_preprocessed$subgroup_counts
 
@@ -70,30 +73,26 @@ att_dr <- function(did_preprocessed) {
   # ---------------------------------------------------------------------
 
   if (boot == TRUE){
-    if (is.null(nboot)){
-      nboot <- 999
+
+    # perform multiplier bootstrap
+    boot_result <- mboot(inf_func, did_preprocessed=did_preprocessed, use_parallel=use_parallel, cores=cores)
+    se_ddd <- boot_result$se
+    cv <- boot_result$crit_val
+    if(cv >= 7){
+      warning("Simultaneous critical value is arguably `too large' to be realible. This usually happens when number of observations per group is small and/or there is no much variation in outcomes.")
     }
-    if (boot_type == "multiplier"){
-      # perform multiplier bootstrap
-      inf_boot <- mboot_did(inf_func, nboot)
-      # get bootstrap std errors based on IQR
-      se_ddd <- stats::IQR(inf_boot) / (stats::qnorm(0.75) - stats::qnorm(0.25))
-      # get symmetric critical values
-      cv <- stats::quantile(abs(inf_boot/se_ddd), probs = 0.95)
-      # Estimate of upper boundary of 95% CI
-      ci_upper <- dr_ddd + cv * se_ddd
-      # Estimate of lower boundary of 95% CI
-      ci_lower <- dr_ddd - cv * se_ddd
-    } else {
-      stop("Bootstrapping type other than multiplier is currently not supported.")
-    }
+    # Computing uniform confidence band
+    # Estimate of upper boundary of 1-alpha% confidence band
+    ci_upper <- dr_ddd + cv * se_ddd
+    # Estimate of lower boundary of 1-alpha% confidence band
+    ci_lower <- dr_ddd - cv * se_ddd
 
   } else {
     se_ddd <- stats::sd(inf_func)/sqrt(n)
-    # estimate upper bound at 95% confidence level
-    ci_upper <- dr_ddd + 1.96 * se_ddd
+    # estimate upper bound at 1 - alpha% confidence level
+    ci_upper <- dr_ddd + qnorm(1-alpha/2) * se_ddd
     # estimate lower bound at 95% confidence level
-    ci_lower <- dr_ddd - 1.96 * se_ddd
+    ci_lower <- dr_ddd - qnorm(1-alpha/2) * se_ddd
   }
 
   # ------------------------------------------------------------------------------

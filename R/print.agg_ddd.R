@@ -1,8 +1,8 @@
 #' @title Print
 #'
-#' @description Prints a aggddd Object
+#' @description Prints a agg_ddd Object
 #'
-#' @param x A aggddd object
+#' @param x A agg_ddd object
 #' @param ... Other params (required as generic function, but not used)
 #' @importFrom utils write.table
 #' @export
@@ -11,8 +11,8 @@
 print.agg_ddd <- function(x, ...) {
 
   pointwise_cval <- qnorm(1-x$argu$alpha/2)
-  overall_cband_upper <- x$aggte_ddd$overall.att + pointwise_cval*x$aggte_ddd$overall.se
-  overall_cband_lower <- x$aggte_ddd$overall.att - pointwise_cval*x$aggte_ddd$overall.se
+  overall_cband_upper <- x$aggte_ddd$overall.att + pointwise_cval * x$aggte_ddd$overall.se
+  overall_cband_lower <- x$aggte_ddd$overall.att - pointwise_cval * x$aggte_ddd$overall.se
   out1 <- cbind.data.frame(x$aggte_ddd$overall.att, x$aggte_ddd$overall.se, overall_cband_lower, overall_cband_upper)
   out1 <- round(out1, 4)
   overall_sig <- (overall_cband_upper < 0) | (overall_cband_lower > 0)

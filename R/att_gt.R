@@ -43,6 +43,7 @@ att_gt <- function(did_preprocessed){
   boot <- did_preprocessed$boot
   boot_type <- did_preprocessed$boot_type
   nboot <- did_preprocessed$nboot
+  alpha <- did_preprocessed$alpha
   cohort_size <- did_preprocessed$cohort_size
 
   orig_data <- copy(data)
@@ -156,7 +157,7 @@ att_gt <- function(did_preprocessed){
       # Reassign dp object and run att_dr
       did_preprocessed$preprocessed_data <- cohort_data
       did_preprocessed$subgroup_counts <- subgroup_counts
-      did_preprocessed$boot <- FALSE # forcing false to avoid bootstrapping inside att_dr() function.
+      did_preprocessed$boot <- FALSE # forcing false to avoid bootstrap inside att_dr() function.
       did_preprocessed$inffunc <- TRUE # forcing true to recover influence function
 
       attgt_inf_func <- att_dr(did_preprocessed)
@@ -184,7 +185,7 @@ att_gt <- function(did_preprocessed){
   periods <- attgt_res$periods
   att_gt_ddd <- attgt_res$att
 
-  # COMPUTE STD ERRORS; EITHER ANALYTICS OR BOOTSTRAP
+  # COMPUTE STD ERRORS; EITHER ANALYTICAL OR MULTIPLIER BOOTSTRAP
   if (!boot){
     n <- did_preprocessed$n
     V <- Matrix::t(inf_func_mat)%*%inf_func_mat/n
@@ -195,8 +196,8 @@ att_gt <- function(did_preprocessed){
   } # TODO; IMPLEMENT MULTIPLIER BOOTSTRAP WITH CLUSTER STANDARD ERRORS
 
   # compute confidence intervals
-  ci_upper <- att_gt_ddd + qnorm(1 - 0.05/2)*se_gt_ddd
-  ci_lower <- att_gt_ddd - qnorm(1 - 0.05/2)*se_gt_ddd
+  ci_upper <- att_gt_ddd + qnorm(1 - alpha/2) * se_gt_ddd
+  ci_lower <- att_gt_ddd - qnorm(1 - alpha/2) * se_gt_ddd
 
   # ------------------------------------------------------------------------------
   # Return results

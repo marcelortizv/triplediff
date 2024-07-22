@@ -6,7 +6,7 @@ test_that("Testing generation of output in aggregation function", {
   out <- ddd(yname = "Y", tname = "period", idname = "id", dname = NULL,
               gname = "G", partition_name = "L", xformla = ~X,
               data = data, control_group = "nevertreated", base_period = "varying",
-              est_method = "trad")
+              est_method = "dr")
   # Simple aggregation
   simple.agg <- agg_ddd(out, type = "simple", alpha = 0.10)
 

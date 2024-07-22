@@ -11,9 +11,9 @@ NULL
 #' @param yname The name of the outcome variable.
 #' @param tname The name of the column containing the time periods.
 #' @param idname The name of the column containing the unit id.
-#' @param dname The name of the column containing the treatment indicator dummy (1 if treated in the post-treatment period, 0 otherwise).
+#' @param dname Valid for 2 time periods only. The name of the column containing the treatment indicator dummy (1 if treated in the post-treatment period, 0 otherwise).
 #' It is mutually exclusive with \code{gname}. If \code{dname} is provided, \code{gname} is ignored.
-#' @param gname The name of the column containing the first period when a particular observation is treated. It is a positive number
+#' @param gname Valid for multiple periods only. The name of the column containing the first period when a particular observation is treated. It is a positive number
 #' for treated units and defines which group the unit belongs to. It takes value 0 or Inf for untreated units. If \code{gname} is specified,
 #' we assume that the treatment is staggered. It is mutually exclusive with \code{dname}. If \code{gname} is provided, \code{dname} is ignored.
 #' @param partition_name The name of the column containing the partition variable (e.g., the subgroup identifier). This is an indicator variable that is 1 for
@@ -21,38 +21,42 @@ NULL
 #' @param xformla The formula for the covariates to be included in the model. It should be of the form \code{~ x1 + x2}.
 #' Default is \code{xformla = ~1} (no covariates).
 #' @param data A data frame or data table containing the data.
-#' @param control_group The control group to be used in the estimation. Default is \code{control_group = "notyettreated"} which sets as control group the units that have not yet participated in the treatment.
+#' @param control_group Valid for multiple periods only. The control group to be used in the estimation. Default is \code{control_group = "notyettreated"} which sets as control group the units that have not yet participated in the treatment.
 #' The alternative is \code{control_group = "nevertreated"} which sets as control group the units that never participate in the treatment and does not change across groups or time periods.
-#' @param base_period Choose between a "varying" or "universal" base period. Both yield the same post-treatment ATT(g,t) estimates.
+#' @param base_period Valid for multiple periods. Choose between a "varying" or "universal" base period. Both yield the same post-treatment ATT(g,t) estimates.
 #' Varying base period: Computes pseudo-ATT in pre-treatment periods by comparing outcome changes for a group to its comparison group from t-1 to t, repeatedly changing t.
 #' Universal base period: Fixes the base period to (g-1), reporting average changes from t to (g-1) for a group relative to its comparison group, similar to event study regressions.
 #' Varying base period reports ATT(g,t) right before treatment. Universal base period normalizes the estimate before treatment to be 0, adding one extra estimate in an earlier period.
-#' @param est_method The estimation method to be used. Default is \code{"trad"} (traditional). It computes propensity score using logistic regression
+#' @param est_method The estimation method to be used. Default is \code{"dr"} (doubly robust). It computes propensity score using logistic regression
 #' and outcome regression using OLS. The alternative is \code{"dml"} (double machine learning). It allows the user to compute propensity score using a
 #' machine learning algorithm and outcome regression using a different machine learning algorithm. We provide some wrappers for popular learners but
-#' the user can also provide their own learner. See our vignette on How to construct a use-provided learner for more details (TODO).
+#' the user can also provide their own learner. See our vignette on How to construct a use-provided learner for more details (# TODO).
 #' @param learners A list of learners to be used in the estimation. It should be a list of two elements,
 #' the first element being the learner for the propensity score and the second element being the learner for the outcome regression.
 #' Default is \code{NULL}, then OLS and MLE Logit is used to estimate nuisances parameters. If \code{est_method = "dml"}, user have to specify \code{learners}.
 #' @param n_folds The number of folds to be used in the cross-fitting. Default is \code{NULL}. If \code{est_method = "dml"}, user have to specify \code{n_folds}.
 #' @param weightsname The name of the column containing the weights. Default is \code{NULL}. As part of data processing, weights are enforced to be normalized
 #' and have mean 1 across all observations.
-#' @param boot Logical. If \code{TRUE}, the function computes the bootstrap standard errors. Default is \code{FALSE}.
-#' @param boot_type The type of bootstrap to be used. Default is \code{"multiplier"}. This is valid when \code{boot = TRUE}.
+#' @param boot Logical. If \code{TRUE}, the function computes standard errors using the multiplier bootstrap. Default is \code{FALSE}.
 #' @param nboot The number of bootstrap samples to be used. Default is \code{NULL}. If \code{boot = TRUE}, the default is \code{nboot = 999}.
+#' @param cluster The name of the variable to be used for clustering. The maximum number of cluster variables is 1. Default is \code{NULL}.
+#' If \code{boot = TRUE}, the function computes the bootstrap standard errors clustering at the unit level setting as cluster variable the one in \code{idname}.
+#' @param cband Logical. If \code{TRUE}, the function computes a uniform confidence band that covers all of the average treatment effects
+#' with fixed probability \code{1-alpha}.  In order to compute uniform confidence bands, \code{boot} must also be set to `TRUE`.  The default is `FALSE`.
+#' @param alpha The level of significance for the confidence intervals.  Default is \code{0.05}.
+#' @param use_parallel Logical. If \code{TRUE}, the function runs in parallel processing. Valid only when \code{boot = TRUE}. Default is \code{FALSE}.
+#' @param cores The number of cores to be used in the parallel processing. Default is \code{cores = 1}.
 #' @param inffunc Logical. If \code{TRUE}, the function returns the influence function. Default is \code{FALSE}.
 #' @param skip_data_checks Logical. If \code{TRUE}, the function skips the data checks and go straight to estimation. Default is \code{FALSE}.
 #'
-#' @return A list with the following elements:
+#' @return A `ddd` object with the following basic elements:
 #' \item{ATT}{The average treatment effect on the treated.}
 #' \item{se}{The standard error of the ATT.}
 #' \item{uci}{The upper confidence interval of the ATT.}
 #' \item{lci}{The lower confidence interval of the ATT.}
-#' \item{inf.func}{The estimate of the influence function.}
+#' \item{inf_func}{The estimate of the influence function.}
+#' \item{...}{Other elements that are specific to the estimation method.}
 #'
-#' @details
-#'
-#' TBA
 #'
 #' @examples
 #' #----------------------------------------------------------
@@ -73,7 +77,7 @@ NULL
 #' ddd(yname = "outcome", tname = "year", idname = "id", dname = "treat",
 #'     gname = NULL, partition_name = "partition", xformla = ~x1 + x2,
 #'     data = sim_data, control_group = NULL,
-#'     est_method = "trad")
+#'     est_method = "dr")
 #'
 #' #----------------------------------------------------------
 #' # DML Triple Diff with covariates and 2 time periods
@@ -101,7 +105,7 @@ NULL
 #' ddd(yname = "Y", tname = "period", idname = "id", dname = NULL,
 #'      gname = "G", partition_name = "L", xformla = ~X,
 #'      data = data, control_group = "nevertreated", base_period = "varying",
-#'      est_method = "trad")
+#'      est_method = "dr")
 #'
 #' #----------------------------------------------------------
 #' # DML Triple Diff with multiple time periods
@@ -109,11 +113,29 @@ NULL
 #'
 #' @export
 
-ddd <- function(yname, tname, idname, dname, gname, partition_name, xformla,
-                data, control_group = NULL, base_period = NULL,
-                est_method = "trad", learners = NULL, n_folds = NULL,
-                weightsname = NULL, boot = FALSE, boot_type = "multiplier",
-                nboot = NULL, inffunc = FALSE, skip_data_checks = FALSE) {
+ddd <- function(yname,
+                tname,
+                idname,
+                dname,
+                gname,
+                partition_name,
+                xformla,
+                data,
+                control_group = NULL,
+                base_period = NULL,
+                est_method = "dr",
+                learners = NULL,
+                n_folds = NULL,
+                weightsname = NULL,
+                boot = FALSE,
+                nboot = NULL,
+                cluster = NULL,
+                cband = FALSE,
+                alpha = 0.05,
+                use_parallel = FALSE,
+                cores = 1,
+                inffunc = FALSE,
+                skip_data_checks = FALSE) {
 
 
   #------------------------------------------
@@ -132,9 +154,9 @@ ddd <- function(yname, tname, idname, dname, gname, partition_name, xformla,
   }
 
   # Flag for est_method
-  if ((est_method != "dml") && (est_method != "trad")) {
-    warning("est_method = ", est_method, " is not supported. Using 'trad'.")
-    est_method <- "trad"
+  if ((est_method != "dml") && (est_method != "dr")) {
+    warning("est_method = ", est_method, " is not supported. Using 'dr'.")
+    est_method <- "dr"
   }
 
   # Flag for control group in multiple periods
@@ -158,20 +180,24 @@ ddd <- function(yname, tname, idname, dname, gname, partition_name, xformla,
                                       xformla = xformla,
                                       data = data,
                                       control_group = NULL,
-                                      est_method = "trad",
+                                      est_method = "dr",
                                       learners = NULL,
                                       n_folds = NULL,
                                       weightsname = weightsname,
                                       boot = boot,
-                                      boot_type = boot_type,
                                       nboot = nboot,
+                                      cluster = cluster,
+                                      cband = cband,
+                                      alpha = alpha,
+                                      use_parallel = use_parallel,
+                                      cores = cores,
                                       inffunc = inffunc)
     } else {
       stop("Triple Diff with multiple time periods is not yet supported")
     }
 
   } else {
-    if ((multiple_periods) && (est_method =="trad")) {
+    if ((multiple_periods) && (est_method =="dr")) {
       dp <- run_preprocess_multPeriods(yname = yname,
                                        tname = tname,
                                        idname = idname,
@@ -182,15 +208,19 @@ ddd <- function(yname, tname, idname, dname, gname, partition_name, xformla,
                                        data = data,
                                        control_group = control_group,
                                        base_period = base_period,
-                                       est_method = "trad",
+                                       est_method = "dr",
                                        learners = NULL,
                                        n_folds = NULL,
                                        weightsname = weightsname,
                                        boot = boot,
-                                       boot_type = boot_type,
                                        nboot = nboot,
+                                       cluster = cluster,
+                                       cband = cband,
+                                       alpha = alpha,
+                                       use_parallel = use_parallel,
+                                       cores = cores,
                                        inffunc = inffunc)
-      # stop("Triple Diff with multiple time periods is not yet supported")
+
     } else if ((multiple_periods) && (est_method == "dml")) {
       # dp <- run_preprocess_multPeriods(yname = yname,
       #                                  tname = tname,
@@ -207,11 +237,10 @@ ddd <- function(yname, tname, idname, dname, gname, partition_name, xformla,
       #                                  n_folds = n_folds,
       #                                  weightsname = weightsname,
       #                                  boot = boot,
-      #                                  boot_type = boot_type,
       #                                  nboot = nboot,
       #                                  inffunc = inffunc)
       stop("Triple Diff with multiple time periods and DML is not yet supported")
-    } else if ((!multiple_periods) && (est_method == "trad")) {
+    } else if ((!multiple_periods) && (est_method == "dr")) {
       dp <- run_preprocess_2Periods(yname = yname,
                                     tname = tname,
                                     idname = idname,
@@ -221,13 +250,17 @@ ddd <- function(yname, tname, idname, dname, gname, partition_name, xformla,
                                     xformla = xformla,
                                     data = data,
                                     control_group = NULL,
-                                    est_method = "trad",
+                                    est_method = "dr",
                                     learners = NULL,
                                     n_folds = NULL,
                                     weightsname = weightsname,
                                     boot = boot,
-                                    boot_type = boot_type,
                                     nboot = nboot,
+                                    cluster = cluster,
+                                    cband = cband,
+                                    alpha = alpha,
+                                    use_parallel = use_parallel,
+                                    cores = cores,
                                     inffunc = inffunc)
     } else if ((!multiple_periods) && (est_method == "dml")) {
       dp <- run_preprocess_2Periods(yname = yname,
@@ -244,8 +277,12 @@ ddd <- function(yname, tname, idname, dname, gname, partition_name, xformla,
                                     n_folds = n_folds,
                                     weightsname = weightsname,
                                     boot = boot,
-                                    boot_type = boot_type,
                                     nboot = nboot,
+                                    cluster = cluster,
+                                    cband = cband,
+                                    alpha = alpha,
+                                    use_parallel = use_parallel,
+                                    cores = cores,
                                     inffunc = inffunc)
     }
   }
@@ -254,31 +291,22 @@ ddd <- function(yname, tname, idname, dname, gname, partition_name, xformla,
   # Run the estimation
   #------------------------------------------
 
-  # # 2 time periods case: trad or dml
-  # if (multiple_periods == FALSE){
-  #   if (est_method == "trad"){
-  #     att_dr <- att_dr(dp)
-  #   } else {
-  #     att_dml <- att_dml(dp)
-  #   }
-  # }#RUN DML ESTIMATION
-
-  # multiple time periods case: trad or dml
+  # multiple time periods case: dr or dml
   if (multiple_periods){
-    if (est_method == "trad"){
+    if (est_method == "dr"){
       att_gt_dr <- att_gt(dp)
     } else {
       stop("DML for multiple time periods is not yet supported")
       # TODO: IMPLEMENT att_gt_dml PROCEDURE AND ADJUST PARAMETERS
       # att_gt_dml <- att_gt_dml(dp)
-    }
+    }#RUN DML for multiple time periods
   } else {
-    if (est_method == "trad"){
+    if (est_method == "dr"){
       att_dr <- att_dr(dp)
     } else {
       att_dml <- att_dml(dp)
-    }
-  }#RUN DML ESTIMATION
+    }#RUN DML for 2 time periods
+  }#RUN DR for 2 time periods
 
   #------------------------------------------
   # Return the results
@@ -299,17 +327,19 @@ ddd <- function(yname, tname, idname, dname, gname, partition_name, xformla,
     learners = args$learners,
     n_folds = args$n_folds,
     boot = args$boot,
-    boot_type = args$boot_type
+    alpha = dp$alpha, # getting from dp because it could change in the pre process
+    nboot = dp$nboot, # getting from dp because it could change in the pre process
+    cores = dp$cores # getting from dp because it could change in the pre process
   )
 
-  if (multiple_periods == FALSE){
-    if (est_method == "trad"){
+  if (!multiple_periods){
+    if (est_method == "dr"){
         ret <- list(
           ATT = att_dr$ATT,
           se = att_dr$se,
           lci = att_dr$lci,
           uci = att_dr$uci,
-          nboot = att_dr$nboot,
+          nboot = att_dr$nboot, # this is not included under argu because it could change in the estimation process
           att_inf_func = att_dr$inf_func,
           subgroup_counts = att_dr$subgroup_counts,
           call.params = call.params,
@@ -328,14 +358,14 @@ ddd <- function(yname, tname, idname, dname, gname, partition_name, xformla,
    }
   }# RETURNING LIST FOR 2 PERIODS CASE
 
-  # multiple time periods case: trad or dml
-  if (multiple_periods == TRUE){
-    if (est_method == "trad"){
+  # multiple time periods case: dr or dml
+  if (multiple_periods){
+    if (est_method == "dr"){
       ret <- list(
         ATT = att_gt_dr$ATT, # this is a vector of attgt
         se = att_gt_dr$se, # this is a vector of std. error for each attgt
-        lci = att_gt_dr$lci, #this a vector
-        uci = att_gt_dr$uci, # this is a vector
+        lci = att_gt_dr$lci, # this a vector of lower bound of CI for each attgt
+        uci = att_gt_dr$uci, # this is a vector of upper bound of CI for each attgt
         groups = att_gt_dr$groups,
         periods = att_gt_dr$periods,
         tlist = att_gt_dr$tlist,
