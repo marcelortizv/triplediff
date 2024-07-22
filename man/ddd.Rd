@@ -25,7 +25,7 @@ ddd(
   cband = FALSE,
   alpha = 0.05,
   use_parallel = FALSE,
-  cores = NULL,
+  cores = 1,
   inffunc = FALSE,
   skip_data_checks = FALSE
 )
@@ -88,7 +88,7 @@ with fixed probability \code{1-alpha}.  In order to compute uniform confidence b
 
 \item{use_parallel}{Logical. If \code{TRUE}, the function runs in parallel processing. Valid only when \code{boot = TRUE}. Default is \code{FALSE}.}
 
-\item{cores}{The number of cores to be used in the parallel processing. Default is \code{NULL}. If \code{use_parallel = TRUE}, the default is \code{cores = 1}.}
+\item{cores}{The number of cores to be used in the parallel processing. Default is \code{cores = 1}.}
 
 \item{inffunc}{Logical. If \code{TRUE}, the function returns the influence function. Default is \code{FALSE}.}
 

@@ -40,6 +40,12 @@ run_nopreprocess_2periods <- function(yname,
     alpha <- 0.05
   }
 
+  # For dml, we only allow analytical standard errors.
+  if (est_method == "dml" & boot == TRUE){
+    warning("Bootstrapping is not allowed for DML. Setting boot = FALSE.")
+    boot <- FALSE
+  }
+
   # setting default bootstrap reps
   if (boot == TRUE){
     if (is.null(nboot)){
@@ -211,6 +217,12 @@ run_preprocess_2Periods <- function(yname,
   if (alpha > 0.10) {
     warning("alpha = ", alpha, " is too high. Using alpha = 0.05 as default.")
     alpha <- 0.05
+  }
+
+  # For dml, we only allow analytical standard errors.
+  if (est_method == "dml" & boot == TRUE){
+    warning("Bootstrapping is not allowed for DML. Setting boot = FALSE.")
+    boot <- FALSE
   }
 
   # setting default bootstrap reps
@@ -454,6 +466,12 @@ run_preprocess_multPeriods <- function(yname,
   if (alpha > 0.10) {
     warning("alpha = ", alpha, " is too high. Using alpha = 0.05 as default.")
     alpha <- 0.05
+  }
+
+  # For dml, we only allow analytical standard errors.
+  if (est_method == "dml" & boot == TRUE){
+    warning("Bootstrapping is not allowed for DML. Setting boot = FALSE.")
+    boot <- FALSE
   }
 
   # setting default bootstrap reps
