@@ -11,10 +11,6 @@
 #'        - `preprocessed_data`: A data table containing the data with variables needed for the analysis.
 #'        - `xformula`: The formula for the covariates to be included in the model. It should be of the form \code{~ x1 + x2}.
 #'        Default is \code{xformla = ~1} (no covariates).
-#'        - `boot`: Logical. If \code{TRUE}, the function computes the bootstrap standard errors. Default is \code{FALSE}.
-#'        - `boot_type`: The type of bootstrap to be used. Default is \code{"multiplier"}.
-#'        - `nboot`: The number of bootstrap samples to be used. Default is \code{NULL}. If \code{boot = TRUE}, the default is \code{nboot = 999}.
-#'        - `subgroup_counts`: A matrix containing the number of observations in each subgroup.
 #'        - `control_group`: A character string indicating the control group. Default is \code{"notyettreated"}.
 #'        - `n`: The number of unique ID observations in the data.
 #'        - `cohorts`: A vector containing the number of treated cohorts
@@ -22,6 +18,13 @@
 #'        - `tlist`: A vector containing the time periods
 #'        - `glist`: A vector containing the groups
 #'        - `base_period`: A character string indicating the base period. Default is \code{"universal"}.
+#'        - `cohort_size`: A vector containing the size of each cohort
+#'        - `boot`: Logical. If \code{TRUE}, the function computes the bootstrap standard errors. Default is \code{FALSE}.
+#'        - `nboot`: The number of bootstrap samples to be used. Default is \code{NULL}. If \code{boot = TRUE}, the default is \code{nboot = 999}.
+#'        - `use_parallel`: Boolean of whether or not to use parallel processing in the multiplier bootstrap, default is \code{use_parallel=FALSE}
+#'        - `cores`: the number of cores to use with parallel processing, default is \code{cores=1}
+#'        - `cband`: Boolean of whether or not to compute simultaneous confidence bands, default is \code{cband=FALSE}
+#'        - `alpha` The level of significance for the confidence intervals.  Default is \code{0.05}.
 #'
 #' @keywords internal
 #' @return A list with the estimated ATT, standard error, upper and lower confidence intervals, and influence function.
@@ -32,7 +35,6 @@ NULL
 att_gt <- function(did_preprocessed){
   data <- did_preprocessed$preprocessed_data
   xformla <- did_preprocessed$xformula
-  est_method <- did_preprocessed$est_method
   control_group <- did_preprocessed$control_group
   n <- did_preprocessed$n
   cohorts <- did_preprocessed$cohorts
@@ -41,18 +43,13 @@ att_gt <- function(did_preprocessed){
   glist <- did_preprocessed$glist
   base_period <- did_preprocessed$base_period
   boot <- did_preprocessed$boot
-  boot_type <- did_preprocessed$boot_type
-  nboot <- did_preprocessed$nboot
   alpha <- did_preprocessed$alpha
   cohort_size <- did_preprocessed$cohort_size
+  use_parallel <- did_preprocessed$use_parallel # to perform bootstrap
+  cores <- did_preprocessed$cores # to perform bootstrap
+  cband <- did_preprocessed$cband # to perform bootstrap + simult. conf. band
 
   orig_data <- copy(data)
-
-  # Currently no supporting bootstrap std errors
-  if (boot){
-    warning("Multiple periods triplediff do not support bootstrap standard errors currently. Changing to analytical standard errors.")
-    boot <- FALSE
-  }
 
   attgt_list <- list()
 
@@ -160,6 +157,7 @@ att_gt <- function(did_preprocessed){
       did_preprocessed$boot <- FALSE # forcing false to avoid bootstrap inside att_dr() function.
       did_preprocessed$inffunc <- TRUE # forcing true to recover influence function
 
+      # run att_dr based on 2 time periods subdata
       attgt_inf_func <- att_dr(did_preprocessed)
 
       # adjust influence function
@@ -179,25 +177,66 @@ att_gt <- function(did_preprocessed){
     } # end of tlist loop
   } # end of glist loop
 
+  # recover original arguments in did_preprocessed
+  did_preprocessed$preprocessed_data <- orig_data
+  did_preprocessed$boot <- boot # forcing false to avoid bootstrap inside att_dr() function.
+
   # PREPROCESS attgt_list AND inf_func_mat
   attgt_res <- process_attgt(attgt_list)
   groups <- attgt_res$group
   periods <- attgt_res$periods
   att_gt_ddd <- attgt_res$att
+  # NEW PROCEDURE
 
-  # COMPUTE STD ERRORS; EITHER ANALYTICAL OR MULTIPLIER BOOTSTRAP
-  if (!boot){
-    n <- did_preprocessed$n
-    V <- Matrix::t(inf_func_mat)%*%inf_func_mat/n
-    se_gt_ddd <- sqrt(Matrix::diag(V)/n)
+  # Get analytical errors: This is analogous to cluster robust standard errors at the unit level
+  n <- did_preprocessed$n
+  V <- Matrix::t(inf_func_mat)%*%inf_func_mat/n
+  se_gt_ddd <- sqrt(Matrix::diag(V)/n)
 
-    # Zero standard error replaced by NA
-    se_gt_ddd[se_gt_ddd <= sqrt(.Machine$double.eps)*10] <- NA
-  } # TODO; IMPLEMENT MULTIPLIER BOOTSTRAP WITH CLUSTER STANDARD ERRORS
+  # Zero standard error replaced by NA
+  se_gt_ddd[se_gt_ddd <= sqrt(.Machine$double.eps)*10] <- NA
 
-  # compute confidence intervals
-  ci_upper <- att_gt_ddd + qnorm(1 - alpha/2) * se_gt_ddd
-  ci_lower <- att_gt_ddd - qnorm(1 - alpha/2) * se_gt_ddd
+  # Identify entries of main diagonal V that are zero or NA
+  zero_na_sd_entry <- unique(which(is.na(se_gt_ddd)))
+
+  # compute bootstrap standard errors
+  bT <- NULL
+  if (boot){
+    # perform multiplier bootstrap
+    boot_result <- mboot(inf_func_mat, did_preprocessed=did_preprocessed, use_parallel=use_parallel, cores=cores)
+    bT <- boot_result$bT # sup-t confidence band
+    # save bootstrap standard errors
+    if(length(zero_na_sd_entry)>0) {
+      se_gt_ddd[-zero_na_sd_entry] <- boot_result$se[-zero_na_sd_entry]
+    } else {
+      se_gt_ddd <- boot_result$se
+    }
+  }
+
+  # Zero standard error replaced by NA
+  se_gt_ddd[se_gt_ddd <= sqrt(.Machine$double.eps)*10] <- NA
+
+  #-----------------------------------------------------------------------------
+  # compute confidence intervals / bands
+  #-----------------------------------------------------------------------------
+
+  # compute critical values for point-wise interval
+  cv <- qnorm(1 - alpha/2)
+
+  # in case uniform confidence bands are requested
+  if (boot){
+    if (cband){
+      # get critical value to compute uniform confidence bands
+      cv <- boot_result$unif_crit_val
+      if(cv >= 7){
+        warning("Simultaneous critical value is arguably `too large' to be realible. This usually happens when number of observations per group is small and/or there is no much variation in outcomes.")
+      }
+    }
+  }
+
+  # compute confidence intervals/bands
+  ci_upper <- att_gt_ddd + cv * se_gt_ddd
+  ci_lower <- att_gt_ddd - cv * se_gt_ddd
 
   # ------------------------------------------------------------------------------
   # Return results
@@ -205,7 +244,6 @@ att_gt <- function(did_preprocessed){
 
   # we need this for aggregation
   first_period_dta <- orig_data[period == tlist[1]]
-  # TODO; ADD INFO ABOUT BOOTSTRAP MULTIPLIER
   ret <- (list(ATT = att_gt_ddd,
                se = se_gt_ddd,
                uci = ci_upper,
@@ -216,6 +254,7 @@ att_gt <- function(did_preprocessed){
                glist = glist,
                cohort_size = cohort_size,
                n = n,
+               bT = bT,
                inf_func_mat = inf_func_mat,
                first_period_dta = first_period_dta
               ))

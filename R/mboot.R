@@ -27,8 +27,6 @@ mboot <- function(inf_func, did_preprocessed, use_parallel = FALSE, cores = 1) {
   biters <- did_preprocessed$nboot
   tlist <- sort(unique(data$period))
   alpha <- did_preprocessed$alpha
-  panel <- did_preprocessed$panel # WE DON'T NEED THIS
-  true_repeated_cross_sections <- did_preprocessed$true_repeated_cross_sections # WE DON'T NEED THIS
 
   # just get n observations. Only for panel data
   dta <- data[period == tlist[1]]
@@ -72,14 +70,16 @@ mboot <- function(inf_func, did_preprocessed, use_parallel = FALSE, cores = 1) {
                   function(b) (quantile(b, .75, type=1, na.rm = T) -
                                  quantile(b, .25, type=1, na.rm = T))/(qnorm(.75) - qnorm(.25)))
 
+  bSigma[bSigma <= sqrt(.Machine$double.eps)*10] <- NA
+
   # critical value for uniform confidence band
-  bT <- base::suppressWarnings(apply(bres, 1, function(b) max( abs(b/bSigma), na.rm = T)))
+  bT <- base::suppressWarnings(apply(bres, 1, function(b) max(abs(b / bSigma), na.rm = T)))
   bT <- bT[is.finite(bT)]
-  crit_val <- quantile(bT, 1-alpha, type=1, na.rm = T)
+  crit_val <- quantile(bT, 1-alpha, type=1, na.rm = T) # uniform critical value
   se <- rep(NA, length(ndg.dim))
   se[ndg.dim] <- as.numeric(bSigma) / sqrt(n_clusters)
 
-  return(list(bres = bres, V = V, se = se, bT= bT, crit_val = crit_val))
+  return(list(bres = bres, V = V, se = se, bT= bT, unif_crit_val = crit_val))
 }
 
 run_multiplier_bootstrap <- function(inf_func, biters, use_parallel = FALSE, cores = 1) {

@@ -26,6 +26,10 @@ run_nopreprocess_2periods <- function(yname,
                                       use_parallel = FALSE,
                                       cores = NULL,
                                       inffunc = FALSE){
+
+  arg_names <- setdiff(names(formals()), "data")
+  args <- mget(arg_names, sys.frame(sys.nframe()))
+
   # Check if 'dta' is a data.table
   if (!"data.table" %in% class(data)) {
     # converting data to data.table
@@ -38,12 +42,14 @@ run_nopreprocess_2periods <- function(yname,
   if (alpha > 0.10) {
     warning("alpha = ", alpha, " is too high. Using alpha = 0.05 as default.")
     alpha <- 0.05
+    args$alpha <- alpha
   }
 
   # For dml, we only allow analytical standard errors.
   if (est_method == "dml" & boot == TRUE){
     warning("Bootstrapping is not allowed for DML. Setting boot = FALSE.")
     boot <- FALSE
+    args$boot <- boot
   }
 
   # setting default bootstrap reps
@@ -51,6 +57,7 @@ run_nopreprocess_2periods <- function(yname,
     if (is.null(nboot)){
       warning("Number of bootstrap samples not specified. Defaulting to 999 reps.")
       nboot <- 999
+      args$nboot <- nboot
     }
   }
 
@@ -72,8 +79,6 @@ run_nopreprocess_2periods <- function(yname,
     }
   }
 
-  arg_names <- setdiff(names(formals()), "data")
-  args <- mget(arg_names, sys.frame(sys.nframe()))
 
   # set weights
   base::ifelse(is.null(weightsname), weights <- rep(1, nrow(dta)), weights <- dta[[weightsname]])
@@ -200,6 +205,9 @@ run_preprocess_2Periods <- function(yname,
                                    cores = NULL,
                                    inffunc = FALSE){
 
+  # Capture all arguments except 'data'
+  arg_names <- setdiff(names(formals()), "data")
+  args <- mget(arg_names, sys.frame(sys.nframe()))
 
   #-------------------------------------
   # Error checking
@@ -210,6 +218,7 @@ run_preprocess_2Periods <- function(yname,
     if ((use_parallel) && (is.null(cores))) {
       warning("Parallel processing is enabled but the number of cores is not specified. Using 1 core as default.")
       cores <- 1
+      args$cores <- cores
     }
   }
 
@@ -217,12 +226,14 @@ run_preprocess_2Periods <- function(yname,
   if (alpha > 0.10) {
     warning("alpha = ", alpha, " is too high. Using alpha = 0.05 as default.")
     alpha <- 0.05
+    args$alpha <- alpha
   }
 
   # For dml, we only allow analytical standard errors.
   if (est_method == "dml" & boot == TRUE){
     warning("Bootstrapping is not allowed for DML. Setting boot = FALSE.")
     boot <- FALSE
+    args$boot <- boot
   }
 
   # setting default bootstrap reps
@@ -230,6 +241,7 @@ run_preprocess_2Periods <- function(yname,
     if (is.null(nboot)){
       warning("Number of bootstrap samples not specified. Defaulting to 999 reps.")
       nboot <- 999
+      args$nboot <- nboot
     }
   }
 
@@ -241,10 +253,6 @@ run_preprocess_2Periods <- function(yname,
     dta <- data
   }
 
-
-  # Capture all arguments except 'data'
-  arg_names <- setdiff(names(formals()), "data")
-  args <- mget(arg_names, sys.frame(sys.nframe()))
   # Run argument checks
   validate_args_2Periods(args, dta)
 
@@ -450,6 +458,10 @@ run_preprocess_multPeriods <- function(yname,
                                        cores = NULL,
                                        inffunc = FALSE){
 
+  # Capture all arguments except 'data'
+  arg_names <- setdiff(names(formals()), "data")
+  args <- mget(arg_names, sys.frame(sys.nframe()))
+
   #-------------------------------------
   # Error checking
   #-------------------------------------
@@ -459,6 +471,7 @@ run_preprocess_multPeriods <- function(yname,
     if ((use_parallel) && (is.null(cores))) {
       warning("Parallel processing is enabled but the number of cores is not specified. Using 1 core.")
       cores <- 1
+      args$cores <- cores
     }
   }
 
@@ -466,12 +479,14 @@ run_preprocess_multPeriods <- function(yname,
   if (alpha > 0.10) {
     warning("alpha = ", alpha, " is too high. Using alpha = 0.05 as default.")
     alpha <- 0.05
+    args$alpha <- alpha
   }
 
   # For dml, we only allow analytical standard errors.
   if (est_method == "dml" & boot == TRUE){
     warning("Bootstrapping is not allowed for DML. Setting boot = FALSE.")
     boot <- FALSE
+    args$boot <- boot
   }
 
   # setting default bootstrap reps
@@ -479,6 +494,7 @@ run_preprocess_multPeriods <- function(yname,
     if (is.null(nboot)){
       warning("Number of bootstrap samples not specified. Defaulting to 999 reps.")
       nboot <- 999
+      args$nboot <- nboot
     }
   }
 
@@ -491,9 +507,6 @@ run_preprocess_multPeriods <- function(yname,
     dta <- data
   }
 
-  # Capture all arguments except 'data'
-  arg_names <- setdiff(names(formals()), "data")
-  args <- mget(arg_names, sys.frame(sys.nframe()))
   # Run argument checks
   validate_args_multPeriods(args, dta)
 

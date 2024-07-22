@@ -18,7 +18,12 @@ validate_args_2Periods <- function(args, dta){
   boot <- args$boot
   nboot <- args$nboot
   inffunc <- args$inffunc
+  cband <- args$cband
 
+  # flag for boot and cband
+  if ((!boot) && (cband)){
+    stop("cband is only available when boot = TRUE")
+  }
 
   # Flag for yname
   if (!is.element(yname, base::colnames(dta))) {

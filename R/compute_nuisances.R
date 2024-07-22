@@ -1044,7 +1044,7 @@ compute_aggregation <- function(ddd_obj,
       # }
       #
       # if(calendar.crit.val >= 7){
-      #   warning("Simultaneous critical value is arguably `too large' to be realible. This usually happens when number of observations per group is small and/or there is no much variation in outcomes.")
+      #   warning("Simultaneous critical value is arguably `too large' to be reliable. This usually happens when number of observations per group is small and/or there is no much variation in outcomes.")
       # }
       warning("Confidence bands and multiplier bootstrap are not implemented yet. We are reporting pointwise confidence intervals.")
     }

@@ -326,6 +326,7 @@ ddd <- function(yname,
     multiple_periods = multiple_periods,
     learners = args$learners,
     n_folds = args$n_folds,
+    cband = args$cband,
     boot = dp$boot, # getting from dp because it could change in the pre process
     alpha = dp$alpha, # getting from dp because it could change in the pre process
     nboot = dp$nboot, # getting from dp because it could change in the pre process
@@ -340,6 +341,7 @@ ddd <- function(yname,
           lci = att_dr$lci,
           uci = att_dr$uci,
           nboot = att_dr$nboot, # this is not included under argu because it could change in the estimation process
+          bT = att_dr$bT,
           att_inf_func = att_dr$inf_func,
           subgroup_counts = att_dr$subgroup_counts,
           call.params = call.params,
@@ -372,6 +374,7 @@ ddd <- function(yname,
         glist = att_gt_dr$glist,
         cohort_size = att_gt_dr$cohort_size,
         n = att_gt_dr$n,
+        bT = att_gt_dr$bT,
         inf_func_mat = att_gt_dr$inf_func_mat,
         first_period_dta = att_gt_dr$first_period_dta,
         call.params = call.params,
