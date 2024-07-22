@@ -326,7 +326,7 @@ ddd <- function(yname,
     multiple_periods = multiple_periods,
     learners = args$learners,
     n_folds = args$n_folds,
-    boot = args$boot,
+    boot = dp$boot, # getting from dp because it could change in the pre process
     alpha = dp$alpha, # getting from dp because it could change in the pre process
     nboot = dp$nboot, # getting from dp because it could change in the pre process
     cores = dp$cores # getting from dp because it could change in the pre process
