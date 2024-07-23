@@ -22,7 +22,7 @@ mboot <- function(inf_func, did_preprocessed, use_parallel = FALSE, cores = 1) {
 
   # setup needed variables
   data <- did_preprocessed$preprocessed_data # we only need data for first period
-  idname <- did_preprocessed$idname
+  #idname <- did_preprocessed$idname
   cluster <- did_preprocessed$cluster
   biters <- did_preprocessed$nboot
   tlist <- sort(unique(data$period))
@@ -42,15 +42,17 @@ mboot <- function(inf_func, did_preprocessed, use_parallel = FALSE, cores = 1) {
   if (length(cluster)==0) {
     bres <- sqrt(n) * run_multiplier_bootstrap(inf_func, biters, use_parallel, cores)
   } else {
+    # Compute multiplier bootstrap for clustered standard errors
 
-    # Count the number of unique clusters
-    n_clusters <- uniqueN(data[, cluster, with = FALSE])
     # Extract the unique clusters along with their IDs
-    unique_clusters <- unique(dta[, .(id = get(idname), cluster = get(cluster))])
+    unique_clusters <- dta[, c("id", "cluster")]
+    # Count the number of unique clusters
+    n_clusters <- length(unique(unique_clusters$cluster))
     # Count the number of observations in each cluster
-    cluster_counts <- unique_clusters[, .N, by = cluster]$N
+    cluster_counts <- as.vector(table(unique_clusters$cluster))
     # Compute the mean influence function per cluster
     cluster_mean_if <- rowsum(inf_func, unique_clusters$cluster, reorder = TRUE) / cluster_counts
+
     # Run the bootstrap procedure
     bres <- sqrt(n_clusters) * run_multiplier_bootstrap(cluster_mean_if, biters, use_parallel, cores)
 

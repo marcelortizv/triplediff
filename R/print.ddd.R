@@ -45,14 +45,12 @@ print.ddd <- function(x, alpha = NULL, ...) {
     sig_text <- ifelse(sig, "*", "")
 
     body <- cbind(
-      round(x$ATT, digits = 4),
-      round(x$se, digits = 4),
-      round(x$ATT / x$se, digits = 4),
-      round(2 * (stats::pnorm(-abs(
-        x$ATT / x$se
-      ))), digits = 4),
-      round(x$lci, digits = 4),
-      round(x$uci, digits = 4),
+      sprintf("%10.4f", x$ATT),
+      sprintf("%10.4f", x$se),
+      sprintf("%10.4f", x$ATT / x$se),
+      sprintf("%10.4f", 2 * (stats::pnorm(-abs(x$ATT / x$se)))),
+      sprintf("%10.4f", x$lci),
+      sprintf("%10.4f", x$uci),
       sig_text
     )
     colnames(body) <- header
@@ -82,10 +80,10 @@ print.ddd <- function(x, alpha = NULL, ...) {
     body <- cbind.data.frame(
       x$groups,
       x$periods,
-      round(x$ATT, digits = 4),
-      round(x$se, digits = 4),
-      round(x$lci, digits = 4),
-      round(x$uci, digits = 4),
+      sprintf("%10.4f", x$ATT),
+      sprintf("%10.4f", x$se),
+      sprintf("%10.4f", x$lci),
+      sprintf("%10.4f", x$uci),
       sig_text
     )
     colnames(body) <- header
@@ -96,7 +94,7 @@ print.ddd <- function(x, alpha = NULL, ...) {
   print(x$call.params)
   cat("=========================== DDD Summary ===========================")
   cat("\n", est_method1)
-  utils::write.table(format(rbind(header, body), justify= "centre", digits=2, nsmall=1),
+  utils::write.table(format(rbind(header, body), justify = "centre", digits = 4, nsmall = 4),
                      row.names=FALSE, col.names=FALSE, quote=FALSE, sep=" ")
   if (x$argu$multiple_periods == TRUE){
     cat("\n")
