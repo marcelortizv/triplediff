@@ -37,9 +37,10 @@ print.ddd <- function(x, alpha = NULL, ...) {
 
     # Front-end Summary Table
     lev_conf <- paste0(round(100 * (1 - x$argu$alpha), digits = 2), "% ")
-    band_method <- ifelse(x$argu$cband, "Simult. ", "Pointwise ")
+    band_method <- ifelse(x$argu$cband, "Simult.", "Ptwise.")
     interval_text <- paste0("[", lev_conf, band_method)
-    header <- c("ATT", "Std. Error", "t value", "Pr(>|t|)", interval_text, "Conf. Band]", "")
+    #header <- c("ATT", "Std. Error", "t value", "Pr(>|t|)", interval_text, "Conf. Band]", "")
+    header <- c("  ATT", "  Std. Error", "   Pr(>|t|)", interval_text, "Conf. Band]", "")
     sig <- (x$uci < 0) | (x$lci > 0)
     sig[is.na(sig)] <- FALSE
     sig_text <- ifelse(sig, "*", "")
@@ -47,7 +48,7 @@ print.ddd <- function(x, alpha = NULL, ...) {
     body <- cbind(
       sprintf("%10.4f", x$ATT),
       sprintf("%10.4f", x$se),
-      sprintf("%10.4f", x$ATT / x$se),
+      #sprintf("%10.4f", x$ATT / x$se),
       sprintf("%10.4f", 2 * (stats::pnorm(-abs(x$ATT / x$se)))),
       sprintf("%10.4f", x$lci),
       sprintf("%10.4f", x$uci),
@@ -96,10 +97,10 @@ print.ddd <- function(x, alpha = NULL, ...) {
   cat("\n", est_method1)
   utils::write.table(format(rbind(header, body), justify = "centre", digits = 4, nsmall = 4),
                      row.names=FALSE, col.names=FALSE, quote=FALSE, sep=" ")
-  if (x$argu$multiple_periods == TRUE){
-    cat("\n")
-    cat(" Note: * indicates that confidence interval does not contain zero.")
-  }
+
+  cat("\n")
+  cat(" Note: * indicates that confidence interval does not contain zero.")
+
   cat("\n --------------------------- Data Info   --------------------------")
   # Panel data
   cat("\n", "Panel data")
