@@ -327,6 +327,7 @@ ddd <- function(yname,
     learners = args$learners,
     n_folds = args$n_folds,
     cband = args$cband,
+    cluster = args$cluster,
     boot = dp$boot, # getting from dp because it could change in the pre process
     alpha = dp$alpha, # getting from dp because it could change in the pre process
     nboot = dp$nboot, # getting from dp because it could change in the pre process
