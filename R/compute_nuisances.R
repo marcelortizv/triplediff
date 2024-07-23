@@ -520,26 +520,19 @@ get_agg_inf_func <- function(att, inf_func, whichones, weights_agg, wif=NULL) {
 #'  a standard error
 #'
 #' @param influence_function An influence function
+#' @param boot a boolean indicating whether bootstrapping was performed
+#' @param boot_std_errors a vector of bootstrapped standard errors
 #'
 #' @return scalar standard error
 #'
 #' @keywords internal
-compute_se_agg <- function(influence_function, DIDparams=NULL) {
-  alpha <- .05
-  boot <- FALSE
+compute_se_agg <- function(influence_function, boot=FALSE, boot_std_errors = NA) {
+
   n <- length(influence_function)
 
-  # if (!is.null(DIDparams)) {
-  #   boot <- DIDparams$boot
-  #   alpha <- DIDparams$alpha
-  #   cband <- DIDparams$cband
-  # }
-
+  # if we performed boot, boot_std_errors will be a vector of bootstrapped standard errors no null
   if (boot) {
-    # TODO; MAKE AVAILABLE MULTIPLIER BOOTSTRAP
-    # bout <- mboot(influence_function, DIDparams)
-    # return(bout$se)
-    stop("Bootstrapping not yet implemented")
+    return(boot_std_errors)
   } else {
     return(sqrt( mean((influence_function)^2)/n ))
   }
@@ -563,6 +556,7 @@ compute_se_agg <- function(influence_function, DIDparams=NULL) {
 #'   \code{"calendar"} computes average treatment effects across different
 #'   time periods, with weights proportional to the group size; here the overall effect averages the effect across each
 #'   time period.
+#' @param cluster The name of the variable to be used for clustering. The maximum number of cluster variables is 1. Default is \code{NULL}.
 #' @param balance_e If set (and if one computes event study), it balances
 #'  the sample with respect to event time.  For example, if `balance_e=2`,
 #'  `agg_ddd` will drop groups that are not exposed to treatment for
@@ -597,6 +591,7 @@ compute_se_agg <- function(influence_function, DIDparams=NULL) {
 #' @export
 compute_aggregation <- function(ddd_obj,
                                 type = "simple",
+                                cluster = NULL,
                                 balance_e = NULL,
                                 min_e = -Inf,
                                 max_e = Inf,
@@ -626,13 +621,60 @@ compute_aggregation <- function(ddd_obj,
   ATT <- ddd_obj$ATT
   inf_func_mat <- ddd_obj$inf_func_mat
   n <- ddd_obj$n
-  data <- ddd_obj$data
+  #data <- ddd_obj$data
   tlist <- ddd_obj$tlist
   glist <- ddd_obj$glist
-  dta <- ddd_obj$first_period_dta
+  dta <- ddd_obj$first_period_dta # data only for first period
   yname <- ddd_obj$argu$yname
   partition_name <- ddd_obj$argu$partition_name
   control_group <- ddd_obj$argu$control_group
+
+  # overwriting parameters for multiplier bootstrap if needed:
+
+  # for cluster variable
+  if (is.null(cluster)){
+    cluster <- ddd_obj$argu$cluster
+  }
+
+  # for bootstrap Boolean
+  if (is.null(boot)){
+    boot <- ddd_obj$argu$boot
+  }
+
+  # for number of bootstrap iterations
+  if (is.null(nboot)){
+    nboot <- ddd_obj$argu$nboot
+  }
+
+  # for uniform confidence bands Boolean
+  if (is.null(cband)){
+    cband <- ddd_obj$argu$cband
+  }
+
+  # for alpha level of significance
+  if (is.null(alpha)){
+    alpha <- ddd_obj$argu$alpha
+  }
+
+  # this is useful for summary tables only
+  new_argu <- list(cluster = cluster,
+                  boot = boot,
+                  nboot = nboot,
+                  cband = cband,
+                  alpha = alpha)
+
+  # flag for boot and cband
+  if ((!boot) && (cband)){
+    stop("cband is only available when boot = TRUE")
+  }
+
+  # recreating a `did_preprocessed` object only with needed parameters to compute bootstrapped standard errors
+  did_preprocessed <- list()
+  did_preprocessed$preprocessed_data <- dta # we only require data from the first period
+  did_preprocessed$cluster <- cluster # cluster variable
+  did_preprocessed$nboot <- nboot # number of bootstrap iterations
+  did_preprocessed$alpha <- alpha # level of significance
+
 
   if((na.rm == FALSE) && base::anyNA(ATT)) stop("Missing values at att_gt found. If you want to remove these, set `na.rm = TRUE'.")
 
@@ -736,9 +778,16 @@ compute_aggregation <- function(ddd_obj,
                                   wif=simple.wif)
     # Make it as vector
     simple.if <- as.numeric(simple.if)
+    # RUN MULTIPLIER BOOTSTRAP
+    if (boot){
+      simple_bres <- mboot(inf_func = simple.if, did_preprocessed = did_preprocessed)
+      simple_boot_see <- simple_bres$se
+    } else {
+      simple_boot_see <- NA
+    }
 
     # get standard errors from overall influence function
-    simple.se <- compute_se_agg(simple.if, dp)
+    simple.se <- compute_se_agg(simple.if, boot, simple_boot_see)
     if(!is.na(simple.se)){
       if(simple.se <= sqrt(.Machine$double.eps)*10) simple.se <- NA
     }
@@ -748,6 +797,7 @@ compute_aggregation <- function(ddd_obj,
                 overall.se = simple.se,
                 type = type,
                 yname = yname,
+                argu = new_argu,
                 partition_name = partition_name,
                 control_group = control_group,
                 inf.function = list(simple.att = simple.if)))
@@ -778,7 +828,14 @@ compute_aggregation <- function(ddd_obj,
                                                 whichones=whichg,
                                                 weights_agg=pg[whichg]/sum(pg[whichg]),
                                                 wif=NULL))
-      se.g <- compute_se_agg(inf.func.g, dp)
+      if (boot){
+        g_bres <- mboot(inf_func = inf.func.g, did_preprocessed = did_preprocessed)
+        g_boot_se <- g_bres$se
+      } else{
+        g_boot_se <- NA
+      }
+      se.g <- compute_se_agg(inf.func.g, boot, g_boot_se)
+
       list(inf.func=inf.func.g, se=se.g)
     })
 
@@ -792,29 +849,25 @@ compute_aggregation <- function(ddd_obj,
     # use multiplier bootstrap (across groups) to get critical value
     # for constructing uniform confidence bands
     selective.crit.val <- stats::qnorm(1 - alpha/2)
-    # TODO; ALLOW FOR CONFIDENCE BAND AND MULTIPLIER BOOTSTRAP
-    if ((!is.null(cband)) && (cband==TRUE)){
-      # if(bstrap == FALSE){
-      #   warning('Used bootstrap procedure to compute simultaneous confidence band.')
-      # }
-      # selective.crit.val <- mboot(selective.inf.func.g, dp)$crit.val
-      #
-      # if(is.na(selective.crit.val) | is.infinite(selective.crit.val)){
-      #   warning('Simultaneous critival value is NA. This probably happened because we cannot compute t-statistic (std errors are NA). We then report pointwise conf. intervals.')
-      #   selective.crit.val <- stats::qnorm(1 - alpha/2)
-      #   dp$cband <- FALSE
-      # }
-      #
-      # if(selective.crit.val < stats::qnorm(1 - alpha/2)){
-      #   warning('Simultaneous conf. band is somehow smaller than pointwise one using normal approximation. Since this is unusual, we are reporting pointwise confidence intervals')
-      #   selective.crit.val <- stats::qnorm(1 - alpha/2)
-      #   dp$cband <- FALSE
-      # }
-      #
-      # if(selective.crit.val >= 7){
-      #   warning("Simultaneous critical value is arguably `too large' to be realible. This usually happens when number of observations per group is small and/or there is no much variation in outcomes.")
-      # }
-      warning("Confidence bands and multiplier bootstrap are not implemented yet. We are reporting pointwise confidence intervals.")
+
+    # GET CRITICAL VALUES FOR UNIFORM CONFIDENCE BANDS
+    if (cband){
+      # if we enter here, it's because we already perform bootstrap. Cannot allow cband without doing bootstrap
+      selective.crit.val <- mboot(inf_func = selective.inf.func.g, did_preprocessed = did_preprocessed)$unif_crit_val
+
+      if(is.na(selective.crit.val) | is.infinite(selective.crit.val)){
+        warning('Simultaneous critical value is NA. This probably happened because we cannot compute t-statistic (std errors are NA). We then report pointwise conf. intervals.')
+        selective.crit.val <- stats::qnorm(1 - alpha/2)
+      }
+
+      if(selective.crit.val < stats::qnorm(1 - alpha/2)){
+        warning('Simultaneous conf. band is somehow smaller than pointwise one using normal approximation. Since this is unusual, we are reporting pointwise confidence intervals')
+        selective.crit.val <- stats::qnorm(1 - alpha/2)
+      }
+
+      if(selective.crit.val >= 7){
+        warning("Simultaneous critical value is arguably `too large' to be reliable. This usually happens when number of observations per group is small and/or there is no much variation in outcomes.")
+      }
     }
 
     # get overall att under selective treatment timing
@@ -837,8 +890,15 @@ compute_aggregation <- function(ddd_obj,
 
 
     selective.inf.func <- as.numeric(selective.inf.func)
+    # RUN MULTIPLIER BOOTSTRAP
+    if (boot){
+      selective_bres <- mboot(inf_func = selective.inf.func, did_preprocessed = did_preprocessed)
+      selective_boot_se <- selective_bres$se
+    } else{
+      selective_boot_se <- NA
+    }
     # get overall standard error
-    selective.se <- compute_se_agg(selective.inf.func, dp)
+    selective.se <- compute_se_agg(selective.inf.func, boot, selective_boot_se)
     if(!is.na(selective.se)){
       if((selective.se <= sqrt(.Machine$double.eps)*10)) selective.se <- NA
     }
@@ -849,6 +909,7 @@ compute_aggregation <- function(ddd_obj,
                 yname = yname,
                 partition_name = partition_name,
                 control_group = control_group,
+                argu = new_argu,
                 egt=orig_glist,
                 att.egt=selective.att.g,
                 se.egt=selective.se.g,
@@ -894,7 +955,13 @@ compute_aggregation <- function(ddd_obj,
                                                 whichones=whicht,
                                                 weights_agg=pgt,
                                                 wif=wif.t))
-      se.t <- compute_se_agg(inf.func.t, dp)
+      if (boot){
+        t_bres <- mboot(inf_func = inf.func.t, did_preprocessed = did_preprocessed)
+        t_boot_se <- t_bres$se
+      } else{
+        t_boot_se <- NA
+      }
+      se.t <- compute_se_agg(inf.func.t, boot, t_boot_se)
       list(inf.func=inf.func.t, se=se.t)
     })
 
@@ -907,29 +974,25 @@ compute_aggregation <- function(ddd_obj,
     # use multiplier boostrap (across groups) to get critical value
     # for constructing uniform confidence bands
     calendar.crit.val <-  stats::qnorm(1-alpha/2)
-    # TODO; ALLOW FOR CONFIDENCE BAND AND MULTIPLIER BOOTSTRAP
-    if ((!is.null(cband)) && (cband==TRUE)){
-      # if(bstrap == FALSE){
-      #   warning('Used bootstrap procedure to compute simultaneous confidence band')
-      # }
-      # calendar.crit.val <- mboot(calendar.inf.func.t, dp)$crit.val
-      #
-      # if(is.na(calendar.crit.val) | is.infinite(calendar.crit.val)){
-      #   warning('Simultaneous critival value is NA. This probably happened because we cannot compute t-statistic (std errors are NA). We then report pointwise conf. intervals.')
-      #   calendar.crit.val <- stats::qnorm(1 - alpha/2)
-      #   dp$cband <- FALSE
-      # }
-      #
-      # if(calendar.crit.val < stats::qnorm(1 - alpha/2)){
-      #   warning('Simultaneous conf. band is somehow smaller than pointwise one using normal approximation. Since this is unusual, we are reporting pointwise confidence intervals')
-      #   calendar.crit.val <- stats::qnorm(1 - alpha/2)
-      #   dp$cband <- FALSE
-      # }
-      #
-      # if(calendar.crit.val >= 7){
-      #   warning("Simultaneous critical value is arguably `too large' to be realible. This usually happens when number of observations per group is small and/or there is no much variation in outcomes.")
-      # }
-      warning("Confidence bands and multiplier bootstrap are not implemented yet. We are reporting pointwise confidence intervals.")
+
+    # GET CRITICAL VALUES FOR UNIFORM CONFIDENCE BANDS
+    if (cband){
+      # if we enter here, it's because we already perform bootstrap. Cannot allow cband without doing bootstrap
+      calendar.crit.val <- mboot(inf_func = calendar.inf.func.t, did_preprocessed = did_preprocessed)$unif_crit_val
+
+      if(is.na(calendar.crit.val) | is.infinite(calendar.crit.val)){
+        warning('Simultaneous critical value is NA. This probably happened because we cannot compute t-statistic (std errors are NA). We then report pointwise conf. intervals.')
+        calendar.crit.val <- stats::qnorm(1 - alpha/2)
+      }
+
+      if(calendar.crit.val < stats::qnorm(1 - alpha/2)){
+        warning('Simultaneous conf. band is somehow smaller than pointwise one using normal approximation. Since this is unusual, we are reporting pointwise confidence intervals')
+        calendar.crit.val <- stats::qnorm(1 - alpha/2)
+      }
+
+      if(calendar.crit.val >= 7){
+        warning("Simultaneous critical value is arguably `too large' to be reliable. This usually happens when number of observations per group is small and/or there is no much variation in outcomes.")
+      }
     }
 
     # get overall att under calendar time effects
@@ -943,8 +1006,16 @@ compute_aggregation <- function(ddd_obj,
                                           weights_agg=rep(1/length(calendar.tlist), length(calendar.tlist)),
                                           wif=NULL)
     calendar.inf.func <- as.numeric(calendar.inf.func)
+    # RUN MULTIPLIER BOOTSTRAP
+    if (boot){
+      calendar_bres <- mboot(inf_func = calendar.inf.func, did_preprocessed = did_preprocessed)
+      calendar_boot_se <- calendar_bres$se
+    } else {
+      calendar_boot_se <- NA
+    }
+
     # get overall standard error
-    calendar.se <- compute_se_agg(calendar.inf.func, dp)
+    calendar.se <- compute_se_agg(calendar.inf.func, boot, calendar_boot_se)
     if(!is.na(calendar.se)){
       if (calendar.se <= sqrt(.Machine$double.eps)*10) calendar.se <- NA
     }
@@ -954,6 +1025,7 @@ compute_aggregation <- function(ddd_obj,
                 yname = yname,
                 partition_name = partition_name,
                 control_group = control_group,
+                argu = new_argu,
                 egt=sapply(calendar.tlist,t2orig),
                 att.egt=calendar.att.t,
                 se.egt=calendar.se.t,
@@ -1014,7 +1086,13 @@ compute_aggregation <- function(ddd_obj,
                                                 whichones=whiche,
                                                 weights_agg=pge,
                                                 wif=wif.e))
-      se.e <- compute_se_agg(inf.func.e, dp)
+      if (boot){
+        e_bres <- mboot(inf_func = inf.func.e, did_preprocessed = did_preprocessed)
+        e_boot_se <- e_bres$se
+      } else{
+        e_boot_se <- NA
+      }
+      se.e <- compute_se_agg(inf.func.e, boot, e_boot_se)
       list(inf.func=inf.func.e, se=se.e)
     })
 
@@ -1024,30 +1102,27 @@ compute_aggregation <- function(ddd_obj,
     dynamic.inf.func.e <- simplify2array(BMisc::getListElement(dynamic.se.inner, "inf.func"))
 
     dynamic.crit.val <- stats::qnorm(1 - alpha/2)
-    # TODO; ALLOW FOR CONFIDENCE BAND AND MULTIPLIER BOOTSTRAP
-    if ((!is.null(cband)) && (cband==TRUE)){
-      # if(bstrap == FALSE){
-      #   warning('Used bootstrap procedure to compute simultaneous confidence band')
-      # }
-      # calendar.crit.val <- mboot(calendar.inf.func.t, dp)$crit.val
-      #
-      # if(is.na(calendar.crit.val) | is.infinite(calendar.crit.val)){
-      #   warning('Simultaneous critival value is NA. This probably happened because we cannot compute t-statistic (std errors are NA). We then report pointwise conf. intervals.')
-      #   calendar.crit.val <- stats::qnorm(1 - alpha/2)
-      #   dp$cband <- FALSE
-      # }
-      #
-      # if(calendar.crit.val < stats::qnorm(1 - alpha/2)){
-      #   warning('Simultaneous conf. band is somehow smaller than pointwise one using normal approximation. Since this is unusual, we are reporting pointwise confidence intervals')
-      #   calendar.crit.val <- stats::qnorm(1 - alpha/2)
-      #   dp$cband <- FALSE
-      # }
-      #
-      # if(calendar.crit.val >= 7){
-      #   warning("Simultaneous critical value is arguably `too large' to be reliable. This usually happens when number of observations per group is small and/or there is no much variation in outcomes.")
-      # }
-      warning("Confidence bands and multiplier bootstrap are not implemented yet. We are reporting pointwise confidence intervals.")
+
+    # GET CRITICAL VALUES FOR UNIFORM CONFIDENCE BANDS
+    if (cband){
+      # if we enter here, it's because we already perform bootstrap. Cannot allow cband without doing bootstrap
+      dynamic.crit.val <- mboot(inf_func = dynamic.inf.func.e, did_preprocessed = did_preprocessed)$unif_crit_val
+
+      if(is.na(dynamic.crit.val) | is.infinite(dynamic.crit.val)){
+        warning('Simultaneous critical value is NA. This probably happened because we cannot compute t-statistic (std errors are NA). We then report pointwise conf. intervals.')
+        dynamic.crit.val <- stats::qnorm(1 - alpha/2)
+      }
+
+      if(dynamic.crit.val < stats::qnorm(1 - alpha/2)){
+        warning('Simultaneous conf. band is somehow smaller than pointwise one using normal approximation. Since this is unusual, we are reporting pointwise confidence intervals')
+        dynamic.crit.val <- stats::qnorm(1 - alpha/2)
+      }
+
+      if(dynamic.crit.val >= 7){
+        warning("Simultaneous critical value is arguably `too large' to be reliable. This usually happens when number of observations per group is small and/or there is no much variation in outcomes.")
+      }
     }
+
 
     # get overall average treatment effect
     # by averaging over positive dynamics
@@ -1060,7 +1135,14 @@ compute_aggregation <- function(ddd_obj,
                                          wif=NULL)
 
     dynamic.inf.func <- as.numeric(dynamic.inf.func)
-    dynamic.se <- compute_se_agg(dynamic.inf.func, dp)
+    # RUN MULTIPLIER BOOTSTRAP
+    if (boot){
+      dynamic_bres <- mboot(inf_func = dynamic.inf.func, did_preprocessed = did_preprocessed)
+      dynamic_boot_se <- dynamic_bres$se
+    } else {
+      dynamic_boot_se <- NA
+    }
+    dynamic.se <- compute_se_agg(dynamic.inf.func, boot, dynamic_boot_se)
     if(!is.na(dynamic.se)){
       if (dynamic.se <= sqrt(.Machine$double.eps)*10) dynamic.se <- NA
     }
@@ -1071,6 +1153,7 @@ compute_aggregation <- function(ddd_obj,
                 yname = yname,
                 partition_name = partition_name,
                 control_group = control_group,
+                argu = new_argu,
                 egt=eseq,
                 att.egt=dynamic.att.e,
                 se.egt=dynamic.se.e,

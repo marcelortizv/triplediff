@@ -22,11 +22,11 @@ mboot <- function(inf_func, did_preprocessed, use_parallel = FALSE, cores = 1) {
 
   # setup needed variables
   data <- did_preprocessed$preprocessed_data # we only need data for first period
-  #idname <- did_preprocessed$idname
   cluster <- did_preprocessed$cluster
   biters <- did_preprocessed$nboot
-  tlist <- sort(unique(data$period))
   alpha <- did_preprocessed$alpha
+  tlist <- sort(unique(data$period))
+
 
   # just get n observations. Only for panel data
   dta <- data[period == tlist[1]]

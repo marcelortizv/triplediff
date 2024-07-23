@@ -156,7 +156,7 @@ print.ddd <- function(x, alpha = NULL, ...) {
   }
   cat("\n", "Type of confidence band: ", ifelse(x$argu$cband, "Uniform Confidence Band ", "Pointwise Confidence Interval"))
   if (!is.null(x$argu$cluster)){
-    cat("\n", paste0("Clustered Std. Errors by: ", x$argu$cluster))
+    cat("\n", paste0("Clustering Std. Errors by: ", x$argu$cluster))
   }
   cat("\n ==================================================================")
   cat("\n See Ortiz-Villavicencio and Sant'Anna (2024) for details.")

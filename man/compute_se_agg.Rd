@@ -4,10 +4,14 @@
 \alias{compute_se_agg}
 \title{Take influence function and compute standard errors}
 \usage{
-compute_se_agg(influence_function, DIDparams = NULL)
+compute_se_agg(influence_function, boot = FALSE, boot_std_errors = NA)
 }
 \arguments{
 \item{influence_function}{An influence function}
+
+\item{boot}{a boolean indicating whether bootstrapping was performed}
+
+\item{boot_std_errors}{a vector of bootstrapped standard errors}
 }
 \value{
 scalar standard error
