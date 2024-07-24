@@ -1,8 +1,8 @@
 #' @title Print
 #'
-#' @description Prints a aggddd Object
+#' @description Prints a agg_ddd Object
 #'
-#' @param x A aggddd object
+#' @param x A agg_ddd object
 #' @param ... Other params (required as generic function, but not used)
 #' @importFrom utils write.table
 #' @export
@@ -10,9 +10,9 @@
 
 print.agg_ddd <- function(x, ...) {
 
-  pointwise_cval <- qnorm(1-x$argu$alpha/2)
-  overall_cband_upper <- x$aggte_ddd$overall.att + pointwise_cval*x$aggte_ddd$overall.se
-  overall_cband_lower <- x$aggte_ddd$overall.att - pointwise_cval*x$aggte_ddd$overall.se
+  pointwise_cval <- qnorm(1-x$aggte_ddd$argu$alpha/2)
+  overall_cband_upper <- x$aggte_ddd$overall.att + pointwise_cval * x$aggte_ddd$overall.se
+  overall_cband_lower <- x$aggte_ddd$overall.att - pointwise_cval * x$aggte_ddd$overall.se
   out1 <- cbind.data.frame(x$aggte_ddd$overall.att, x$aggte_ddd$overall.se, overall_cband_lower, overall_cband_upper)
   out1 <- round(out1, 4)
   overall_sig <- (overall_cband_upper < 0) | (overall_cband_lower > 0)
@@ -31,7 +31,7 @@ print.agg_ddd <- function(x, ...) {
 
   # Front-end Summary Table
   cat("\n")
-  header <- c("ATT","   Std. Error", paste0("    [ ",100*(1-x$argu$alpha),"% "), "Conf. Int.]","")
+  header <- c("ATT","   Std. Error", paste0("    [ ",100*(1-x$aggte_ddd$argu$alpha),"% "), "Conf. Int.]","")
   colnames(out1) <- header
 
   # utils::write.table(format(rbind(header, out1), justify= "centre", digits=2, nsmall=2),
@@ -47,12 +47,19 @@ print.agg_ddd <- function(x, ...) {
     if (x$aggte_ddd$type=="calendar") { c1name <- "Time"; cat("\n", "Calendar Effects:") }
 
     cat("\n")
-    cband_text1a <- paste0(100*(1-x$argu$alpha),"% ")
-    # cband_text1b <- ifelse(x$argu$boot,
-    #                        ifelse(x$argu$cband, "Simult. ", "Pointwise "),
-    #                        "Pointwise ")
-    cband_text1b <- "Pointwise "
-    cband_text1 <- paste0("[", cband_text1a, cband_text1b)
+
+    # Front-end Summary Table
+    lev_conf <- paste0(round(100 * (1 - x$aggte_ddd$argu$alpha), digits = 2), "% ")
+    band_method <- ifelse(x$aggte_ddd$argu$cband, "Simult. ", "Ptwise. ")
+    interval_text <- paste0("[", lev_conf, band_method)
+
+
+    # cband_text1a <- paste0(100*(1-x$aggte_ddd$argu$alpha),"% ")
+    # # cband_text1b <- ifelse(x$argu$boot,
+    # #                        ifelse(x$argu$cband, "Simult. ", "Pointwise "),
+    # #                        "Pointwise ")
+    # cband_text1b <- "Pointwise "
+    # cband_text1 <- paste0("[", cband_text1a, cband_text1b)
 
     cband_lower <- x$aggte_ddd$att.egt - x$aggte_ddd$crit.val.egt * x$aggte_ddd$se.egt
     cband_upper <- x$aggte_ddd$att.egt + x$aggte_ddd$crit.val.egt * x$aggte_ddd$se.egt
@@ -65,7 +72,7 @@ print.agg_ddd <- function(x, ...) {
     out2 <- round(out2, 4)
     out2 <- cbind.data.frame(out2, sig_text)
 
-    header2 <- c(c1name, "Estimate","Std. Error", cband_text1, "Conf. Band]", "")
+    header2 <- c(c1name, "Estimate","Std. Error", interval_text, "Conf. Band]", "")
 
     colnames(out2) <- header2
     # utils::write.table(format(rbind(header2, out2), justify= "centre", digits=2, nsmall=2),
@@ -81,21 +88,22 @@ print.agg_ddd <- function(x, ...) {
   cat("\n", paste("Partition variable:", x$aggte_ddd$partition_name))
   ifelse(x$aggte_ddd$control_group == "nevertreated", control_type <- "Never Treated", control_type <- "Not yet Treated")
   cat("\n", paste("Control group: ", control_type))
-  cat("\n", paste("Level of significance: ", x$argu$alpha))
+  cat("\n", paste("Level of significance: ", x$aggte_ddd$argu$alpha))
 
   # Analytical vs bootstrapped standard errors
   cat("\n --------------------------- Std. Errors  -------------------------")
-  if (x$argu$boot == T) {
+  if (x$aggte_ddd$argu$boot == T) {
     boot1 <-
       cat(
         "\n Boostrapped standard error based on",
-        x$argu$nboot,
-        "bootstrap draws. \n Bootstrap Method:",
-        "Multiplier bootstrap",
-        "(Mammen,1993) \n"
+        x$aggte_ddd$argu$nboot, "reps.",
+        "\n Bootstrap Method: Multiplier bootstrap."
       )
   } else {
     boot1 <- cat("\n Analytical standard errors.")
+  }
+  if (!is.null(x$aggte_ddd$argu$cluster)){
+    cat("\n", paste0("Clustering Std. Errors by: ", x$aggte_ddd$argu$cluster))
   }
   cat("\n ==================================================================")
   cat("\n See Ortiz-Villavicencio and Sant'Anna (2024) for details.")

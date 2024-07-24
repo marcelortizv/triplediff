@@ -14,14 +14,22 @@ run_nopreprocess_2periods <- function(yname,
                                       xformla = ~1,
                                       data,
                                       control_group = NULL,
-                                      est_method = "trad",
+                                      est_method = "dr",
                                       learners = NULL,
                                       n_folds = NULL,
                                       weightsname = NULL,
                                       boot = FALSE,
-                                      boot_type = "multiplier",
                                       nboot = NULL,
+                                      cluster = NULL,
+                                      cband = FALSE,
+                                      alpha = 0.05,
+                                      use_parallel = FALSE,
+                                      cores = NULL,
                                       inffunc = FALSE){
+
+  arg_names <- setdiff(names(formals()), "data")
+  args <- mget(arg_names, sys.frame(sys.nframe()))
+
   # Check if 'dta' is a data.table
   if (!"data.table" %in% class(data)) {
     # converting data to data.table
@@ -30,8 +38,47 @@ run_nopreprocess_2periods <- function(yname,
     dta <- data
   }
 
-  arg_names <- setdiff(names(formals()), "data")
-  args <- mget(arg_names, sys.frame(sys.nframe()))
+  # Flag for alpha > 0.10
+  if (alpha > 0.10) {
+    warning("alpha = ", alpha, " is too high. Using alpha = 0.05 as default.")
+    alpha <- 0.05
+    args$alpha <- alpha
+  }
+
+  # For dml, we only allow analytical standard errors.
+  if (est_method == "dml" & boot == TRUE){
+    warning("Bootstrapping is not allowed for DML. Setting boot = FALSE.")
+    boot <- FALSE
+    args$boot <- boot
+  }
+
+  # setting default bootstrap reps
+  if (boot == TRUE){
+    if (is.null(nboot)){
+      warning("Number of bootstrap samples not specified. Defaulting to 999 reps.")
+      nboot <- 999
+      args$nboot <- nboot
+    }
+  }
+
+  # Flags for cluster variable
+  if (!is.null(cluster)) {
+    # dropping idname from cluster
+    if (idname %in% cluster) {
+      cluster <- setdiff(cluster, idname)
+    }
+
+    # flag if cluster variable is in dataset
+    if (!is.element(cluster, base::colnames(dta))) {
+      stop("cluster = ",cluster,  " could not be found in the data provided. Please check your arguments")
+    }
+
+    # check if user is providing more than 2 cluster variables (different than idname)
+    if (length(cluster) > 1) {
+      stop("You can only provide 1 cluster variable additionally to the one provided in idname. Please check your arguments")
+    }
+  }
+
 
   # set weights
   base::ifelse(is.null(weightsname), weights <- rep(1, nrow(dta)), weights <- dta[[weightsname]])
@@ -50,7 +97,8 @@ run_nopreprocess_2periods <- function(yname,
   }
 
   # Creating a post dummy variable based on tlist[2] (second period = post treatment)
-  tlist <- unique(dta[[args$tname]])[base::order(unique(dta[[args$tname]]))]
+  #tlist <- unique(dta[[args$tname]])[base::order(unique(dta[[args$tname]]))]
+  tlist <- sort(unique(dta[[tname]]))
   dta$post <- as.numeric(dta[[tname]] == tlist[2])
 
   # sort data based on idnam and tname and make it balanced
@@ -65,14 +113,24 @@ run_nopreprocess_2periods <- function(yname,
                                          y = dta[[yname]],
                                          post = dta$post,
                                          treat = dta[[dname]],
+                                         period = dta[[tname]],
                                          partition = dta[[partition_name]],
                                          weights = dta$weights)
+  idx_static_vars <- 8 # useful to perform the elimination of collinear variables
+  # Add cluster column if cluster argument is provided
+  if (!is.null(cluster)) {
+    cleaned_data[, cluster := dta[[cluster]]]
+    idx_static_vars <- 9
+  }
 
   # creating subgroup variable
   # 4 if (partition ==1 & treat == 1); 3 if (partition ==0 & treat == 1); 2 if (partition ==1 & treat == 0); 1 if (partition ==0 & treat == 0)
-  cleaned_data$subgroup <- ifelse((cleaned_data$partition == 1) & (cleaned_data$treat == 1), 4,
-                                  ifelse((cleaned_data$partition == 0) & (cleaned_data$treat == 1), 3,
-                                         ifelse((cleaned_data$partition == 1) & (cleaned_data$treat == 0), 2, 1)))
+  # cleaned_data$subgroup <- ifelse((cleaned_data$partition == 1) & (cleaned_data$treat == 1), 4,
+  #                                 ifelse((cleaned_data$partition == 0) & (cleaned_data$treat == 1), 3,
+  #                                        ifelse((cleaned_data$partition == 1) & (cleaned_data$treat == 0), 2, 1)))
+  cleaned_data[, subgroup := fifelse(partition == 1 & treat == 1, 4,
+                                     fifelse(partition == 0 & treat == 1, 3,
+                                             fifelse(partition == 1 & treat == 0, 2, 1)))]
 
   # Flag for not enough observations for each subgroup
   # Calculate the size of each subgroup in the 'subgroup' column
@@ -90,7 +148,7 @@ run_nopreprocess_2periods <- function(yname,
 
   # Remove collinear variables
   # Convert the remaining columns to a matrix
-  cov_m <- as.matrix(cleaned_data[, -c(1:7)])
+  cov_m <- as.matrix(cleaned_data[, -c(1:idx_static_vars), with = FALSE])
   # Use the qr() function to detect collinear columns
   qr_m <- qr(cov_m, tol = 1e-6)
   # Get the rank of the matrix
@@ -98,10 +156,11 @@ run_nopreprocess_2periods <- function(yname,
   # Get the indices of the non-collinear columns
   non_collinear_indices <- qr_m$pivot[seq_len(rank_m)]
   # Drop the collinear columns from the data.table
-  cleaned_data <- cleaned_data[, c(seq(1,7,1), non_collinear_indices + 7), with = FALSE]
+  cleaned_data <- cleaned_data[, c(seq(1,idx_static_vars,1), non_collinear_indices + idx_static_vars), with = FALSE]
 
   # drop the intercept
-  cleaned_data[, 8 := NULL]
+  #cleaned_data[, (idx_static_vars+1) := NULL]
+  cleaned_data[, "(Intercept)" := NULL]
 
   out <- list(preprocessed_data = cleaned_data,
               xformula = xformla,
@@ -109,8 +168,12 @@ run_nopreprocess_2periods <- function(yname,
               learners = learners,
               n_folds = n_folds,
               boot = boot,
-              boot_type = boot_type,
               nboot = nboot,
+              cluster = cluster,
+              cband = cband,
+              alpha = alpha,
+              use_parallel = use_parallel,
+              cores = cores,
               inffunc = inffunc,
               subgroup_counts = subgroup_counts)
 
@@ -129,32 +192,57 @@ run_preprocess_2Periods <- function(yname,
                                    xformla = ~1,
                                    data,
                                    control_group = NULL,
-                                   est_method = "trad",
+                                   est_method = "dr",
                                    learners = NULL,
                                    n_folds = NULL,
                                    weightsname = NULL,
                                    boot = FALSE,
-                                   boot_type = "multiplier",
                                    nboot = NULL,
+                                   cluster = NULL,
+                                   cband = FALSE,
+                                   alpha = 0.05,
+                                   use_parallel = FALSE,
+                                   cores = NULL,
                                    inffunc = FALSE){
 
+  # Capture all arguments except 'data'
+  arg_names <- setdiff(names(formals()), "data")
+  args <- mget(arg_names, sys.frame(sys.nframe()))
 
   #-------------------------------------
   # Error checking
   #-------------------------------------
 
-  # Flag for boot_type
+  # Flag for parallel and cores
   if (boot){
-    if (boot_type!="multiplier") {
-      warning("boot_type = ",boot_type,  " is not supported. Using 'multiplier'.")
-      boot_type <- "multiplier"
+    if ((use_parallel) && (is.null(cores))) {
+      warning("Parallel processing is enabled but the number of cores is not specified. Using 1 core as default.")
+      cores <- 1
+      args$cores <- cores
     }
   }
 
-  # Flag for est_method
-  if (est_method!="trad" && est_method!="dml") {
-    warning("est_method = ",est_method,  " is not supported. Using 'trad'.")
-    est_method <- "trad"
+  # Flag for alpha > 0.10
+  if (alpha > 0.10) {
+    warning("alpha = ", alpha, " is too high. Using alpha = 0.05 as default.")
+    alpha <- 0.05
+    args$alpha <- alpha
+  }
+
+  # For dml, we only allow analytical standard errors.
+  if (est_method == "dml" & boot == TRUE){
+    warning("Bootstrapping is not allowed for DML. Setting boot = FALSE.")
+    boot <- FALSE
+    args$boot <- boot
+  }
+
+  # setting default bootstrap reps
+  if (boot == TRUE){
+    if (is.null(nboot)){
+      warning("Number of bootstrap samples not specified. Defaulting to 999 reps.")
+      nboot <- 999
+      args$nboot <- nboot
+    }
   }
 
   # Check if 'dta' is a data.table
@@ -165,12 +253,36 @@ run_preprocess_2Periods <- function(yname,
     dta <- data
   }
 
-
-  # Capture all arguments except 'data'
-  arg_names <- setdiff(names(formals()), "data")
-  args <- mget(arg_names, sys.frame(sys.nframe()))
   # Run argument checks
   validate_args_2Periods(args, dta)
+
+  # Flags for cluster variable
+  if (!is.null(cluster)) {
+    # dropping idname from cluster
+    if (idname %in% cluster) {
+      cluster <- setdiff(cluster, idname)
+    }
+
+    # flag if cluster variable is in dataset
+    if (!is.element(cluster, base::colnames(dta))) {
+      stop("cluster = ",cluster,  " could not be found in the data provided. Please check your arguments.")
+    }
+
+    # check if user is providing more than 2 cluster variables (different than idname)
+    if (length(cluster) > 1) {
+      stop("You can only provide 1 cluster variable additionally to the one provided in idname. Please check your arguments.")
+    }
+
+    # Check that cluster variables do not vary over time within each unit
+    if (length(cluster) > 0) {
+      # Efficiently check for time-varying cluster variables
+      clust_tv <- dta[, lapply(.SD, function(col) length(unique(col)) == 1), by = id, .SDcols = cluster]
+      # If any cluster variable varies over time within any unit, stop execution
+      if (!all(unlist(clust_tv[, -1, with = FALSE]))) {
+        stop("triplediff cannot handle time-varying cluster variables at the moment. Please check your cluster variable.")
+      }
+    }
+  }
 
   # set weights
   base::ifelse(is.null(weightsname), weights <- rep(1, nrow(dta)), weights <- dta[[weightsname]])
@@ -203,7 +315,8 @@ run_preprocess_2Periods <- function(yname,
   )
 
   # Creating a post dummy variable based on tlist[2] (second period = post treatment)
-  tlist <- unique(dta[[args$tname]])[base::order(unique(dta[[args$tname]]))]
+  #tlist <- unique(dta[[args$tname]])[base::order(unique(dta[[args$tname]]))]
+  tlist <- sort(unique(dta[[tname]]))
   dta$post <- as.numeric(dta[[tname]] == tlist[2])
   # Checking if covariates are time invariant in panel data case
   # Create the model matrix
@@ -227,13 +340,22 @@ run_preprocess_2Periods <- function(yname,
                                          y = dta[[yname]],
                                          post = dta$post,
                                          treat = dta[[dname]],
+                                         period = dta[[tname]],
                                          partition = dta[[partition_name]],
                                          weights = dta$weights)
+
+  idx_static_vars <- 8 # useful to perform the elimination of collinear variables
+  # Add cluster column if cluster argument is provided
+  if (!is.null(cluster)) {
+    cleaned_data[, cluster := dta[[cluster]]]
+    idx_static_vars <- 9
+  }
+
   # creating subgroup variable
   # 4 if (partition ==1 & treat == 1); 3 if (partition ==0 & treat == 1); 2 if (partition ==1 & treat == 0); 1 if (partition ==0 & treat == 0)
-  cleaned_data$subgroup <- ifelse((cleaned_data$partition == 1) & (cleaned_data$treat == 1), 4,
-                          ifelse((cleaned_data$partition == 0) & (cleaned_data$treat == 1), 3,
-                          ifelse((cleaned_data$partition == 1) & (cleaned_data$treat == 0), 2, 1)))
+  cleaned_data[, subgroup := fifelse(partition == 1 & treat == 1, 4,
+                                     fifelse(partition == 0 & treat == 1, 3,
+                                             fifelse(partition == 1 & treat == 0, 2, 1)))]
 
   # Flag for not enough observations for each subgroup
   # Calculate the size of each subgroup in the 'subgroup' column
@@ -264,8 +386,8 @@ run_preprocess_2Periods <- function(yname,
   # Check for missing values in several columns
   #missing_flags <- lapply(cleaned_data[, .(treat, post, y, weights)], anyNA)
   missing_flags <- lapply(cleaned_data[, .SD, .SDcols = c("treat", "post", "y", "weights")], anyNA)
-  missing_X_flag <- base::anyNA(cleaned_data[,-c(1:7)]) # all except id, y, post, treat, partition, subgroup, weights
-
+  # all except id, y, post, treat, partition, period, subgroup, weights, cluster (if any)
+  missing_X_flag <- base::anyNA(cleaned_data[,-c(1:idx_static_vars), with = FALSE])
   # Print warning messages if any missing values are found
   if (any(unlist(missing_flags))) {
     # Get the names of the TRUE values
@@ -280,7 +402,7 @@ run_preprocess_2Periods <- function(yname,
 
   # Remove collinear variables
   # Convert the remaining columns to a matrix
-  cov_m <- as.matrix(cleaned_data[, -c(1:7)])
+  cov_m <- as.matrix(cleaned_data[, -c(1:idx_static_vars), with = FALSE])
   # Use the qr() function to detect collinear columns
   qr_m <- qr(cov_m, tol = 1e-6)
   # Get the rank of the matrix
@@ -288,19 +410,24 @@ run_preprocess_2Periods <- function(yname,
   # Get the indices of the non-collinear columns
   non_collinear_indices <- qr_m$pivot[seq_len(rank_m)]
   # Drop the collinear columns from the data.table
-  cleaned_data <- cleaned_data[, c(seq(1,7,1), non_collinear_indices + 7), with = FALSE]
+  cleaned_data <- cleaned_data[, c(seq(1,idx_static_vars,1), non_collinear_indices + idx_static_vars), with = FALSE]
 
   # drop the intercept
-  cleaned_data[, 8 := NULL]
+  cleaned_data[, "(Intercept)" := NULL]
 
   out <- list(preprocessed_data = cleaned_data,
               xformula = xformla,
+              tname = tname,
               est_method = est_method,
               learners = learners,
               n_folds = n_folds,
               boot = boot,
-              boot_type = boot_type,
               nboot = nboot,
+              cluster = cluster,
+              cband = cband,
+              alpha = alpha,
+              use_parallel = use_parallel,
+              cores = cores,
               inffunc = inffunc,
               subgroup_counts = subgroup_counts)
 
@@ -318,32 +445,59 @@ run_preprocess_multPeriods <- function(yname,
                                        data,
                                        control_group,
                                        base_period,
-                                       est_method = "trad",
+                                       est_method = "dr",
                                        learners = NULL,
                                        n_folds = NULL,
                                        weightsname = NULL,
                                        boot = FALSE,
-                                       boot_type = "multiplier",
                                        nboot = NULL,
+                                       cluster = NULL,
+                                       cband = FALSE,
+                                       alpha = 0.05,
+                                       use_parallel = FALSE,
+                                       cores = NULL,
                                        inffunc = FALSE){
+
+  # Capture all arguments except 'data'
+  arg_names <- setdiff(names(formals()), "data")
+  args <- mget(arg_names, sys.frame(sys.nframe()))
 
   #-------------------------------------
   # Error checking
   #-------------------------------------
 
-  # Flag for boot_type
+  # Flag for parallel and cores
   if (boot){
-    if (boot_type!="multiplier") {
-      warning("boot_type = ",boot_type,  " is not supported. Using 'multiplier'.")
-      boot_type <- "multiplier"
+    if ((use_parallel) && (is.null(cores))) {
+      warning("Parallel processing is enabled but the number of cores is not specified. Using 1 core.")
+      cores <- 1
+      args$cores <- cores
     }
   }
 
-  # Flag for est_method
-  if (est_method!="trad" && est_method!="dml") {
-    warning("est_method = ",est_method,  " is not supported. Using 'trad'.")
-    est_method <- "trad"
+  # Flag for alpha > 0.10
+  if (alpha > 0.10) {
+    warning("alpha = ", alpha, " is too high. Using alpha = 0.05 as default.")
+    alpha <- 0.05
+    args$alpha <- alpha
   }
+
+  # For dml, we only allow analytical standard errors.
+  if (est_method == "dml" & boot == TRUE){
+    warning("Bootstrapping is not allowed for DML. Setting boot = FALSE.")
+    boot <- FALSE
+    args$boot <- boot
+  }
+
+  # setting default bootstrap reps
+  if (boot == TRUE){
+    if (is.null(nboot)){
+      warning("Number of bootstrap samples not specified. Defaulting to 999 reps.")
+      nboot <- 999
+      args$nboot <- nboot
+    }
+  }
+
 
   # Check if 'dta' is a data.table
   if (!"data.table" %in% class(data)) {
@@ -353,11 +507,36 @@ run_preprocess_multPeriods <- function(yname,
     dta <- data
   }
 
-  # Capture all arguments except 'data'
-  arg_names <- setdiff(names(formals()), "data")
-  args <- mget(arg_names, sys.frame(sys.nframe()))
   # Run argument checks
   validate_args_multPeriods(args, dta)
+
+  # Flags for cluster variable
+  if (!is.null(cluster)) {
+    # dropping idname from cluster
+    if (idname %in% cluster) {
+      cluster <- setdiff(cluster, idname)
+    }
+
+    # flag if cluster variable is in dataset
+    if (!is.element(cluster, base::colnames(dta))) {
+      stop("cluster = ",cluster,  " could not be found in the data provided. Please check your arguments.")
+    }
+
+    # check if user is providing more than 2 cluster variables (different than idname)
+    if (length(cluster) > 1) {
+      stop("You can only provide 1 cluster variable additionally to the one provided in idname. Please check your arguments.")
+    }
+
+    # Check that cluster variables do not vary over time within each unit
+    if (length(cluster) > 0) {
+      # Efficiently check for time-varying cluster variables
+      clust_tv <- dta[, lapply(.SD, function(col) length(unique(col)) == 1), by = id, .SDcols = cluster]
+      # If any cluster variable varies over time within any unit, stop execution
+      if (!all(unlist(clust_tv[, -1, with = FALSE]))) {
+        stop("triplediff cannot handle time-varying cluster variables at the moment. Please check your cluster variable.")
+      }
+    }
+  }
 
   # set in-blank xformla if no covariates are provided
   if (is.null(xformla)) {
@@ -365,7 +544,7 @@ run_preprocess_multPeriods <- function(yname,
   }
 
   # keep relevant columns in data
-  cols_to_keep <- c(idname, tname, yname, gname, partition_name, weightsname)
+  cols_to_keep <- c(idname, tname, yname, gname, partition_name, weightsname, cluster)
 
   model_frame <- model.frame(xformla, data = dta, na.action = na.pass)
   # Subset the data.table to keep only relevant columns
@@ -491,13 +670,19 @@ run_preprocess_multPeriods <- function(yname,
                                          partition = dta[[partition_name]],
                                          weights = dta$weights)
 
+  # Add cluster column if cluster argument is provided
+  if (!is.null(cluster)) {
+    cleaned_data[, cluster := dta[[cluster]]]
+  }
+
+
   if (n < n_old) {
     warning(paste0("Dropped ", n_old - n, " observations while converting to balanced panel."))
   }
 
   # If drop all data, you do not have a panel.
   if (nrow(cleaned_data) == 0) {
-    stop("All observations dropped to convert data to balanced panel. Consider setting `panel = FALSE` and/or revisiting 'idname'.")
+    stop("All observations dropped to convert data to balanced panel. Please check your argument in 'idname'.")
   }
 
   n <- nrow(cleaned_data[period == tlist[1], ])
@@ -509,7 +694,7 @@ run_preprocess_multPeriods <- function(yname,
 
   # Check if there are enough time periods
   if (length(tlist) == 2) {
-    stop("The type of ddd specified only have two time periods. Change type of ddd for two time periods")
+    stop("The type of ddd specified only have two time periods. Change type of ddd for two time periods using argument 'dname'.")
   }
 
   # Check for small comparison groups
@@ -548,10 +733,15 @@ run_preprocess_multPeriods <- function(yname,
 
   out <- list(preprocessed_data = cleaned_data,
               xformula = xformla,
+              tname = tname,
               est_method = est_method,
               boot = boot,
-              boot_type = boot_type,
               nboot = nboot,
+              cluster = cluster,
+              cband = cband,
+              alpha = alpha,
+              use_parallel = use_parallel,
+              cores = cores,
               control_group = control_group,
               base_period = base_period,
               n = n,

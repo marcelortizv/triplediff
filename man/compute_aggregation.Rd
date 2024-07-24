@@ -7,6 +7,7 @@
 compute_aggregation(
   ddd_obj,
   type = "simple",
+  cluster = NULL,
   balance_e = NULL,
   min_e = -Inf,
   max_e = Inf,
@@ -32,6 +33,8 @@ the overall effect averages the effect across different groups using group size 
 \code{"calendar"} computes average treatment effects across different
 time periods, with weights proportional to the group size; here the overall effect averages the effect across each
 time period.}
+
+\item{cluster}{The name of the variable to be used for clustering. The maximum number of cluster variables is 1. Default is \code{NULL}.}
 
 \item{balance_e}{If set (and if one computes event study), it balances
 the sample with respect to event time.  For example, if \code{balance_e=2},

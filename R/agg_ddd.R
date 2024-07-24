@@ -84,36 +84,37 @@ agg_ddd <- function(ddd_obj,
                    min_e = -Inf,
                    max_e = Inf,
                    na.rm = FALSE,
-                   boot = FALSE,
+                   boot = NULL,
                    nboot = NULL,
                    cband = NULL,
                    alpha = 0.05) {
 
  call <- match.call()
  # Record all arguments used in the function
- args <- mget(names(formals()), sys.frame(sys.nframe()))
- argu <- list(
-   boot = args$boot,
-   nboot = args$nboot,
-   cband = args$cband,
-   alpha = args$alpha
- )
+ # args <- mget(names(formals()), sys.frame(sys.nframe()))
+ # argu <- list(
+ #   boot = args$boot,
+ #   nboot = args$nboot,
+ #   cband = args$cband,
+ #   alpha = args$alpha
+ # )
 
  aggte_ddd <- compute_aggregation(ddd_obj = ddd_obj,
-                            type = type,
-                            balance_e = balance_e,
-                            min_e = min_e,
-                            max_e = max_e,
-                            na.rm = na.rm,
-                            boot = boot,
-                            nboot = nboot,
-                            cband = cband,
-                            alpha = alpha
-                            )
+                                  type = type,
+                                  balance_e = balance_e,
+                                  min_e = min_e,
+                                  max_e = max_e,
+                                  na.rm = na.rm,
+                                  boot = boot,
+                                  nboot = nboot,
+                                  cband = cband,
+                                  alpha = alpha
+                                )
+
 
  ret <- list(aggte_ddd = aggte_ddd,
-             call.params = call,
-             argu = argu)
+             call.params = call)#,
+             #argu = argu)
 
  # define a class
  class(ret) <- "agg_ddd"

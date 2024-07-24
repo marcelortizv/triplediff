@@ -149,7 +149,36 @@ sd.z3 <-   0.04453
 mean.z4 <- 402
 sd.z4 <-  56.63891
 
-# Generate efficiency bounds for MC simulations
+# ---------------------------------------------------------------------
+# Generate data for multiple treatment periods
+# ---------------------------------------------------------------------
+
+#' Function that generates panel data with staggered treatment assignment for multiple periods
+#' @description
+#' Function to generate data with staggered treatment adoption.
+#'
+#' @param size number of units
+#' @param dgp_type type of DGP to generate.
+#'           1 if both nuisance functions are correct,
+#'           2 if only the outcome model is correct,
+#'           3 if only the pscore is correct,
+#'           4 if both nuisance functions are incorrect
+#'
+#' @return A data.table with the following columns:
+#'
+#' - id: ID
+#' - state: State variable
+#' - time: Time variable
+#' - partition: Partition variable
+#' - x1: Covariate 1
+#' - x2: Covariate 2
+#' - x3: Covariate 3
+#' - x4: Covariate 4
+#' - y: Outcome variable
+#' - cluster: Cluster variables (there's no actual within-cluster correlation)
+
+#' @export
+
 gen_dgp_2periods <- function(size, dgp_type){
   # Generate data for MC simulations
   # size: number of observations
@@ -257,6 +286,14 @@ gen_dgp_2periods <- function(size, dgp_type){
 
     # Generate the data assuming we always observe Z
     dt <- get_long_data(y0, y1, state, partition, z)
+    setorder(dt, "id", "time")
+    # generate clusters (there's no actual within-cluster correlation) with sample with replacement by id
+    # get unique ids
+    unique_ids <- unique(dt$id)
+    # sample cluster values for each unique id
+    clusters <- data.table(id = unique_ids, cluster = sample(1:50, size = length(unique_ids), replace = TRUE))
+    # merge the sampled clusters back into the original data table
+    dt <- merge(dt, clusters, by = "id", all.x = TRUE)
 
     return(list(data = dt, att = 0, att.unf = att.unf, eff = eff))
 
@@ -334,6 +371,14 @@ gen_dgp_2periods <- function(size, dgp_type){
 
     # Generate the data assuming we always observe Z
     dt <- get_long_data(y0, y1, state, partition, z)
+    setorder(dt, "id", "time")
+    # generate clusters (there's no actual within-cluster correlation) with sample with replacement by id
+    # get unique ids
+    unique_ids <- unique(dt$id)
+    # sample cluster values for each unique id
+    clusters <- data.table(id = unique_ids, cluster = sample(1:50, size = length(unique_ids), replace = TRUE))
+    # merge the sampled clusters back into the original data table
+    dt <- merge(dt, clusters, by = "id", all.x = TRUE)
 
     return(list(data = dt, att = 0, att.unf = att.unf, eff = eff))
 
@@ -411,6 +456,14 @@ gen_dgp_2periods <- function(size, dgp_type){
 
     # Generate the data assuming we always observe Z
     dt <- get_long_data(y0, y1, state, partition, z)
+    setorder(dt, "id", "time")
+    # generate clusters (there's no actual within-cluster correlation) with sample with replacement by id
+    # get unique ids
+    unique_ids <- unique(dt$id)
+    # sample cluster values for each unique id
+    clusters <- data.table(id = unique_ids, cluster = sample(1:50, size = length(unique_ids), replace = TRUE))
+    # merge the sampled clusters back into the original data table
+    dt <- merge(dt, clusters, by = "id", all.x = TRUE)
 
     return(list(data = dt, att = 0, att.unf = att.unf, eff = eff))
 
@@ -487,6 +540,14 @@ gen_dgp_2periods <- function(size, dgp_type){
 
     # Generate the data assuming we always observe Z
     dt <- get_long_data(y0, y1, state, partition, z)
+    setorder(dt, "id", "time")
+    # generate clusters (there's no actual within-cluster correlation) with sample with replacement by id
+    # get unique ids
+    unique_ids <- unique(dt$id)
+    # sample cluster values for each unique id
+    clusters <- data.table(id = unique_ids, cluster = sample(1:50, size = length(unique_ids), replace = TRUE))
+    # merge the sampled clusters back into the original data table
+    dt <- merge(dt, clusters, by = "id", all.x = TRUE)
 
     return(list(data = dt, att = 0, att.unf = att.unf, eff = eff))
 
@@ -640,6 +701,7 @@ set_params <- function(time_periods){
 #' - x2: Covariate 2
 #' - treat: Treatment variable
 #' - outcome: Outcome variable
+#' - cluster: Cluster variables (there's no actual within-cluster correlation)
 
 #' @export
 

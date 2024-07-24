@@ -12,7 +12,7 @@ agg_ddd(
   min_e = -Inf,
   max_e = Inf,
   na.rm = FALSE,
-  boot = FALSE,
+  boot = NULL,
   nboot = NULL,
   cband = NULL,
   alpha = 0.05

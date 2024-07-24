@@ -1,4 +1,4 @@
-# This process run all the error check before enter to the preprocessing
+# This process run all the error check before enter to the data processing
 
 #' @importFrom Rcpp sourceCpp
 
@@ -16,10 +16,14 @@ validate_args_2Periods <- function(args, dta){
   n_folds <- args$n_folds
   weightsname <- args$weightsname
   boot <- args$boot
-  boot_type <- args$boot_type
   nboot <- args$nboot
   inffunc <- args$inffunc
+  cband <- args$cband
 
+  # flag for boot and cband
+  if ((!boot) && (cband)){
+    stop("cband is only available when boot = TRUE")
+  }
 
   # Flag for yname
   if (!is.element(yname, base::colnames(dta))) {
@@ -145,7 +149,6 @@ validate_args_multPeriods <- function(args, dta){
   n_folds <- args$n_folds
   weightsname <- args$weightsname
   boot <- args$boot
-  boot_type <- args$boot_type
   nboot <- args$nboot
   base_period <- args$base_period
 
