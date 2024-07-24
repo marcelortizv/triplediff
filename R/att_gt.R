@@ -179,7 +179,7 @@ att_gt <- function(did_preprocessed){
 
   # recover original arguments in did_preprocessed
   did_preprocessed$preprocessed_data <- orig_data
-  did_preprocessed$boot <- boot # forcing false to avoid bootstrap inside att_dr() function.
+  did_preprocessed$boot <- boot # restoring boot argument
 
   # PREPROCESS attgt_list AND inf_func_mat
   attgt_res <- process_attgt(attgt_list)
