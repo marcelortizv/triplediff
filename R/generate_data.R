@@ -150,10 +150,10 @@ mean.z4 <- 402
 sd.z4 <-  56.63891
 
 # ---------------------------------------------------------------------
-# Generate data for multiple treatment periods
+# Generate data for 2 time treatment periods
 # ---------------------------------------------------------------------
 
-#' Function that generates panel data with staggered treatment assignment for multiple periods
+#' Function that generates panel data with staggered treatment assignment for 2 time periods
 #' @description
 #' Function to generate data with staggered treatment adoption.
 #'
@@ -164,18 +164,21 @@ sd.z4 <-  56.63891
 #'           3 if only the pscore is correct,
 #'           4 if both nuisance functions are incorrect
 #'
-#' @return A data.table with the following columns:
-#'
-#' - id: ID
-#' - state: State variable
-#' - time: Time variable
-#' - partition: Partition variable
-#' - x1: Covariate 1
-#' - x2: Covariate 2
-#' - x3: Covariate 3
-#' - x4: Covariate 4
-#' - y: Outcome variable
-#' - cluster: Cluster variables (there's no actual within-cluster correlation)
+#' @return A list with the following elements:
+#' - data: data.table with the generated data with columns
+#'        - id: ID
+#'        - state: State variable
+#'        - time: Time variable
+#'        - partition: Partition variable
+#'        - x1: Covariate 1
+#'        - x2: Covariate 2
+#'        - x3: Covariate 3
+#'        - x4: Covariate 4
+#'        - y: Outcome variable
+#'        - cluster: Cluster variables (there's no actual within-cluster correlation)
+#' - att: True ATT. Set to be equal to 0.
+#' - att.unf: Computation of unfeasible ATT
+#' - eff: value of the theoretical efficiency bound
 
 #' @export
 
@@ -693,15 +696,13 @@ set_params <- function(time_periods){
 #'
 #' @return A data.table with the following columns:
 #'
-#' - id: ID
-#' - state: State variable
-#' - year: Time variable
-#' - partition: Partition variable
-#' - x1: Covariate 1
-#' - x2: Covariate 2
-#' - treat: Treatment variable
-#' - outcome: Outcome variable
+#' - G: Indicate the first period where the treatment is assigned
+#' - L: Partition variable
+#' - X: Covariate
+#' - id: ID for panel data
 #' - cluster: Cluster variables (there's no actual within-cluster correlation)
+#' - period: Time periods
+#' - Y: Outcome variable
 
 #' @export
 

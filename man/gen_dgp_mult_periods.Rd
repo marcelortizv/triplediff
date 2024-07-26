@@ -20,15 +20,13 @@ gen_dgp_mult_periods(size, tperiods, dgp_type)
 \value{
 A data.table with the following columns:
 \itemize{
-\item id: ID
-\item state: State variable
-\item year: Time variable
-\item partition: Partition variable
-\item x1: Covariate 1
-\item x2: Covariate 2
-\item treat: Treatment variable
-\item outcome: Outcome variable
+\item G: Indicate the first period where the treatment is assigned
+\item L: Partition variable
+\item X: Covariate
+\item id: ID for panel data
 \item cluster: Cluster variables (there's no actual within-cluster correlation)
+\item period: Time periods
+\item Y: Outcome variable
 }
 }
 \description{

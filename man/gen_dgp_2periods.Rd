@@ -2,7 +2,7 @@
 % Please edit documentation in R/generate_data.R
 \name{gen_dgp_2periods}
 \alias{gen_dgp_2periods}
-\title{Function that generates panel data with staggered treatment assignment for multiple periods}
+\title{Function that generates panel data with staggered treatment assignment for 2 time periods}
 \usage{
 gen_dgp_2periods(size, dgp_type)
 }
@@ -16,18 +16,22 @@ gen_dgp_2periods(size, dgp_type)
 4 if both nuisance functions are incorrect}
 }
 \value{
-A data.table with the following columns:
+A list with the following elements:
 \itemize{
-\item id: ID
-\item state: State variable
-\item time: Time variable
-\item partition: Partition variable
-\item x1: Covariate 1
-\item x2: Covariate 2
-\item x3: Covariate 3
-\item x4: Covariate 4
-\item y: Outcome variable
-\item cluster: Cluster variables (there's no actual within-cluster correlation)
+\item data: data.table with the generated data with columns
+- id: ID
+- state: State variable
+- time: Time variable
+- partition: Partition variable
+- x1: Covariate 1
+- x2: Covariate 2
+- x3: Covariate 3
+- x4: Covariate 4
+- y: Outcome variable
+- cluster: Cluster variables (there's no actual within-cluster correlation)
+\item att: True ATT. Set to be equal to 0.
+\item att.unf: Computation of unfeasible ATT
+\item eff: value of the theoretical efficiency bound
 }
 }
 \description{
