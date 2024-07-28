@@ -19,7 +19,7 @@
 #' - x2: Covariate 2
 #' - treat: Treatment variable
 #' - outcome: Outcome variable
-
+#'
 #' @export
 
 generate_test_panel <- function(seed = 123,
@@ -179,7 +179,7 @@ sd.z4 <-  56.63891
 #' - att: True ATT. Set to be equal to 0.
 #' - att.unf: Computation of unfeasible ATT
 #' - eff: value of the theoretical efficiency bound
-
+#'
 #' @export
 
 gen_dgp_2periods <- function(size, dgp_type){
@@ -703,7 +703,7 @@ set_params <- function(time_periods){
 #' - cluster: Cluster variables (there's no actual within-cluster correlation)
 #' - period: Time periods
 #' - Y: Outcome variable
-
+#'
 #' @export
 
 gen_dgp_mult_periods <- function(size, tperiods, dgp_type){
