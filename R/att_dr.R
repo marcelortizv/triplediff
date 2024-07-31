@@ -70,7 +70,7 @@ att_dr <- function(did_preprocessed) {
   w2 <- n/n2
   w1 <- n/n1
   # rescaling influence function
-  inf_func = w3*dr_att_inf_func_3$inf_func - w2*dr_att_inf_func_2$inf_fun + w3*dr_att_inf_func_1$inf_func
+  inf_func = w3*dr_att_inf_func_3$inf_func - w2*dr_att_inf_func_2$inf_fun + w1*dr_att_inf_func_1$inf_func
 
   #-----------------------------------------------------------------------------
   # compute confidence intervals / bands
