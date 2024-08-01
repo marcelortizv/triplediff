@@ -4,12 +4,10 @@
 \alias{gen_dgp_mult_periods}
 \title{Function that generates panel data with staggered treatment assignment for multiple periods}
 \usage{
-gen_dgp_mult_periods(size, tperiods, dgp_type)
+gen_dgp_mult_periods(size, dgp_type = 1)
 }
 \arguments{
 \item{size}{number of units}
-
-\item{tperiods}{number of periods}
 
 \item{dgp_type}{type of DGP to generate.
 1 if both nuisance functions are correct,
@@ -18,17 +16,21 @@ gen_dgp_mult_periods(size, tperiods, dgp_type)
 4 if both nuisance functions are incorrect}
 }
 \value{
-A data.table with the following columns:
+A list of 2 data.table with the following columns in long and wide format:
 \itemize{
-\item G: Indicate the first period where the treatment is assigned
-\item L: Partition variable
-\item X: Covariate
 \item id: ID for panel data
+\item cohort: Indicate the first period where the treatment is assigned
+\item partition: Partition variable
+\item x1: Covariate 1
+\item x2: Covariate 2
+\item x3: Covariate 3
+\item x4: Covariate 4
 \item cluster: Cluster variables (there's no actual within-cluster correlation)
-\item period: Time periods
-\item Y: Outcome variable
+\item time: Time periods
+\item y: Outcome variable
 }
 }
 \description{
 Function to generate data with staggered treatment adoption.
+Without loss of generality, the number of time periods is set to be 3.
 }
