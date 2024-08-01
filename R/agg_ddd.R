@@ -56,10 +56,10 @@ NULL
 #' # Triple Diff with multiple time periods
 #' #----------------------------------------------------------
 #'
-#' data <- gen_dgp_mult_periods(size = 1000, tperiods = 4, dgp_type = 1)
+#' data <- gen_dgp_mult_periods(size = 1000, dgp_type = 1)[["data"]]
 #'
-#' out <- ddd(yname = "Y", tname = "period", idname = "id", dname = NULL,
-#'             gname = "G", partition_name = "L", xformla = ~X,
+#' out <- ddd(yname = "y", tname = "time", idname = "id", dname = NULL,
+#'             gname = "state", partition_name = "partition", xformla = ~cov1 + cov2 + cov3 + cov4,
 #'             data = data, control_group = "nevertreated", base_period = "varying",
 #'             est_method = "trad")
 #' # Simple aggregation

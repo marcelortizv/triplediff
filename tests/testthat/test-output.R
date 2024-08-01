@@ -6,7 +6,7 @@ test_that("Testing generation of output in main function", {
   # data from dgp 2 periods
   data_2periods <- gen_dgp_2periods(size = 1000, dgp_type = 1)[["data"]]
   # data from dgp multiple periods
-  data_multperiods <- gen_dgp_mult_periods(size = 1000, tperiods = 4, dgp_type = 1)
+  data_multperiods <- gen_dgp_mult_periods(size = 1000, dgp_type = 1)[["data"]]
 
   # ------------------------------
   # Performing tests
@@ -31,15 +31,15 @@ test_that("Testing generation of output in main function", {
 
 
   # performing DR estimation with multiple periods
-  ddd_gt <- ddd(yname = "Y", tname = "period", idname = "id", dname = NULL,
-                gname = "G", partition_name = "L", xformla = ~X,
-                data = data_multperiods, control_group = "nevertreated", base_period = "varying",
+  ddd_gt <- ddd(yname = "y", tname = "time", idname = "id", dname = NULL,
+                gname = "state", partition_name = "partition", xformla = ~cov1 + cov2 + cov3 + cov4,
+                data = data_multperiods, control_group = "nevertreated", base_period = "universal",
                 est_method = "dr")
 
   # performing DR estimation with multiple periods and bootstrapping
-  ddd_gt_boot_cluster <- ddd(yname = "Y", tname = "period", idname = "id", dname = NULL,
-                             gname = "G", partition_name = "L", xformla = ~X,
-                             data = data_multperiods, control_group = "nevertreated", base_period = "varying",
+  ddd_gt_boot_cluster <- ddd(yname = "y", tname = "time", idname = "id", dname = NULL,
+                             gname = "state", partition_name = "partition", xformla = ~cov1 + cov2 + cov3 + cov4,
+                             data = data_multperiods, control_group = "nevertreated", base_period = "universal",
                              est_method = "dr", boot = TRUE, nboot = 999, cluster = "cluster", cband = TRUE)
 
   # expecting results

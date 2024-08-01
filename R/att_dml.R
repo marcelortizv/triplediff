@@ -60,7 +60,7 @@ att_dml <- function(did_preprocessed) {
                                             n_folds = n_folds)
 
   # Compute ATT
-  att_dml = mean_ddd_k(dml_att_scores_3) - mean_ddd_k(dml_att_scores_2) + mean_ddd_k(dml_att_scores_1)
+  att_dml = mean_ddd_k(dml_att_scores_3) + mean_ddd_k(dml_att_scores_2) - mean_ddd_k(dml_att_scores_1)
 
   # Inference
   scores_3 <- get_long_scores(dml_att_scores_3)

@@ -1,11 +1,11 @@
 # Testing if agg_ddd in generating output
 test_that("Testing generation of output in aggregation function", {
 
-  data <- gen_dgp_mult_periods(size = 1000, tperiods = 4, dgp_type = 1)
+  data <- gen_dgp_mult_periods(size = 10000, dgp_type = 1)[["data"]]
 
   # Performing simple tests
-  out <- ddd(yname = "Y", tname = "period", idname = "id", dname = NULL,
-              gname = "G", partition_name = "L", xformla = ~X,
+  out <- ddd(yname = "y", tname = "time", idname = "id", dname = NULL,
+              gname = "state", partition_name = "partition", xformla = ~cov1 + cov2 + cov3 + cov4,
               data = data, control_group = "nevertreated", base_period = "varying",
               est_method = "dr")
   # Simple aggregation
@@ -23,8 +23,8 @@ test_that("Testing generation of output in aggregation function", {
 
 
   # Performing tests with bootstrap + clustered standard errors
-  ddd_gt_boot_cluster <- ddd(yname = "Y", tname = "period", idname = "id", dname = NULL,
-                             gname = "G", partition_name = "L", xformla = ~X,
+  ddd_gt_boot_cluster <- ddd(yname = "y", tname = "time", idname = "id", dname = NULL,
+                             gname = "state", partition_name = "partition", xformla = ~cov1 + cov2 + cov3 + cov4,
                              data = data, control_group = "nevertreated", base_period = "varying",
                              est_method = "dr", boot = TRUE, nboot = 999, cluster = "cluster", cband = TRUE)
 
