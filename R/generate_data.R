@@ -717,6 +717,25 @@ gen_dgp_mult_periods <- function(size, dgp_type = 1){
     y_t2<- y_t2_g2*(cohort == 2) + y_t2_g3*(cohort==3) + y_t2_never*(cohort==0)
     y_t3<- y_t3_g2*(cohort == 2) + y_t3_g3*(cohort==3) + y_t3_never*(cohort==0)
     #-----------------------------------------------------------------------------
+    # Get the event study parameter
+    # Get unfeasible ATT(g,t) (assuming we see the Potential outcomes)
+    att_g2_t2_unf <- (mean((group_types==1)*y_t2_g2) - mean((group_types==1)*y_t2_never))/
+      mean((group_types==1))
+    att_g2_t3_unf <- (mean((group_types==1)*y_t3_g2) - mean((group_types==1)*y_t3_never))/
+      mean((group_types==1))
+    att_g3_t2_unf <- (mean((group_types==3)*y_t2_g3) - mean((group_types==3)*y_t2_never))/
+      mean((group_types==3))
+    att_g3_t3_unf <- (mean((group_types==3)*y_t3_g3) - mean((group_types==3)*y_t3_never))/
+      mean((group_types==3))
+
+    # Get unfeasible Event-Study (ES) (assuming we see the Potential outcomes and pscores)
+    # get weights
+    prob_g2_p1 <- mean(pi_2A/(pi_2A + pi_3A))
+    prob_g3_p1 <- mean(pi_3A/(pi_2A + pi_3A))
+    # Get ES
+    ES_0_unf <- att_g2_t2_unf * prob_g2_p1 + att_g3_t3_unf * prob_g3_p1
+    ES_1_unf <- att_g2_t3_unf
+    # ------------------------------------------------------------------------------
     # Put all data in a data frame
     dta_wide <- data.frame(cbind(id = 1:size,
                                  y_t1 = y_t1,
@@ -739,7 +758,10 @@ gen_dgp_mult_periods <- function(size, dgp_type = 1){
     #-----------------------------------------------------------------------------
     # Return the data
     return(list(data = as.data.table(dta),
-                data_wide = as.data.table(dta_wide)))
+                data_wide = as.data.table(dta_wide),
+                ES_0_unf = ES_0_unf,
+                prob_g2_p1 = prob_g2_p1,
+                prob_g3_p1 = prob_g3_p1))
 
   } else if(dgp_type == 2){
     # Pscore depends on X but Regressions depend on Z
@@ -827,6 +849,25 @@ gen_dgp_mult_periods <- function(size, dgp_type = 1){
     y_t2<- y_t2_g2*(cohort == 2) + y_t2_g3*(cohort==3) + y_t2_never*(cohort==0)
     y_t3<- y_t3_g2*(cohort == 2) + y_t3_g3*(cohort==3) + y_t3_never*(cohort==0)
     #-----------------------------------------------------------------------------
+    # Get the event study parameter
+    # Get unfeasible ATT(g,t) (assuming we see the Potential outcomes)
+    att_g2_t2_unf <- (mean((group_types==1)*y_t2_g2) - mean((group_types==1)*y_t2_never))/
+      mean((group_types==1))
+    att_g2_t3_unf <- (mean((group_types==1)*y_t3_g2) - mean((group_types==1)*y_t3_never))/
+      mean((group_types==1))
+    att_g3_t2_unf <- (mean((group_types==3)*y_t2_g3) - mean((group_types==3)*y_t2_never))/
+      mean((group_types==3))
+    att_g3_t3_unf <- (mean((group_types==3)*y_t3_g3) - mean((group_types==3)*y_t3_never))/
+      mean((group_types==3))
+
+    # Get unfeasible Event-Study (ES) (assuming we see the Potential outcomes and pscores)
+    # get weights
+    prob_g2_p1 <- mean(pi_2A/(pi_2A + pi_3A))
+    prob_g3_p1 <- mean(pi_3A/(pi_2A + pi_3A))
+    # Get ES
+    ES_0_unf <- att_g2_t2_unf * prob_g2_p1 + att_g3_t3_unf * prob_g3_p1
+    ES_1_unf <- att_g2_t3_unf
+    # ------------------------------------------------------------------------------
     # Put all data in a data frame
     dta_wide <- data.frame(cbind(id = 1:size,
                                  y_t1, y_t2 , y_t3,
@@ -845,7 +886,10 @@ gen_dgp_mult_periods <- function(size, dgp_type = 1){
     #-----------------------------------------------------------------------------
     # Return the data
     return(list(data = as.data.table(dta),
-                data_wide = as.data.table(dta_wide)))
+                data_wide = as.data.table(dta_wide),
+                ES_0_unf = ES_0_unf,
+                prob_g2_p1 = prob_g2_p1,
+                prob_g3_p1 = prob_g3_p1))
 
   } else if(dgp_type == 3){
     # Pscore depends on Z but Regressions depend on X
@@ -933,6 +977,25 @@ gen_dgp_mult_periods <- function(size, dgp_type = 1){
     y_t2<- y_t2_g2*(cohort == 2) + y_t2_g3*(cohort==3) + y_t2_never*(cohort==0)
     y_t3<- y_t3_g2*(cohort == 2) + y_t3_g3*(cohort==3) + y_t3_never*(cohort==0)
     #-----------------------------------------------------------------------------
+    # Get the event study parameter
+    # Get unfeasible ATT(g,t) (assuming we see the Potential outcomes)
+    att_g2_t2_unf <- (mean((group_types==1)*y_t2_g2) - mean((group_types==1)*y_t2_never))/
+      mean((group_types==1))
+    att_g2_t3_unf <- (mean((group_types==1)*y_t3_g2) - mean((group_types==1)*y_t3_never))/
+      mean((group_types==1))
+    att_g3_t2_unf <- (mean((group_types==3)*y_t2_g3) - mean((group_types==3)*y_t2_never))/
+      mean((group_types==3))
+    att_g3_t3_unf <- (mean((group_types==3)*y_t3_g3) - mean((group_types==3)*y_t3_never))/
+      mean((group_types==3))
+
+    # Get unfeasible Event-Study (ES) (assuming we see the Potential outcomes and pscores)
+    # get weights
+    prob_g2_p1 <- mean(pi_2A/(pi_2A + pi_3A))
+    prob_g3_p1 <- mean(pi_3A/(pi_2A + pi_3A))
+    # Get ES
+    ES_0_unf <- att_g2_t2_unf * prob_g2_p1 + att_g3_t3_unf * prob_g3_p1
+    ES_1_unf <- att_g2_t3_unf
+    # ------------------------------------------------------------------------------
     # Put all data in a data frame
     dta_wide <- data.frame(cbind(id = 1:size,
                                  y_t1, y_t2 , y_t3,
@@ -951,7 +1014,10 @@ gen_dgp_mult_periods <- function(size, dgp_type = 1){
     #-----------------------------------------------------------------------------
     # Return the data
     return(list(data = as.data.table(dta),
-                data_wide = as.data.table(dta_wide)))
+                data_wide = as.data.table(dta_wide),
+                ES_0_unf = ES_0_unf,
+                prob_g2_p1 = prob_g2_p1,
+                prob_g3_p1 = prob_g3_p1))
 
   } else if (dgp_type == 4){
     # Both models are functions of X (misspecified)
@@ -1039,6 +1105,25 @@ gen_dgp_mult_periods <- function(size, dgp_type = 1){
     y_t2<- y_t2_g2*(cohort == 2) + y_t2_g3*(cohort==3) + y_t2_never*(cohort==0)
     y_t3<- y_t3_g2*(cohort == 2) + y_t3_g3*(cohort==3) + y_t3_never*(cohort==0)
     #-----------------------------------------------------------------------------
+    # Get the event study parameter
+    # Get unfeasible ATT(g,t) (assuming we see the Potential outcomes)
+    att_g2_t2_unf <- (mean((group_types==1)*y_t2_g2) - mean((group_types==1)*y_t2_never))/
+      mean((group_types==1))
+    att_g2_t3_unf <- (mean((group_types==1)*y_t3_g2) - mean((group_types==1)*y_t3_never))/
+      mean((group_types==1))
+    att_g3_t2_unf <- (mean((group_types==3)*y_t2_g3) - mean((group_types==3)*y_t2_never))/
+      mean((group_types==3))
+    att_g3_t3_unf <- (mean((group_types==3)*y_t3_g3) - mean((group_types==3)*y_t3_never))/
+      mean((group_types==3))
+
+    # Get unfeasible Event-Study (ES) (assuming we see the Potential outcomes and pscores)
+    # get weights
+    prob_g2_p1 <- mean(pi_2A/(pi_2A + pi_3A))
+    prob_g3_p1 <- mean(pi_3A/(pi_2A + pi_3A))
+    # Get ES
+    ES_0_unf <- att_g2_t2_unf * prob_g2_p1 + att_g3_t3_unf * prob_g3_p1
+    ES_1_unf <- att_g2_t3_unf
+    # ------------------------------------------------------------------------------
     # Put all data in a data frame
     dta_wide <- data.frame(cbind(id = 1:size,
                                  y_t1, y_t2 , y_t3,
@@ -1057,7 +1142,10 @@ gen_dgp_mult_periods <- function(size, dgp_type = 1){
     #-----------------------------------------------------------------------------
     # Return the data
     return(list(data = as.data.table(dta),
-                data_wide = as.data.table(dta_wide)))
+                data_wide = as.data.table(dta_wide),
+                ES_0_unf = ES_0_unf,
+                prob_g2_p1 = prob_g2_p1,
+                prob_g3_p1 = prob_g3_p1))
 
   } else {
     stop("Invalid DGP type")
