@@ -626,7 +626,7 @@ compute_aggregation <- function(ddd_obj,
   glist <- ddd_obj$glist
   dta <- ddd_obj$first_period_dta # data only for first period
   yname <- ddd_obj$argu$yname
-  partition_name <- ddd_obj$argu$partition_name
+  pname <- ddd_obj$argu$pname
   control_group <- ddd_obj$argu$control_group
 
   # overwriting parameters for multiplier bootstrap if needed:
@@ -798,7 +798,7 @@ compute_aggregation <- function(ddd_obj,
                 type = type,
                 yname = yname,
                 argu = new_argu,
-                partition_name = partition_name,
+                pname = pname,
                 control_group = control_group,
                 inf.function = list(simple.att = simple.if)))
   }
@@ -907,7 +907,7 @@ compute_aggregation <- function(ddd_obj,
                 overall.se=selective.se,
                 type=type,
                 yname = yname,
-                partition_name = partition_name,
+                pname = pname,
                 control_group = control_group,
                 argu = new_argu,
                 egt=orig_glist,
@@ -1023,7 +1023,7 @@ compute_aggregation <- function(ddd_obj,
                 overall.se=calendar.se,
                 type=type,
                 yname = yname,
-                partition_name = partition_name,
+                pname = pname,
                 control_group = control_group,
                 argu = new_argu,
                 egt=sapply(calendar.tlist,t2orig),
@@ -1151,7 +1151,7 @@ compute_aggregation <- function(ddd_obj,
                 overall.se=dynamic.se,
                 type=type,
                 yname = yname,
-                partition_name = partition_name,
+                pname = pname,
                 control_group = control_group,
                 argu = new_argu,
                 egt=eseq,

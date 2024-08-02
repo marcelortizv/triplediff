@@ -10,7 +10,7 @@ run_nopreprocess_2periods <- function(yname,
                                       idname,
                                       dname,
                                       gname = NULL,
-                                      partition_name,
+                                      pname,
                                       xformla = ~1,
                                       data,
                                       control_group = NULL,
@@ -114,7 +114,7 @@ run_nopreprocess_2periods <- function(yname,
                                          post = dta$post,
                                          treat = dta[[dname]],
                                          period = dta[[tname]],
-                                         partition = dta[[partition_name]],
+                                         partition = dta[[pname]],
                                          weights = dta$weights)
   idx_static_vars <- 8 # useful to perform the elimination of collinear variables
   # Add cluster column if cluster argument is provided
@@ -188,7 +188,7 @@ run_preprocess_2Periods <- function(yname,
                                    idname,
                                    dname,
                                    gname = NULL,
-                                   partition_name,
+                                   pname,
                                    xformla = ~1,
                                    data,
                                    control_group = NULL,
@@ -341,7 +341,7 @@ run_preprocess_2Periods <- function(yname,
                                          post = dta$post,
                                          treat = dta[[dname]],
                                          period = dta[[tname]],
-                                         partition = dta[[partition_name]],
+                                         partition = dta[[pname]],
                                          weights = dta$weights)
 
   idx_static_vars <- 8 # useful to perform the elimination of collinear variables
@@ -440,7 +440,7 @@ run_preprocess_multPeriods <- function(yname,
                                        idname,
                                        dname = NULL,
                                        gname,
-                                       partition_name,
+                                       pname,
                                        xformla = ~1,
                                        data,
                                        control_group,
@@ -551,7 +551,7 @@ run_preprocess_multPeriods <- function(yname,
   }
 
   # keep relevant columns in data
-  cols_to_keep <- c(idname, tname, yname, gname, partition_name, weightsname, cluster)
+  cols_to_keep <- c(idname, tname, yname, gname, pname, weightsname, cluster)
 
   model_frame <- model.frame(xformla, data = dta, na.action = na.pass)
   # Subset the data.table to keep only relevant columns
@@ -674,7 +674,7 @@ run_preprocess_multPeriods <- function(yname,
                                          y = dta[[yname]],
                                          first_treat = dta[[gname]],
                                          period = dta[[tname]],
-                                         partition = dta[[partition_name]],
+                                         partition = dta[[pname]],
                                          weights = dta$weights)
 
   # Add cluster column if cluster argument is provided

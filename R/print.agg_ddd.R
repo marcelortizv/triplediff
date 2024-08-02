@@ -85,7 +85,7 @@ print.agg_ddd <- function(x, ...) {
   cat("\n --------------------------- Data Info   --------------------------")
   cat("\n", paste("Outcome variable:", x$aggte_ddd$yname))
   # add partition variable name
-  cat("\n", paste("Partition variable:", x$aggte_ddd$partition_name))
+  cat("\n", paste("Partition variable:", x$aggte_ddd$pname))
   ifelse(x$aggte_ddd$control_group == "nevertreated", control_type <- "Never Treated", control_type <- "Not yet Treated")
   cat("\n", paste("Control group: ", control_type))
   cat("\n", paste("Level of significance: ", x$aggte_ddd$argu$alpha))

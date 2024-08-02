@@ -10,7 +10,7 @@ ddd(
   idname,
   dname,
   gname,
-  partition_name,
+  pname,
   xformla,
   data,
   control_group = NULL,
@@ -44,8 +44,8 @@ It is mutually exclusive with \code{gname}. If \code{dname} is provided, \code{g
 for treated units and defines which group the unit belongs to. It takes value 0 or Inf for untreated units. If \code{gname} is specified,
 we assume that the treatment is staggered. It is mutually exclusive with \code{dname}. If \code{gname} is provided, \code{dname} is ignored.}
 
-\item{partition_name}{The name of the column containing the partition variable (e.g., the subgroup identifier). This is an indicator variable that is 1 for
-the units targeted for treatment and 0 otherwise.}
+\item{pname}{The name of the column containing the partition variable (e.g., the subgroup identifier). This is an indicator variable that is 1 for
+the units eligible for treatment and 0 otherwise.}
 
 \item{xformla}{The formula for the covariates to be included in the model. It should be of the form \code{~ x1 + x2}.
 Default is \code{xformla = ~1} (no covariates).}
@@ -126,7 +126,7 @@ sim_data = generate_test_panel(seed = seed,
                               treatment.year = treatment.year)
 
 ddd(yname = "outcome", tname = "year", idname = "id", dname = "treat",
-    gname = NULL, partition_name = "partition", xformla = ~x1 + x2,
+    gname = NULL, pname = "partition", xformla = ~x1 + x2,
     data = sim_data, control_group = NULL,
     est_method = "dr")
 
@@ -144,7 +144,7 @@ learner_regr <- lrn("regr.xgboost")
 learners <- list(ml_pa = learner_rf, ml_md = learner_regr)
 
 ddd(yname = "outcome", tname = "year", idname = "id", dname = "treat",
-    gname = NULL, partition_name = "partition", xformla = ~x1 + x2,
+    gname = NULL, pname = "partition", xformla = ~x1 + x2,
     data = sim_data, control_group = NULL,
     est_method = "dml", learners = learners, n_folds = 3)
 
@@ -154,7 +154,7 @@ ddd(yname = "outcome", tname = "year", idname = "id", dname = "treat",
 data <- gen_dgp_mult_periods(size = 1000, dgp_type = 1)[["data"]]
 
 ddd(yname = "y", tname = "time", idname = "id", dname = NULL,
-     gname = "state", partition_name = "partition", xformla = ~cov1 + cov2 + cov3 + cov4,
+     gname = "state", pname = "partition", xformla = ~cov1 + cov2 + cov3 + cov4,
      data = data, control_group = "nevertreated", base_period = "varying",
      est_method = "dr")
 

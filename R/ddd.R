@@ -16,8 +16,8 @@ NULL
 #' @param gname Valid for multiple periods only. The name of the column containing the first period when a particular observation is treated. It is a positive number
 #' for treated units and defines which group the unit belongs to. It takes value 0 or Inf for untreated units. If \code{gname} is specified,
 #' we assume that the treatment is staggered. It is mutually exclusive with \code{dname}. If \code{gname} is provided, \code{dname} is ignored.
-#' @param partition_name The name of the column containing the partition variable (e.g., the subgroup identifier). This is an indicator variable that is 1 for
-#' the units targeted for treatment and 0 otherwise.
+#' @param pname The name of the column containing the partition variable (e.g., the subgroup identifier). This is an indicator variable that is 1 for
+#' the units eligible for treatment and 0 otherwise.
 #' @param xformla The formula for the covariates to be included in the model. It should be of the form \code{~ x1 + x2}.
 #' Default is \code{xformla = ~1} (no covariates).
 #' @param data A data frame or data table containing the data.
@@ -75,7 +75,7 @@ NULL
 #'                               treatment.year = treatment.year)
 #'
 #' ddd(yname = "outcome", tname = "year", idname = "id", dname = "treat",
-#'     gname = NULL, partition_name = "partition", xformla = ~x1 + x2,
+#'     gname = NULL, pname = "partition", xformla = ~x1 + x2,
 #'     data = sim_data, control_group = NULL,
 #'     est_method = "dr")
 #'
@@ -93,7 +93,7 @@ NULL
 #' learners <- list(ml_pa = learner_rf, ml_md = learner_regr)
 #'
 #' ddd(yname = "outcome", tname = "year", idname = "id", dname = "treat",
-#'     gname = NULL, partition_name = "partition", xformla = ~x1 + x2,
+#'     gname = NULL, pname = "partition", xformla = ~x1 + x2,
 #'     data = sim_data, control_group = NULL,
 #'     est_method = "dml", learners = learners, n_folds = 3)
 #'
@@ -103,7 +103,7 @@ NULL
 #' data <- gen_dgp_mult_periods(size = 1000, dgp_type = 1)[["data"]]
 #'
 #' ddd(yname = "y", tname = "time", idname = "id", dname = NULL,
-#'      gname = "state", partition_name = "partition", xformla = ~cov1 + cov2 + cov3 + cov4,
+#'      gname = "state", pname = "partition", xformla = ~cov1 + cov2 + cov3 + cov4,
 #'      data = data, control_group = "nevertreated", base_period = "varying",
 #'      est_method = "dr")
 #'
@@ -118,7 +118,7 @@ ddd <- function(yname,
                 idname,
                 dname,
                 gname,
-                partition_name,
+                pname,
                 xformla,
                 data,
                 control_group = NULL,
@@ -176,7 +176,7 @@ ddd <- function(yname,
                                       idname = idname,
                                       dname = dname,
                                       gname = NULL,
-                                      partition_name = partition_name,
+                                      pname = pname,
                                       xformla = xformla,
                                       data = data,
                                       control_group = NULL,
@@ -203,7 +203,7 @@ ddd <- function(yname,
                                        idname = idname,
                                        dname = NULL,
                                        gname = gname,
-                                       partition_name = partition_name,
+                                       pname = pname,
                                        xformla = xformla,
                                        data = data,
                                        control_group = control_group,
@@ -227,7 +227,7 @@ ddd <- function(yname,
       #                                  idname = idname,
       #                                  dname = NULL,
       #                                  gname = gname,
-      #                                  partition_name = partition_name,
+      #                                  pname = pname,
       #                                  xformla = xformla,
       #                                  data = data,
       #                                  control_group = control_group,
@@ -246,7 +246,7 @@ ddd <- function(yname,
                                     idname = idname,
                                     dname = dname,
                                     gname = NULL,
-                                    partition_name = partition_name,
+                                    pname = pname,
                                     xformla = xformla,
                                     data = data,
                                     control_group = NULL,
@@ -268,7 +268,7 @@ ddd <- function(yname,
                                     idname = idname,
                                     dname = dname,
                                     gname = NULL,
-                                    partition_name = partition_name,
+                                    pname = pname,
                                     xformla = xformla,
                                     data = data,
                                     control_group = NULL,
@@ -320,7 +320,7 @@ ddd <- function(yname,
   args <- mget(arg_names, sys.frame(sys.nframe()))
   argu <- list(
     yname = args$yname,
-    partition_name = args$partition_name,
+    pname = args$pname,
     control_group = args$control_group,
     est_method = est_method,
     multiple_periods = multiple_periods,

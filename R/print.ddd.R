@@ -106,7 +106,7 @@ print.ddd <- function(x, alpha = NULL, ...) {
   cat("\n", "Panel data")
   cat("\n", paste0("Outcome variable: ", x$argu$yname))
   # add partition variable name
-  cat("\n", paste0("Partition variable: ", x$argu$partition_name))
+  cat("\n", paste0("Partition variable: ", x$argu$pname))
   if(x$argu$multiple_periods == FALSE){
     cat("\n", "No. of observations for each partition:")
     cat("\n", paste0("  (treat = 1, partition = 1): ", x$subgroup_counts$V1[1]))
