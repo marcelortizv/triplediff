@@ -8,7 +8,6 @@ ddd(
   yname,
   tname,
   idname,
-  dname,
   gname,
   pname,
   xformla,
@@ -37,12 +36,8 @@ ddd(
 
 \item{idname}{The name of the column containing the unit id.}
 
-\item{dname}{Valid for 2 time periods only. The name of the column containing the treatment indicator dummy (1 if treated in the post-treatment period, 0 otherwise).
-It is mutually exclusive with \code{gname}. If \code{dname} is provided, \code{gname} is ignored.}
-
-\item{gname}{Valid for multiple periods only. The name of the column containing the first period when a particular observation is treated. It is a positive number
-for treated units and defines which group the unit belongs to. It takes value 0 or Inf for untreated units. If \code{gname} is specified,
-we assume that the treatment is staggered. It is mutually exclusive with \code{dname}. If \code{gname} is provided, \code{dname} is ignored.}
+\item{gname}{The name of the column containing the first period when a particular observation is treated. It is a positive number
+for treated units and defines which group the unit belongs to. It takes value 0 or Inf for untreated units.}
 
 \item{pname}{The name of the column containing the partition variable (e.g., the subgroup identifier). This is an indicator variable that is 1 for
 the units eligible for treatment and 0 otherwise.}
@@ -125,8 +120,8 @@ sim_data = generate_test_panel(seed = seed,
                               initial.year = initial.year,
                               treatment.year = treatment.year)
 
-ddd(yname = "outcome", tname = "year", idname = "id", dname = "treat",
-    gname = NULL, pname = "partition", xformla = ~x1 + x2,
+ddd(yname = "outcome", tname = "year", idname = "id", gname = "treat",
+    pname = "partition", xformla = ~x1 + x2,
     data = sim_data, control_group = NULL,
     est_method = "dr")
 
@@ -143,8 +138,8 @@ learner_regr <- lrn("regr.xgboost")
 
 learners <- list(ml_pa = learner_rf, ml_md = learner_regr)
 
-ddd(yname = "outcome", tname = "year", idname = "id", dname = "treat",
-    gname = NULL, pname = "partition", xformla = ~x1 + x2,
+ddd(yname = "outcome", tname = "year", idname = "id", gname = "treat",
+    pname = "partition", xformla = ~x1 + x2,
     data = sim_data, control_group = NULL,
     est_method = "dml", learners = learners, n_folds = 3)
 
@@ -153,7 +148,7 @@ ddd(yname = "outcome", tname = "year", idname = "id", dname = "treat",
 #----------------------------------------------------------
 data <- gen_dgp_mult_periods(size = 1000, dgp_type = 1)[["data"]]
 
-ddd(yname = "y", tname = "time", idname = "id", dname = NULL,
+ddd(yname = "y", tname = "time", idname = "id",
      gname = "state", pname = "partition", xformla = ~cov1 + cov2 + cov3 + cov4,
      data = data, control_group = "nevertreated", base_period = "varying",
      est_method = "dr")

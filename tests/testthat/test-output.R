@@ -12,32 +12,32 @@ test_that("Testing generation of output in main function", {
   # Performing tests
   # ------------------------------
 
-  ddd_test <- ddd(yname = "outcome", tname = "year", idname = "id", dname = "treat",
-                  gname = NULL, pname = "partition", xformla = ~x1 + x2,
+  ddd_test <- ddd(yname = "outcome", tname = "year", idname = "id", gname = "treat",
+                  pname = "partition", xformla = ~x1 + x2,
                   data = test_panel, control_group = NULL, base_period = NULL, est_method = "dr", learners = NULL,
                   weightsname = NULL, boot = FALSE, nboot = NULL,
                   inffunc = FALSE, skip_data_checks = FALSE)
 
   # performing DR estimatio with 2 periods
-  ddd_dr = ddd(yname = "y", tname = "time", idname = "id", dname = "state",
-               gname = NULL, pname = "partition", xformla = ~cov1 + cov2 + cov3 + cov4,
+  ddd_dr = ddd(yname = "y", tname = "time", idname = "id", gname = "state",
+               pname = "partition", xformla = ~cov1 + cov2 + cov3 + cov4,
                data = data_2periods, alpha = 0.05, est_method = "dr")
 
   # performing DR estimation with 2 periods and bootstrapping + clustered std. errors.
-  ddd_boot_cluster = ddd(yname = "y", tname = "time", idname = "id", dname = "state",
-                         gname = NULL, pname = "partition", xformla = ~cov1 + cov2 + cov3 + cov4,
+  ddd_boot_cluster = ddd(yname = "y", tname = "time", idname = "id", gname = "state",
+                         pname = "partition", xformla = ~cov1 + cov2 + cov3 + cov4,
                          data = data_2periods, alpha = 0.05, boot = TRUE, nboot = 999,
                          est_method = "dr", cluster = "cluster", cband = TRUE)
 
 
   # performing DR estimation with multiple periods
-  ddd_gt <- ddd(yname = "y", tname = "time", idname = "id", dname = NULL,
+  ddd_gt <- ddd(yname = "y", tname = "time", idname = "id",
                 gname = "state", pname = "partition", xformla = ~cov1 + cov2 + cov3 + cov4,
                 data = data_multperiods, control_group = "nevertreated", base_period = "universal",
                 est_method = "dr")
 
   # performing DR estimation with multiple periods and bootstrapping
-  ddd_gt_boot_cluster <- ddd(yname = "y", tname = "time", idname = "id", dname = NULL,
+  ddd_gt_boot_cluster <- ddd(yname = "y", tname = "time", idname = "id",
                              gname = "state", pname = "partition", xformla = ~cov1 + cov2 + cov3 + cov4,
                              data = data_multperiods, control_group = "nevertreated", base_period = "universal",
                              est_method = "dr", boot = TRUE, nboot = 999, cluster = "cluster", cband = TRUE)

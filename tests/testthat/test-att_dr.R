@@ -7,14 +7,14 @@ test_that("multiplication works", {
   # Performing tests
   # ------------------------------
 
-  ddd_analytical <- ddd(yname = "outcome", tname = "year", idname = "id", dname = "treat",
-                  gname = NULL, pname = "partition", xformla = ~x1 + x2,
+  ddd_analytical <- ddd(yname = "outcome", tname = "year", idname = "id", gname = "treat",
+                 pname = "partition", xformla = ~x1 + x2,
                   data = test_panel, control_group = NULL, base_period = NULL, est_method = "dr", learners = NULL, n_folds = NULL,
                   weightsname = NULL, boot = TRUE, nboot = NULL,
                   inffunc = FALSE, skip_data_checks = FALSE)
 
-  ddd_boostrap <- ddd(yname = "outcome", tname = "year", idname = "id", dname = "treat",
-                  gname = NULL, pname = "partition", xformla = ~x1 + x2,
+  ddd_boostrap <- ddd(yname = "outcome", tname = "year", idname = "id", gname = "treat",
+                  pname = "partition", xformla = ~x1 + x2,
                   data = test_panel, control_group = NULL, base_period = NULL, est_method = "dr", learners = NULL, n_folds = NULL,
                   weightsname = NULL, boot = FALSE, nboot = NULL,
                   inffunc = FALSE, skip_data_checks = FALSE)

@@ -7,7 +7,7 @@ validate_args_2Periods <- function(args, dta){
   yname <- args$yname
   tname <- args$tname
   idname <- args$idname
-  dname <- args$dname
+  gname <- args$gname
   pname <- args$pname
   xformla <- args$xformla
   est_method <- args$est_method
@@ -46,16 +46,21 @@ validate_args_2Periods <- function(args, dta){
     stop("The type of ddd specified only allow for two time periods (pre and post). Change type of ddd for multiple time periods")
   }
 
-  # Flag for dname
-  if ( !is.element(dname, base::colnames(dta))) {
-    stop("dname = ",dname,  " could not be found in the data provided.")
+  # Flag for gname
+  if ( !is.element(gname, base::colnames(dta))) {
+    stop("gname = ",gname,  " could not be found in the data provided.")
   }
 
   # Check if there is only 2 groups
-  dlist <- unique(dta[[dname]])[base::order(unique(dta[[dname]]))]
-  if (length(dlist) != 2) {
+  # dlist <- unique(dta[[dname]])[base::order(unique(dta[[dname]]))]
+  # if (length(dlist) != 2) {
+  #   stop("The type of ddd specified only allow for two groups (treated and untreated). Change type of ddd for multiple groups")
+  # }
+  if (dta[, uniqueN(get(gname))] != 2) {
     stop("The type of ddd specified only allow for two groups (treated and untreated). Change type of ddd for multiple groups")
   }
+
+
 
   # Flag for pname
   if ( !is.element(pname, base::colnames(dta))) {
@@ -94,8 +99,8 @@ validate_args_2Periods <- function(args, dta){
   # Check if partition is unique by idname
   checkPartitionUniqueness(dta, idname, pname)
 
-  # Check if dname is unique by idname
-  checkTreatmentUniqueness(dta, idname, dname)
+  # Check if gname is unique by idname
+  checkTreatmentUniqueness(dta, idname, gname)
 
   # Flag for weightsname
   if(!is.null(weightsname)){

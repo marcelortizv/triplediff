@@ -11,11 +11,8 @@ NULL
 #' @param yname The name of the outcome variable.
 #' @param tname The name of the column containing the time periods.
 #' @param idname The name of the column containing the unit id.
-#' @param dname Valid for 2 time periods only. The name of the column containing the treatment indicator dummy (1 if treated in the post-treatment period, 0 otherwise).
-#' It is mutually exclusive with \code{gname}. If \code{dname} is provided, \code{gname} is ignored.
-#' @param gname Valid for multiple periods only. The name of the column containing the first period when a particular observation is treated. It is a positive number
-#' for treated units and defines which group the unit belongs to. It takes value 0 or Inf for untreated units. If \code{gname} is specified,
-#' we assume that the treatment is staggered. It is mutually exclusive with \code{dname}. If \code{gname} is provided, \code{dname} is ignored.
+#' @param gname The name of the column containing the first period when a particular observation is treated. It is a positive number
+#' for treated units and defines which group the unit belongs to. It takes value 0 or Inf for untreated units.
 #' @param pname The name of the column containing the partition variable (e.g., the subgroup identifier). This is an indicator variable that is 1 for
 #' the units eligible for treatment and 0 otherwise.
 #' @param xformla The formula for the covariates to be included in the model. It should be of the form \code{~ x1 + x2}.
@@ -74,8 +71,8 @@ NULL
 #'                               initial.year = initial.year,
 #'                               treatment.year = treatment.year)
 #'
-#' ddd(yname = "outcome", tname = "year", idname = "id", dname = "treat",
-#'     gname = NULL, pname = "partition", xformla = ~x1 + x2,
+#' ddd(yname = "outcome", tname = "year", idname = "id", gname = "treat",
+#'     pname = "partition", xformla = ~x1 + x2,
 #'     data = sim_data, control_group = NULL,
 #'     est_method = "dr")
 #'
@@ -92,8 +89,8 @@ NULL
 #'
 #' learners <- list(ml_pa = learner_rf, ml_md = learner_regr)
 #'
-#' ddd(yname = "outcome", tname = "year", idname = "id", dname = "treat",
-#'     gname = NULL, pname = "partition", xformla = ~x1 + x2,
+#' ddd(yname = "outcome", tname = "year", idname = "id", gname = "treat",
+#'     pname = "partition", xformla = ~x1 + x2,
 #'     data = sim_data, control_group = NULL,
 #'     est_method = "dml", learners = learners, n_folds = 3)
 #'
@@ -102,7 +99,7 @@ NULL
 #' #----------------------------------------------------------
 #' data <- gen_dgp_mult_periods(size = 1000, dgp_type = 1)[["data"]]
 #'
-#' ddd(yname = "y", tname = "time", idname = "id", dname = NULL,
+#' ddd(yname = "y", tname = "time", idname = "id",
 #'      gname = "state", pname = "partition", xformla = ~cov1 + cov2 + cov3 + cov4,
 #'      data = data, control_group = "nevertreated", base_period = "varying",
 #'      est_method = "dr")
@@ -116,7 +113,6 @@ NULL
 ddd <- function(yname,
                 tname,
                 idname,
-                dname,
                 gname,
                 pname,
                 xformla,
@@ -142,15 +138,24 @@ ddd <- function(yname,
   # Running initial arguments validation
   #------------------------------------------
 
+  # Check if 'dta' is a data.table
+  if (!"data.table" %in% class(data)) {
+    # converting data to data.table
+    dta <- data.table::as.data.table(data)
+  } else {
+    dta <- data
+  }
+
   # Check what's the setting: 2 time periods or multiple time periods
-  if (is.null(dname) && is.null(gname)) {
-    stop("Either dname or gname should be provided")
-  } else if (!is.null(dname)){
+  # TODO; see how to identify if your in multiple time periods or just 2 time periods
+  if (is.null(gname)) {
+    stop("gname should be provided")
+  } else if (dta[, uniqueN(get(gname))] == 2){
     multiple_periods <- FALSE
-    gname <- NULL
-  } else if (!is.null(gname)){
+  } else if (dta[, uniqueN(get(gname))] > 2){
     multiple_periods <- TRUE
-    dname <- NULL
+  } else {
+    stop("Invalid gname. Please check your arguments.")
   }
 
   # Flag for est_method
@@ -161,8 +166,8 @@ ddd <- function(yname,
 
   # Flag for control group in multiple periods
   if (multiple_periods && is.null(control_group)) {
-      warning("control_group should be provided for multiple time periods. Using 'notyettreated'")
-      control_group <- "notyettreated"
+      warning("control_group should be provided for multiple time periods. Using 'nevertreated'")
+      control_group <- "nevetreated"
   }
 
   #------------------------------------------
@@ -174,11 +179,10 @@ ddd <- function(yname,
       dp <- run_nopreprocess_2periods(yname = yname,
                                       tname = tname,
                                       idname = idname,
-                                      dname = dname,
-                                      gname = NULL,
+                                      gname = gname,
                                       pname = pname,
                                       xformla = xformla,
-                                      data = data,
+                                      dta = dta,
                                       control_group = NULL,
                                       est_method = "dr",
                                       learners = NULL,
@@ -201,11 +205,10 @@ ddd <- function(yname,
       dp <- run_preprocess_multPeriods(yname = yname,
                                        tname = tname,
                                        idname = idname,
-                                       dname = NULL,
                                        gname = gname,
                                        pname = pname,
                                        xformla = xformla,
-                                       data = data,
+                                       dta = dta,
                                        control_group = control_group,
                                        base_period = base_period,
                                        est_method = "dr",
@@ -225,11 +228,10 @@ ddd <- function(yname,
       # dp <- run_preprocess_multPeriods(yname = yname,
       #                                  tname = tname,
       #                                  idname = idname,
-      #                                  dname = NULL,
       #                                  gname = gname,
       #                                  pname = pname,
       #                                  xformla = xformla,
-      #                                  data = data,
+      #                                  dta = dta,
       #                                  control_group = control_group,
       #                                  base_period = base_period,
       #                                  est_method = "dml",
@@ -244,11 +246,10 @@ ddd <- function(yname,
       dp <- run_preprocess_2Periods(yname = yname,
                                     tname = tname,
                                     idname = idname,
-                                    dname = dname,
-                                    gname = NULL,
+                                    gname = gname,
                                     pname = pname,
                                     xformla = xformla,
-                                    data = data,
+                                    dta = dta,
                                     control_group = NULL,
                                     est_method = "dr",
                                     learners = NULL,
@@ -266,11 +267,10 @@ ddd <- function(yname,
       dp <- run_preprocess_2Periods(yname = yname,
                                     tname = tname,
                                     idname = idname,
-                                    dname = dname,
-                                    gname = NULL,
+                                    gname = gname,
                                     pname = pname,
                                     xformla = xformla,
-                                    data = data,
+                                    dta = dta,
                                     control_group = NULL,
                                     est_method = "dml",
                                     learners = learners,
