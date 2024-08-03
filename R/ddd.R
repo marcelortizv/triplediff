@@ -25,9 +25,9 @@ NULL
 #' Universal base period: Fixes the base period to (g-1), reporting average changes from t to (g-1) for a group relative to its comparison group, similar to event study regressions.
 #' Varying base period reports ATT(g,t) right before treatment. Universal base period normalizes the estimate before treatment to be 0, adding one extra estimate in an earlier period.
 #' @param est_method The estimation method to be used. Default is \code{"dr"} (doubly robust). It computes propensity score using logistic regression
-#' and outcome regression using OLS. The alternative is \code{"dml"} (double machine learning). It allows the user to compute propensity score using a
-#' machine learning algorithm and outcome regression using a different machine learning algorithm. We provide some wrappers for popular learners but
-#' the user can also provide their own learner. See our vignette on How to construct a use-provided learner for more details (# TODO).
+#' and outcome regression using OLS. The alternative are \code{c("reg", "ipw", dml")}. The last option allows the user to compute propensity score using a
+#' machine learning algorithm and outcome regression using a different machine learning algorithm based on \code{mlr3} library. We provide some examples for popular learners but
+#' the user can also provide their own learner.
 #' @param learners A list of learners to be used in the estimation. It should be a list of two elements,
 #' the first element being the learner for the propensity score and the second element being the learner for the outcome regression.
 #' Default is \code{NULL}, then OLS and MLE Logit is used to estimate nuisances parameters. If \code{est_method = "dml"}, user have to specify \code{learners}.
