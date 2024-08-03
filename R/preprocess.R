@@ -29,14 +29,6 @@ run_nopreprocess_2periods <- function(yname,
   arg_names <- setdiff(names(formals()), "dta")
   args <- mget(arg_names, sys.frame(sys.nframe()))
 
-  # # Check if 'dta' is a data.table
-  # if (!"data.table" %in% class(data)) {
-  #   # converting data to data.table
-  #   dta <- data.table::as.data.table(data)
-  # } else {
-  #   dta <- data
-  # }
-
   # Flag for alpha > 0.10
   if (alpha > 0.10) {
     warning("alpha = ", alpha, " is too high. Using alpha = 0.05 as default.")
@@ -96,10 +88,7 @@ run_nopreprocess_2periods <- function(yname,
   }
 
   # Creating a post dummy variable based on tlist[2] (second period = post treatment)
-  #tlist <- unique(dta[[args$tname]])[base::order(unique(dta[[args$tname]]))]
-  #tlist <- sort(unique(dta[[tname]]))
   tlist <- dta[, sort(unique(get(tname)))]
-  #dta$post <- as.numeric(dta[[tname]] == tlist[2])
   dta[, post := as.numeric(get(tname) == tlist[2])]
 
   # sort data based on idnam and tname and make it balanced
@@ -245,14 +234,6 @@ run_preprocess_2Periods <- function(yname,
     }
   }
 
-  # # Check if 'dta' is a data.table
-  # if (!"data.table" %in% class(data)) {
-  #   # converting data to data.table
-  #   dta <- data.table::as.data.table(data)
-  # } else {
-  #   dta <- data
-  # }
-
   # Run argument checks
   validate_args_2Periods(args, dta)
 
@@ -315,9 +296,9 @@ run_preprocess_2Periods <- function(yname,
   )
 
   # Creating a post dummy variable based on tlist[2] (second period = post treatment)
-  #tlist <- unique(dta[[args$tname]])[base::order(unique(dta[[args$tname]]))]
-  tlist <- sort(unique(dta[[tname]]))
-  dta$post <- as.numeric(dta[[tname]] == tlist[2])
+  tlist <- dta[, sort(unique(get(tname)))]
+  dta[, post := as.numeric(get(tname) == tlist[2])]
+
   # Checking if covariates are time invariant in panel data case
   # Create the model matrix
   cov_pre <- model.matrix(as.formula(xformla), data = dta[dta[["post"]] == 0])
@@ -504,15 +485,6 @@ run_preprocess_multPeriods <- function(yname,
     }
   }
 
-
-  # # Check if 'dta' is a data.table
-  # if (!"data.table" %in% class(data)) {
-  #   # converting data to data.table
-  #   dta <- data.table::as.data.table(data)
-  # } else {
-  #   dta <- data
-  # }
-
   # Run argument checks
   validate_args_multPeriods(args, dta)
 
@@ -575,7 +547,7 @@ run_preprocess_multPeriods <- function(yname,
   dta$weights <- weights
 
   # get a list of dates from min to max
-  tlist <- sort(unique(dta[[tname]]))
+  tlist <- dta[, sort(unique(get(tname)))]
 
   # Coerce control group identified with Inf as zero
   dta[get(gname) == Inf, (gname) := 0]
@@ -697,11 +669,6 @@ run_preprocess_multPeriods <- function(yname,
   if(length(glist)==0){
     stop("No valid groups. The variable in 'gname' should be expressed as the time a unit is first treated (0 if never-treated).")
   }
-
-  # # Check if there are enough time periods
-  # if (length(tlist) == 2) {
-  #   stop("The type of ddd specified only have two time periods. Change type of ddd for two time periods using argument 'dname'.")
-  # }
 
   # Check for small comparison groups
   # Calculate the size of each group in the 'treat' column

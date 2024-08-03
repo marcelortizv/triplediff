@@ -52,10 +52,6 @@ validate_args_2Periods <- function(args, dta){
   }
 
   # Check if there is only 2 groups
-  # dlist <- unique(dta[[dname]])[base::order(unique(dta[[dname]]))]
-  # if (length(dlist) != 2) {
-  #   stop("The type of ddd specified only allow for two groups (treated and untreated). Change type of ddd for multiple groups")
-  # }
   if (dta[, uniqueN(get(gname))] != 2) {
     stop("The type of ddd specified only allow for two groups (treated and untreated). Change type of ddd for multiple groups")
   }
