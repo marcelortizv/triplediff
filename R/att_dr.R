@@ -9,6 +9,7 @@
 #' @param did_preprocessed A list containing preprocessed data and specifications for the DDD estimation.
 #'        Expected elements include:
 #'        - `preprocessed_data`: A data table containing the data with variables needed for the analysis.
+#'        - `est_method`: The estimation method to be used. Default is \code{est_method = "dr"}.
 #'        - `xformula`: The formula for the covariates to be included in the model. It should be of the form \code{~ x1 + x2}.
 #'        Default is \code{xformla = ~1} (no covariates).
 #'        - `boot`: Logical. If \code{TRUE}, the function use the multiplier bootstrap to compute standard errors. Default is \code{FALSE}.
@@ -29,6 +30,7 @@ NULL
 att_dr <- function(did_preprocessed) {
 
   data <- did_preprocessed$preprocessed_data
+  est_method <- did_preprocessed$est_method
   xformula <- did_preprocessed$xformula
   boot <- did_preprocessed$boot
   nboot <- did_preprocessed$nboot
@@ -45,21 +47,33 @@ att_dr <- function(did_preprocessed) {
   # --------------------------------------------------------------------
 
   # Pre-compute propensity scores for each subgroup
-  pscores <- lapply(c(3, 2, 1), function(condition_subgroup) {
-    compute_pscore(data, condition_subgroup, xformula)
-  })
+  if (est_method == "reg"){
+    # set pscores properly such that weights for control are zero
+    pscores <- lapply(c(3, 2, 1), function(condition_subgroup) {
+      compute_pscore_null(data, condition_subgroup)
+    })
+  } else {
+    pscores <- lapply(c(3, 2, 1), function(condition_subgroup) {
+      compute_pscore(data, condition_subgroup, xformula)
+    })
+  }
 
-
-  # Pre-compute the regression adjustment for each subgroup
-  reg_adjust <- lapply(c(3, 2, 1), function(condition_subgroup) {
-    compute_outcome_regression(data, condition_subgroup, xformula)
-  })
-
+  if (est_method == "ipw"){
+    # set or_delta equal to zero
+    reg_adjust <- lapply(c(3, 2, 1), function(condition_subgroup) {
+      compute_outcome_regression_null(data, condition_subgroup)
+    })
+  } else {
+    # Pre-compute the regression adjustment for each subgroup
+    reg_adjust <- lapply(c(3, 2, 1), function(condition_subgroup) {
+      compute_outcome_regression(data, condition_subgroup, xformula)
+    })
+  }
 
   # Compute Doubly Robust Triple Difference Estimator
-  dr_att_inf_func_3 <- compute_did(data, condition_subgroup = 3, pscores, reg_adjust, xformula) # S=2, L=A
-  dr_att_inf_func_2 <- compute_did(data, condition_subgroup = 2, pscores, reg_adjust, xformula) # S=\infty, L=B
-  dr_att_inf_func_1 <- compute_did(data, condition_subgroup = 1, pscores, reg_adjust, xformula) # S=\infty, L=A
+  dr_att_inf_func_3 <- compute_did(data, condition_subgroup = 3, pscores, reg_adjust, xformula, est_method) # S=2, L=A
+  dr_att_inf_func_2 <- compute_did(data, condition_subgroup = 2, pscores, reg_adjust, xformula, est_method) # S=\infty, L=B
+  dr_att_inf_func_1 <- compute_did(data, condition_subgroup = 1, pscores, reg_adjust, xformula, est_method) # S=\infty, L=A
 
   dr_ddd <- dr_att_inf_func_3$dr_att + dr_att_inf_func_2$dr_att - dr_att_inf_func_1$dr_att
   n <- data[, .N/2]

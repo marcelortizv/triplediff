@@ -113,6 +113,18 @@ compute_pscore <- function(data, condition_subgroup, xformula) {
   return(list(propensity_scores = propensity_scores, hessian_matrix = hessian_matrix))
 }
 
+compute_pscore_null <- function(data, condition_subgroup) {
+  # This is valid when REG is used
+  # Subset data for condition_subgroup and subgroup == 4 or the given condition_subgroup
+  condition_data <- data[data$subgroup %in% c(condition_subgroup, 4)]
+  uid_condition_data <- unique(condition_data, by = "id")
+
+  propensity_scores <- rep(1, nrow(uid_condition_data))
+  hessian_matrix <- NA
+
+  return(list(propensity_scores = propensity_scores, hessian_matrix = hessian_matrix))
+}
+
 # Function to compute outcome regression for multiple subgroups
 compute_outcome_regression <- function(data, condition_subgroup, xformula){
   # Subset data for condition_subgroup and subgroup == 4 or the given condition_subgroup
@@ -166,8 +178,26 @@ compute_outcome_regression <- function(data, condition_subgroup, xformula){
   return(list(deltaY = deltaY, or_delta = or_delta))
 }
 
+compute_outcome_regression_null <- function(data, condition_subgroup){
+  # This is valid when IPW is used
+  # Subset data for condition_subgroup and subgroup == 4 or the given condition_subgroup
+  condition_data <- data[data$subgroup %in% c(condition_subgroup, 4)]
+
+  # compute regression adjustment
+  y1 = condition_data[condition_data$post == 1, y]
+  y0 = condition_data[condition_data$post == 0, y]
+  deltaY = y1 - y0
+
+  # Filter the data for the pre-treatment period
+  pre_treatment_data <- condition_data[condition_data$post == 0]
+  # Create a zero vector with the same length as the number of rows in pre_treatment_data
+  or_delta <- numeric(nrow(pre_treatment_data))
+
+  return(list(deltaY = deltaY, or_delta = or_delta))
+}
+
 # Function to compute the average treatment effect for multiple subgroups
-compute_did <- function(data, condition_subgroup, pscores, reg_adjustment, xformula){
+compute_did <- function(data, condition_subgroup, pscores, reg_adjustment, xformula, est_method){
 
   data <- unique(data, by = "id")
   condition_data <- data[data$subgroup %in% c(condition_subgroup, 4)]
@@ -203,9 +233,13 @@ compute_did <- function(data, condition_subgroup, pscores, reg_adjustment, xform
   ################################
   # Get doubly-robust estimation #
   ################################
-
   w_treat = i_weights * PA4
-  w_control = (i_weights * pscore * PAa) / (1 - pscore)
+  if (est_method == "reg") {
+    # Compute doubly-robust estimation
+    w_control = (i_weights * PAa)
+  } else {
+    w_control = (i_weights * pscore * PAa) / (1 - pscore)
+  }
   riesz_treat = w_treat * (deltaY - or_delta)
   riesz_control = w_control * (deltaY - or_delta)
   att_treat = mean(riesz_treat, na.rm = TRUE) / mean(w_treat, na.rm = TRUE)
@@ -219,31 +253,38 @@ compute_did <- function(data, condition_subgroup, pscores, reg_adjustment, xform
 
   # Influence function related to the estimation of pscores
   covX = stats::model.matrix(xformula, data = condition_data)
-  M2 <- base::colMeans(w_control * (deltaY - or_delta - att_control) * covX, na.rm = TRUE) # reg_adjust = deltaY - m_delta(x)
+  if (est_method == "reg") {
+    inf_control_pscore <- 0
+  } else {
+    M2 <- base::colMeans(w_control * (deltaY - or_delta - att_control) * covX, na.rm = TRUE) # reg_adjust = deltaY - m_delta(x)
+    score_ps <- i_weights * (PA4 - pscore) * covX
+    # asymptotic linear representation of logit's beta
+    score_ps_no_na <- na.omit(score_ps) # Exclude rows with NA values
+    asy_lin_rep_ps <- score_ps_no_na %*% hessian
+    inf_control_pscore <- asy_lin_rep_ps %*% as.matrix(M2)
+  }
 
-  score_ps <- i_weights * (PA4 - pscore) * covX
-  # asymptotic linear representation of logit's beta
-  score_ps_no_na <- na.omit(score_ps) # Exclude rows with NA values
-  asy_lin_rep_ps <- score_ps_no_na %*% hessian
-  inf_control_pscore <- asy_lin_rep_ps %*% as.matrix(M2)
+  if (est_method == "ipw") {
+    inf_treat_or <- 0
+    inf_cont_or <- 0
+  } else {
+    # Influence function related to the estimation of outcome model
+    M1 <- base::colMeans(w_treat * covX, na.rm = TRUE)
+    M3 <- base::colMeans(w_control * covX, na.rm = TRUE)
 
-  # Influence function related to the estimation of pscores
+    # Influence function related to the estimation of regression model
+    or_x <- i_weights * PAa * covX
+    or_ex <- i_weights * PAa * (deltaY - or_delta) * covX
+    XpX <- crossprod(or_x, covX)/nrow(condition_data)
 
-  M1 <- base::colMeans(w_treat * covX, na.rm = TRUE)
-  M3 <- base::colMeans(w_control * covX, na.rm = TRUE)
+    #asymptotic linear representation of the beta
+    asy_linear_or <- t(solve(XpX, t(or_ex)))
 
-  # Influence function related to the estimation of regression model
-  or_x <- i_weights * PAa * covX
-  or_ex <- i_weights * PAa * (deltaY - or_delta) * covX
-  XpX <- crossprod(or_x, covX)/nrow(condition_data)
-
-  #asymptotic linear representation of the beta
-  asy_linear_or <- t(solve(XpX, t(or_ex)))
-
-  #or for treat
-  inf_treat_or <- -asy_linear_or %*% M1
-  #or for control
-  inf_cont_or <- -asy_linear_or %*% M3
+    #or for treat
+    inf_treat_or <- -asy_linear_or %*% M1
+    #or for control
+    inf_cont_or <- -asy_linear_or %*% M3
+  }
 
   # Influence function from did
   inf_control_did <- riesz_control - w_control*att_control

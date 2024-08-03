@@ -607,8 +607,8 @@ run_preprocess_multPeriods <- function(yname,
     dta <- dta[get(gname) %in% c(0, glist)]
 
     # update tlist and glist
-    tlist <- sort(unique(dta[[tname]]))
-    glist <- sort(unique(dta[[gname]]))
+    tlist <- dta[, sort(unique(get(tname)))]
+    glist <- dta[, sort(unique(get(gname)))]
     glist <- glist[glist > 0]
 
     # Drop groups treated in the first period or before

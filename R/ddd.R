@@ -7,7 +7,6 @@ NULL
 #' It can be used with covariates and/or under multiple time periods. At its core, \code{triplediff} employs
 #' the doubly robust estimator for the ATT, which is a combination of the propensity score weighting and the outcome regression.
 #' Furthermore, this package supports the application of machine learning methods for the estimation of the nuisance functions.
-#'
 #' @param yname The name of the outcome variable.
 #' @param tname The name of the column containing the time periods.
 #' @param idname The name of the column containing the unit id.
@@ -25,8 +24,8 @@ NULL
 #' Universal base period: Fixes the base period to (g-1), reporting average changes from t to (g-1) for a group relative to its comparison group, similar to event study regressions.
 #' Varying base period reports ATT(g,t) right before treatment. Universal base period normalizes the estimate before treatment to be 0, adding one extra estimate in an earlier period.
 #' @param est_method The estimation method to be used. Default is \code{"dr"} (doubly robust). It computes propensity score using logistic regression
-#' and outcome regression using OLS. The alternative are \code{c("reg", "ipw", dml")}. The last option allows the user to compute propensity score using a
-#' machine learning algorithm and outcome regression using a different machine learning algorithm based on \code{mlr3} library. We provide some examples for popular learners but
+#' and outcome regression using OLS. The alternative are \code{c("reg", "ipw", "dml")}. The last option allows the user to compute propensity score using a
+#' machine learning algorithm and outcome regression using a different machine learning algorithm based on mlr3 library. We provide some examples for popular learners but
 #' the user can also provide their own learner.
 #' @param learners A list of learners to be used in the estimation. It should be a list of two elements,
 #' the first element being the learner for the propensity score and the second element being the learner for the outcome regression.
@@ -147,20 +146,23 @@ ddd <- function(yname,
   }
 
   # Check what's the setting: 2 time periods or multiple time periods
-  # TODO; see how to identify if your in multiple time periods or just 2 time periods
   if (is.null(gname)) {
     stop("gname should be provided")
-  } else if (dta[, uniqueN(get(gname))] == 2){
-    multiple_periods <- FALSE
-  } else if (dta[, uniqueN(get(gname))] > 2){
-    multiple_periods <- TRUE
   } else {
-    stop("Invalid gname. Please check your arguments.")
+    unique_gname_values <- dta[, uniqueN(get(gname))]
+    if (unique_gname_values == 2) {
+      multiple_periods <- FALSE
+    } else if (unique_gname_values > 2) {
+      multiple_periods <- TRUE
+    } else {
+      stop("Invalid gname. Please check your arguments.")
+    }
   }
 
+
   # Flag for est_method
-  if ((est_method != "dml") && (est_method != "dr")) {
-    warning("est_method = ", est_method, " is not supported. Using 'dr'.")
+  if (!(est_method %in% c("reg", "ipw", "dr", "dml"))) {
+    warning("est_method = ", est_method, " is invalid or not supported. Using 'dr'.")
     est_method <- "dr"
   }
 
@@ -184,7 +186,7 @@ ddd <- function(yname,
                                       xformla = xformla,
                                       dta = dta,
                                       control_group = NULL,
-                                      est_method = "dr",
+                                      est_method = est_method,
                                       learners = NULL,
                                       n_folds = NULL,
                                       weightsname = weightsname,
@@ -201,7 +203,7 @@ ddd <- function(yname,
     }
 
   } else {
-    if ((multiple_periods) && (est_method =="dr")) {
+    if ((multiple_periods) && (est_method %in% c("dr", "reg", "ipw"))) {
       dp <- run_preprocess_multPeriods(yname = yname,
                                        tname = tname,
                                        idname = idname,
@@ -211,7 +213,7 @@ ddd <- function(yname,
                                        dta = dta,
                                        control_group = control_group,
                                        base_period = base_period,
-                                       est_method = "dr",
+                                       est_method = est_method,
                                        learners = NULL,
                                        n_folds = NULL,
                                        weightsname = weightsname,
@@ -242,7 +244,7 @@ ddd <- function(yname,
       #                                  nboot = nboot,
       #                                  inffunc = inffunc)
       stop("Triple Diff with multiple time periods and DML is not yet supported")
-    } else if ((!multiple_periods) && (est_method == "dr")) {
+    } else if ((!multiple_periods) && (est_method %in% c("dr", "reg", "ipw"))) {
       dp <- run_preprocess_2Periods(yname = yname,
                                     tname = tname,
                                     idname = idname,
@@ -251,7 +253,7 @@ ddd <- function(yname,
                                     xformla = xformla,
                                     dta = dta,
                                     control_group = NULL,
-                                    est_method = "dr",
+                                    est_method = est_method,
                                     learners = NULL,
                                     n_folds = NULL,
                                     weightsname = weightsname,
@@ -293,20 +295,24 @@ ddd <- function(yname,
 
   # multiple time periods case: dr or dml
   if (multiple_periods){
-    if (est_method == "dr"){
+    # RUN DR for multiple periods
+    if (est_method %in% c("dr", "reg", "ipw")){
       att_gt_dr <- att_gt(dp)
     } else {
+      # RUN DML for multiple time periods
       stop("DML for multiple time periods is not yet supported")
       # TODO: IMPLEMENT att_gt_dml PROCEDURE AND ADJUST PARAMETERS
       # att_gt_dml <- att_gt_dml(dp)
-    }#RUN DML for multiple time periods
+    }
   } else {
-    if (est_method == "dr"){
+    if (est_method %in% c("dr", "reg", "ipw")){
+      # RUN DR for 2 time periods
       att_dr <- att_dr(dp)
     } else {
+      # RUN DML for 2 time periods
       att_dml <- att_dml(dp)
-    }#RUN DML for 2 time periods
-  }#RUN DR for 2 time periods
+    }
+  }
 
   #------------------------------------------
   # Return the results
@@ -335,7 +341,7 @@ ddd <- function(yname,
   )
 
   if (!multiple_periods){
-    if (est_method == "dr"){
+    if (est_method %in% c("dr", "reg", "ipw")){
         ret <- list(
           ATT = att_dr$ATT,
           se = att_dr$se,
@@ -363,7 +369,7 @@ ddd <- function(yname,
 
   # multiple time periods case: dr or dml
   if (multiple_periods){
-    if (est_method == "dr"){
+    if (est_method %in% c("dr", "reg", "ipw")){
       ret <- list(
         ATT = att_gt_dr$ATT, # this is a vector of attgt
         se = att_gt_dr$se, # this is a vector of std. error for each attgt
