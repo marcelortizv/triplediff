@@ -18,10 +18,18 @@ test_that("Testing generation of output in main function", {
                   weightsname = NULL, boot = FALSE, nboot = NULL,
                   inffunc = FALSE, skip_data_checks = FALSE)
 
-  # performing DR estimatio with 2 periods
+  # performing DR estimation with 2 periods
   ddd_dr = ddd(yname = "y", tname = "time", idname = "id", gname = "state",
                pname = "partition", xformla = ~cov1 + cov2 + cov3 + cov4,
                data = data_2periods, alpha = 0.05, est_method = "dr")
+
+  ddd_ipw = ddd(yname = "y", tname = "time", idname = "id", gname = "state",
+               pname = "partition", xformla = ~cov1 + cov2 + cov3 + cov4,
+               data = data_2periods, alpha = 0.05, est_method = "ipw")
+
+  ddd_reg = ddd(yname = "y", tname = "time", idname = "id", gname = "state",
+               pname = "partition", xformla = ~cov1 + cov2 + cov3 + cov4,
+               data = data_2periods, alpha = 0.05, est_method = "reg")
 
   # performing DR estimation with 2 periods and bootstrapping + clustered std. errors.
   ddd_boot_cluster = ddd(yname = "y", tname = "time", idname = "id", gname = "state",
@@ -36,6 +44,16 @@ test_that("Testing generation of output in main function", {
                 data = data_multperiods, control_group = "nevertreated", base_period = "universal",
                 est_method = "dr")
 
+  ddd_gt_ipw <- ddd(yname = "y", tname = "time", idname = "id",
+                gname = "state", pname = "partition", xformla = ~cov1 + cov2 + cov3 + cov4,
+                data = data_multperiods, control_group = "nevertreated", base_period = "universal",
+                est_method = "ipw")
+
+  ddd_gt_reg <- ddd(yname = "y", tname = "time", idname = "id",
+                gname = "state", pname = "partition", xformla = ~cov1 + cov2 + cov3 + cov4,
+                data = data_multperiods, control_group = "nevertreated", base_period = "universal",
+                est_method = "reg")
+
   # performing DR estimation with multiple periods and bootstrapping
   ddd_gt_boot_cluster <- ddd(yname = "y", tname = "time", idname = "id",
                              gname = "state", pname = "partition", xformla = ~cov1 + cov2 + cov3 + cov4,
@@ -46,8 +64,12 @@ test_that("Testing generation of output in main function", {
   expect_output(summary(ddd_test))
   expect_output(print(ddd_test))
   expect_output(summary(ddd_dr))
+  expect_output(summary(ddd_ipw))
+  expect_output(summary(ddd_reg))
   expect_output(summary(ddd_boot_cluster))
   expect_output(summary(ddd_gt))
+  expect_output(summary(ddd_gt_ipw))
+  expect_output(summary(ddd_gt_reg))
   expect_output(summary(ddd_gt_boot_cluster))
 
 
