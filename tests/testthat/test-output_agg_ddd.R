@@ -4,8 +4,8 @@ test_that("Testing generation of output in aggregation function", {
   data <- gen_dgp_mult_periods(size = 10000, dgp_type = 1)[["data"]]
 
   # Performing simple tests
-  out <- ddd(yname = "y", tname = "time", idname = "id", dname = NULL,
-              gname = "state", partition_name = "partition", xformla = ~cov1 + cov2 + cov3 + cov4,
+  out <- ddd(yname = "y", tname = "time", idname = "id",
+              gname = "state", pname = "partition", xformla = ~cov1 + cov2 + cov3 + cov4,
               data = data, control_group = "nevertreated", base_period = "varying",
               est_method = "dr")
   # Simple aggregation
@@ -23,8 +23,8 @@ test_that("Testing generation of output in aggregation function", {
 
 
   # Performing tests with bootstrap + clustered standard errors
-  ddd_gt_boot_cluster <- ddd(yname = "y", tname = "time", idname = "id", dname = NULL,
-                             gname = "state", partition_name = "partition", xformla = ~cov1 + cov2 + cov3 + cov4,
+  ddd_gt_boot_cluster <- ddd(yname = "y", tname = "time", idname = "id",
+                             gname = "state", pname = "partition", xformla = ~cov1 + cov2 + cov3 + cov4,
                              data = data, control_group = "nevertreated", base_period = "varying",
                              est_method = "dr", boot = TRUE, nboot = 999, cluster = "cluster", cband = TRUE)
 

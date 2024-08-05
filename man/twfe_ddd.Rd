@@ -4,7 +4,7 @@
 \alias{twfe_ddd}
 \title{TWFE DDD estimator, with panel data and 2 periods}
 \usage{
-twfe_ddd(yname, tname, dname, partition_name, xformla = ~1, data)
+twfe_ddd(yname, tname, dname, pname, xformla = ~1, data)
 }
 \arguments{
 \item{yname}{A character string specifying the name of the outcome variable in the data.}
@@ -13,7 +13,7 @@ twfe_ddd(yname, tname, dname, partition_name, xformla = ~1, data)
 
 \item{dname}{A character string specifying the name of the state variable in the data.}
 
-\item{partition_name}{A character string specifying the name of the partition variable in the data.}
+\item{pname}{A character string specifying the name of the partition variable in the data.}
 
 \item{xformla}{A formula specifying the covariates to be included in the regression.}
 

@@ -7,8 +7,8 @@ validate_args_2Periods <- function(args, dta){
   yname <- args$yname
   tname <- args$tname
   idname <- args$idname
-  dname <- args$dname
-  partition_name <- args$partition_name
+  gname <- args$gname
+  pname <- args$pname
   xformla <- args$xformla
   est_method <- args$est_method
   base_period <- args$base_period
@@ -46,32 +46,33 @@ validate_args_2Periods <- function(args, dta){
     stop("The type of ddd specified only allow for two time periods (pre and post). Change type of ddd for multiple time periods")
   }
 
-  # Flag for dname
-  if ( !is.element(dname, base::colnames(dta))) {
-    stop("dname = ",dname,  " could not be found in the data provided.")
+  # Flag for gname
+  if ( !is.element(gname, base::colnames(dta))) {
+    stop("gname = ",gname,  " could not be found in the data provided.")
   }
 
   # Check if there is only 2 groups
-  dlist <- unique(dta[[dname]])[base::order(unique(dta[[dname]]))]
-  if (length(dlist) != 2) {
+  if (dta[, uniqueN(get(gname))] != 2) {
     stop("The type of ddd specified only allow for two groups (treated and untreated). Change type of ddd for multiple groups")
   }
 
-  # Flag for partition_name
-  if ( !is.element(partition_name, base::colnames(dta))) {
-    stop("partition_name = ",partition_name,  " could not be found in the data provided.")
+
+
+  # Flag for pname
+  if ( !is.element(pname, base::colnames(dta))) {
+    stop("pname = ",pname,  " could not be found in the data provided.")
   }
 
 
-  # check if partition_name is numeric
-  if (!all(sapply(dta[, ..partition_name], is.numeric))) {
-    stop("partition_name = ",partition_name,  " is not numeric. Please convert it")
+  # check if pname is numeric
+  if (!all(sapply(dta[, ..pname], is.numeric))) {
+    stop("pname = ",pname,  " is not numeric. Please convert it")
   }
 
   # Check if partition values are binary
-  plist <- unique(dta[[partition_name]])[base::order(unique(dta[[partition_name]]))]
+  plist <- unique(dta[[pname]])[base::order(unique(dta[[pname]]))]
   if (length(plist) != 2) {
-    stop("partition_name =", partition_name, " must have only two values (0 and 1). Please check partition_name")
+    stop("pname =", pname, " must have only two values (0 and 1). Please check pname")
   }
 
   # Check if idname is in the data
@@ -92,10 +93,10 @@ validate_args_2Periods <- function(args, dta){
   }
 
   # Check if partition is unique by idname
-  checkPartitionUniqueness(dta, idname, partition_name)
+  checkPartitionUniqueness(dta, idname, pname)
 
-  # Check if dname is unique by idname
-  checkTreatmentUniqueness(dta, idname, dname)
+  # Check if gname is unique by idname
+  checkTreatmentUniqueness(dta, idname, gname)
 
   # Flag for weightsname
   if(!is.null(weightsname)){
@@ -142,7 +143,7 @@ validate_args_multPeriods <- function(args, dta){
   idname <- args$idname
   gname <- args$gname
   control_group <- args$control_group
-  partition_name <- args$partition_name
+  pname <- args$pname
   xformla <- args$xformla
   est_method <- args$est_method
   learners <- args$learners
@@ -187,20 +188,20 @@ validate_args_multPeriods <- function(args, dta){
     stop("gname = ",gname,  " is not numeric. Please convert it")
   }
 
-  # Flag for partition_name
-  if ( !is.element(partition_name, base::colnames(dta))) {
-    stop("partition_name = ",partition_name,  " could not be found in the data provided.")
+  # Flag for pname
+  if ( !is.element(pname, base::colnames(dta))) {
+    stop("pname = ",pname,  " could not be found in the data provided.")
   }
 
-  # check if partition_name is numeric
-  if (!all(sapply(dta[, ..partition_name], is.numeric))) {
-    stop("partition_name = ",partition_name,  " is not numeric. Please convert it")
+  # check if pname is numeric
+  if (!all(sapply(dta[, ..pname], is.numeric))) {
+    stop("pname = ",pname,  " is not numeric. Please convert it")
   }
 
   # Check if partition values are binary
-  plist <- unique(dta[[partition_name]])[base::order(unique(dta[[partition_name]]))]
+  plist <- unique(dta[[pname]])[base::order(unique(dta[[pname]]))]
   if (length(plist) != 2) {
-    stop("partition_name =", partition_name, " must have only two values (0 and 1). Please check partition_name")
+    stop("pname =", pname, " must have only two values (0 and 1). Please check pname")
   }
 
   # Check if idname is in the data
@@ -230,7 +231,7 @@ validate_args_multPeriods <- function(args, dta){
   # Faster and useful checks to make sere we have a well-balanced panel.
 
   # Check if partition is unique by idname
-  checkPartitionUniqueness(dta, idname, partition_name)
+  checkPartitionUniqueness(dta, idname, pname)
 
   # Check if gname is unique by idname
   checkTreatmentUniqueness(dta, idname, gname)

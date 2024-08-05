@@ -8,11 +8,10 @@ NULL
 run_nopreprocess_2periods <- function(yname,
                                       tname,
                                       idname,
-                                      dname,
-                                      gname = NULL,
-                                      partition_name,
+                                      gname,
+                                      pname,
                                       xformla = ~1,
-                                      data,
+                                      dta,
                                       control_group = NULL,
                                       est_method = "dr",
                                       learners = NULL,
@@ -27,16 +26,8 @@ run_nopreprocess_2periods <- function(yname,
                                       cores = NULL,
                                       inffunc = FALSE){
 
-  arg_names <- setdiff(names(formals()), "data")
+  arg_names <- setdiff(names(formals()), "dta")
   args <- mget(arg_names, sys.frame(sys.nframe()))
-
-  # Check if 'dta' is a data.table
-  if (!"data.table" %in% class(data)) {
-    # converting data to data.table
-    dta <- data.table::as.data.table(data)
-  } else {
-    dta <- data
-  }
 
   # Flag for alpha > 0.10
   if (alpha > 0.10) {
@@ -97,9 +88,8 @@ run_nopreprocess_2periods <- function(yname,
   }
 
   # Creating a post dummy variable based on tlist[2] (second period = post treatment)
-  #tlist <- unique(dta[[args$tname]])[base::order(unique(dta[[args$tname]]))]
-  tlist <- sort(unique(dta[[tname]]))
-  dta$post <- as.numeric(dta[[tname]] == tlist[2])
+  tlist <- dta[, sort(unique(get(tname)))]
+  dta[, post := as.numeric(get(tname) == tlist[2])]
 
   # sort data based on idnam and tname and make it balanced
   data.table::setorderv(dta, c(idname, tname), c(1,1))
@@ -112,9 +102,9 @@ run_nopreprocess_2periods <- function(yname,
   cleaned_data <- data.table::data.table(id = dta[[idname]],
                                          y = dta[[yname]],
                                          post = dta$post,
-                                         treat = dta[[dname]],
+                                         treat = dta[[gname]],
                                          period = dta[[tname]],
-                                         partition = dta[[partition_name]],
+                                         partition = dta[[pname]],
                                          weights = dta$weights)
   idx_static_vars <- 8 # useful to perform the elimination of collinear variables
   # Add cluster column if cluster argument is provided
@@ -186,11 +176,10 @@ run_nopreprocess_2periods <- function(yname,
 run_preprocess_2Periods <- function(yname,
                                    tname,
                                    idname,
-                                   dname,
-                                   gname = NULL,
-                                   partition_name,
+                                   gname,
+                                   pname,
                                    xformla = ~1,
-                                   data,
+                                   dta,
                                    control_group = NULL,
                                    est_method = "dr",
                                    learners = NULL,
@@ -206,7 +195,7 @@ run_preprocess_2Periods <- function(yname,
                                    inffunc = FALSE){
 
   # Capture all arguments except 'data'
-  arg_names <- setdiff(names(formals()), "data")
+  arg_names <- setdiff(names(formals()), "dta")
   args <- mget(arg_names, sys.frame(sys.nframe()))
 
   #-------------------------------------
@@ -243,14 +232,6 @@ run_preprocess_2Periods <- function(yname,
       nboot <- 999
       args$nboot <- nboot
     }
-  }
-
-  # Check if 'dta' is a data.table
-  if (!"data.table" %in% class(data)) {
-    # converting data to data.table
-    dta <- data.table::as.data.table(data)
-  } else {
-    dta <- data
   }
 
   # Run argument checks
@@ -315,9 +296,9 @@ run_preprocess_2Periods <- function(yname,
   )
 
   # Creating a post dummy variable based on tlist[2] (second period = post treatment)
-  #tlist <- unique(dta[[args$tname]])[base::order(unique(dta[[args$tname]]))]
-  tlist <- sort(unique(dta[[tname]]))
-  dta$post <- as.numeric(dta[[tname]] == tlist[2])
+  tlist <- dta[, sort(unique(get(tname)))]
+  dta[, post := as.numeric(get(tname) == tlist[2])]
+
   # Checking if covariates are time invariant in panel data case
   # Create the model matrix
   cov_pre <- model.matrix(as.formula(xformla), data = dta[dta[["post"]] == 0])
@@ -339,9 +320,9 @@ run_preprocess_2Periods <- function(yname,
   cleaned_data <- data.table::data.table(id = dta[[idname]],
                                          y = dta[[yname]],
                                          post = dta$post,
-                                         treat = dta[[dname]],
+                                         treat = dta[[gname]],
                                          period = dta[[tname]],
-                                         partition = dta[[partition_name]],
+                                         partition = dta[[pname]],
                                          weights = dta$weights)
 
   idx_static_vars <- 8 # useful to perform the elimination of collinear variables
@@ -438,11 +419,10 @@ run_preprocess_2Periods <- function(yname,
 run_preprocess_multPeriods <- function(yname,
                                        tname,
                                        idname,
-                                       dname = NULL,
                                        gname,
-                                       partition_name,
+                                       pname,
                                        xformla = ~1,
-                                       data,
+                                       dta,
                                        control_group,
                                        base_period,
                                        est_method = "dr",
@@ -459,7 +439,7 @@ run_preprocess_multPeriods <- function(yname,
                                        inffunc = FALSE){
 
   # Capture all arguments except 'data'
-  arg_names <- setdiff(names(formals()), "data")
+  arg_names <- setdiff(names(formals()), "dta")
   args <- mget(arg_names, sys.frame(sys.nframe()))
 
   #-------------------------------------
@@ -505,15 +485,6 @@ run_preprocess_multPeriods <- function(yname,
     }
   }
 
-
-  # Check if 'dta' is a data.table
-  if (!"data.table" %in% class(data)) {
-    # converting data to data.table
-    dta <- data.table::as.data.table(data)
-  } else {
-    dta <- data
-  }
-
   # Run argument checks
   validate_args_multPeriods(args, dta)
 
@@ -551,7 +522,7 @@ run_preprocess_multPeriods <- function(yname,
   }
 
   # keep relevant columns in data
-  cols_to_keep <- c(idname, tname, yname, gname, partition_name, weightsname, cluster)
+  cols_to_keep <- c(idname, tname, yname, gname, pname, weightsname, cluster)
 
   model_frame <- model.frame(xformla, data = dta, na.action = na.pass)
   # Subset the data.table to keep only relevant columns
@@ -576,7 +547,7 @@ run_preprocess_multPeriods <- function(yname,
   dta$weights <- weights
 
   # get a list of dates from min to max
-  tlist <- sort(unique(dta[[tname]]))
+  tlist <- dta[, sort(unique(get(tname)))]
 
   # Coerce control group identified with Inf as zero
   dta[get(gname) == Inf, (gname) := 0]
@@ -636,8 +607,8 @@ run_preprocess_multPeriods <- function(yname,
     dta <- dta[get(gname) %in% c(0, glist)]
 
     # update tlist and glist
-    tlist <- sort(unique(dta[[tname]]))
-    glist <- sort(unique(dta[[gname]]))
+    tlist <- dta[, sort(unique(get(tname)))]
+    glist <- dta[, sort(unique(get(gname)))]
     glist <- glist[glist > 0]
 
     # Drop groups treated in the first period or before
@@ -674,7 +645,7 @@ run_preprocess_multPeriods <- function(yname,
                                          y = dta[[yname]],
                                          first_treat = dta[[gname]],
                                          period = dta[[tname]],
-                                         partition = dta[[partition_name]],
+                                         partition = dta[[pname]],
                                          weights = dta$weights)
 
   # Add cluster column if cluster argument is provided
@@ -697,11 +668,6 @@ run_preprocess_multPeriods <- function(yname,
   # Check if groups is empty
   if(length(glist)==0){
     stop("No valid groups. The variable in 'gname' should be expressed as the time a unit is first treated (0 if never-treated).")
-  }
-
-  # Check if there are enough time periods
-  if (length(tlist) == 2) {
-    stop("The type of ddd specified only have two time periods. Change type of ddd for two time periods using argument 'dname'.")
   }
 
   # Check for small comparison groups

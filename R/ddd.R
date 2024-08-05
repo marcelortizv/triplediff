@@ -7,17 +7,13 @@ NULL
 #' It can be used with covariates and/or under multiple time periods. At its core, \code{triplediff} employs
 #' the doubly robust estimator for the ATT, which is a combination of the propensity score weighting and the outcome regression.
 #' Furthermore, this package supports the application of machine learning methods for the estimation of the nuisance functions.
-#'
 #' @param yname The name of the outcome variable.
 #' @param tname The name of the column containing the time periods.
 #' @param idname The name of the column containing the unit id.
-#' @param dname Valid for 2 time periods only. The name of the column containing the treatment indicator dummy (1 if treated in the post-treatment period, 0 otherwise).
-#' It is mutually exclusive with \code{gname}. If \code{dname} is provided, \code{gname} is ignored.
-#' @param gname Valid for multiple periods only. The name of the column containing the first period when a particular observation is treated. It is a positive number
-#' for treated units and defines which group the unit belongs to. It takes value 0 or Inf for untreated units. If \code{gname} is specified,
-#' we assume that the treatment is staggered. It is mutually exclusive with \code{dname}. If \code{gname} is provided, \code{dname} is ignored.
-#' @param partition_name The name of the column containing the partition variable (e.g., the subgroup identifier). This is an indicator variable that is 1 for
-#' the units targeted for treatment and 0 otherwise.
+#' @param gname The name of the column containing the first period when a particular observation is treated. It is a positive number
+#' for treated units and defines which group the unit belongs to. It takes value 0 or Inf for untreated units.
+#' @param pname The name of the column containing the partition variable (e.g., the subgroup identifier). This is an indicator variable that is 1 for
+#' the units eligible for treatment and 0 otherwise.
 #' @param xformla The formula for the covariates to be included in the model. It should be of the form \code{~ x1 + x2}.
 #' Default is \code{xformla = ~1} (no covariates).
 #' @param data A data frame or data table containing the data.
@@ -28,9 +24,9 @@ NULL
 #' Universal base period: Fixes the base period to (g-1), reporting average changes from t to (g-1) for a group relative to its comparison group, similar to event study regressions.
 #' Varying base period reports ATT(g,t) right before treatment. Universal base period normalizes the estimate before treatment to be 0, adding one extra estimate in an earlier period.
 #' @param est_method The estimation method to be used. Default is \code{"dr"} (doubly robust). It computes propensity score using logistic regression
-#' and outcome regression using OLS. The alternative is \code{"dml"} (double machine learning). It allows the user to compute propensity score using a
-#' machine learning algorithm and outcome regression using a different machine learning algorithm. We provide some wrappers for popular learners but
-#' the user can also provide their own learner. See our vignette on How to construct a use-provided learner for more details (# TODO).
+#' and outcome regression using OLS. The alternative are \code{c("reg", "ipw", "dml")}. The last option allows the user to compute propensity score using a
+#' machine learning algorithm and outcome regression using a different machine learning algorithm based on mlr3 library. We provide some examples for popular learners but
+#' the user can also provide their own learner.
 #' @param learners A list of learners to be used in the estimation. It should be a list of two elements,
 #' the first element being the learner for the propensity score and the second element being the learner for the outcome regression.
 #' Default is \code{NULL}, then OLS and MLE Logit is used to estimate nuisances parameters. If \code{est_method = "dml"}, user have to specify \code{learners}.
@@ -74,8 +70,8 @@ NULL
 #'                               initial.year = initial.year,
 #'                               treatment.year = treatment.year)
 #'
-#' ddd(yname = "outcome", tname = "year", idname = "id", dname = "treat",
-#'     gname = NULL, partition_name = "partition", xformla = ~x1 + x2,
+#' ddd(yname = "outcome", tname = "year", idname = "id", gname = "treat",
+#'     pname = "partition", xformla = ~x1 + x2,
 #'     data = sim_data, control_group = NULL,
 #'     est_method = "dr")
 #'
@@ -92,8 +88,8 @@ NULL
 #'
 #' learners <- list(ml_pa = learner_rf, ml_md = learner_regr)
 #'
-#' ddd(yname = "outcome", tname = "year", idname = "id", dname = "treat",
-#'     gname = NULL, partition_name = "partition", xformla = ~x1 + x2,
+#' ddd(yname = "outcome", tname = "year", idname = "id", gname = "treat",
+#'     pname = "partition", xformla = ~x1 + x2,
 #'     data = sim_data, control_group = NULL,
 #'     est_method = "dml", learners = learners, n_folds = 3)
 #'
@@ -102,8 +98,8 @@ NULL
 #' #----------------------------------------------------------
 #' data <- gen_dgp_mult_periods(size = 1000, dgp_type = 1)[["data"]]
 #'
-#' ddd(yname = "y", tname = "time", idname = "id", dname = NULL,
-#'      gname = "state", partition_name = "partition", xformla = ~cov1 + cov2 + cov3 + cov4,
+#' ddd(yname = "y", tname = "time", idname = "id",
+#'      gname = "state", pname = "partition", xformla = ~cov1 + cov2 + cov3 + cov4,
 #'      data = data, control_group = "nevertreated", base_period = "varying",
 #'      est_method = "dr")
 #'
@@ -116,9 +112,8 @@ NULL
 ddd <- function(yname,
                 tname,
                 idname,
-                dname,
                 gname,
-                partition_name,
+                pname,
                 xformla,
                 data,
                 control_group = NULL,
@@ -142,27 +137,39 @@ ddd <- function(yname,
   # Running initial arguments validation
   #------------------------------------------
 
-  # Check what's the setting: 2 time periods or multiple time periods
-  if (is.null(dname) && is.null(gname)) {
-    stop("Either dname or gname should be provided")
-  } else if (!is.null(dname)){
-    multiple_periods <- FALSE
-    gname <- NULL
-  } else if (!is.null(gname)){
-    multiple_periods <- TRUE
-    dname <- NULL
+  # Check if 'dta' is a data.table
+  if (!"data.table" %in% class(data)) {
+    # converting data to data.table
+    dta <- data.table::as.data.table(data)
+  } else {
+    dta <- data
   }
 
+  # Check what's the setting: 2 time periods or multiple time periods
+  if (is.null(gname)) {
+    stop("gname should be provided")
+  } else {
+    unique_gname_values <- dta[, uniqueN(get(gname))]
+    if (unique_gname_values == 2) {
+      multiple_periods <- FALSE
+    } else if (unique_gname_values > 2) {
+      multiple_periods <- TRUE
+    } else {
+      stop("Invalid gname. Please check your arguments.")
+    }
+  }
+
+
   # Flag for est_method
-  if ((est_method != "dml") && (est_method != "dr")) {
-    warning("est_method = ", est_method, " is not supported. Using 'dr'.")
+  if (!(est_method %in% c("reg", "ipw", "dr", "dml"))) {
+    warning("est_method = ", est_method, " is invalid or not supported. Using 'dr'.")
     est_method <- "dr"
   }
 
   # Flag for control group in multiple periods
   if (multiple_periods && is.null(control_group)) {
-      warning("control_group should be provided for multiple time periods. Using 'notyettreated'")
-      control_group <- "notyettreated"
+      warning("control_group should be provided for multiple time periods. Using 'nevertreated'")
+      control_group <- "nevetreated"
   }
 
   #------------------------------------------
@@ -174,13 +181,12 @@ ddd <- function(yname,
       dp <- run_nopreprocess_2periods(yname = yname,
                                       tname = tname,
                                       idname = idname,
-                                      dname = dname,
-                                      gname = NULL,
-                                      partition_name = partition_name,
+                                      gname = gname,
+                                      pname = pname,
                                       xformla = xformla,
-                                      data = data,
+                                      dta = dta,
                                       control_group = NULL,
-                                      est_method = "dr",
+                                      est_method = est_method,
                                       learners = NULL,
                                       n_folds = NULL,
                                       weightsname = weightsname,
@@ -197,18 +203,17 @@ ddd <- function(yname,
     }
 
   } else {
-    if ((multiple_periods) && (est_method =="dr")) {
+    if ((multiple_periods) && (est_method %in% c("dr", "reg", "ipw"))) {
       dp <- run_preprocess_multPeriods(yname = yname,
                                        tname = tname,
                                        idname = idname,
-                                       dname = NULL,
                                        gname = gname,
-                                       partition_name = partition_name,
+                                       pname = pname,
                                        xformla = xformla,
-                                       data = data,
+                                       dta = dta,
                                        control_group = control_group,
                                        base_period = base_period,
-                                       est_method = "dr",
+                                       est_method = est_method,
                                        learners = NULL,
                                        n_folds = NULL,
                                        weightsname = weightsname,
@@ -225,11 +230,10 @@ ddd <- function(yname,
       # dp <- run_preprocess_multPeriods(yname = yname,
       #                                  tname = tname,
       #                                  idname = idname,
-      #                                  dname = NULL,
       #                                  gname = gname,
-      #                                  partition_name = partition_name,
+      #                                  pname = pname,
       #                                  xformla = xformla,
-      #                                  data = data,
+      #                                  dta = dta,
       #                                  control_group = control_group,
       #                                  base_period = base_period,
       #                                  est_method = "dml",
@@ -240,17 +244,16 @@ ddd <- function(yname,
       #                                  nboot = nboot,
       #                                  inffunc = inffunc)
       stop("Triple Diff with multiple time periods and DML is not yet supported")
-    } else if ((!multiple_periods) && (est_method == "dr")) {
+    } else if ((!multiple_periods) && (est_method %in% c("dr", "reg", "ipw"))) {
       dp <- run_preprocess_2Periods(yname = yname,
                                     tname = tname,
                                     idname = idname,
-                                    dname = dname,
-                                    gname = NULL,
-                                    partition_name = partition_name,
+                                    gname = gname,
+                                    pname = pname,
                                     xformla = xformla,
-                                    data = data,
+                                    dta = dta,
                                     control_group = NULL,
-                                    est_method = "dr",
+                                    est_method = est_method,
                                     learners = NULL,
                                     n_folds = NULL,
                                     weightsname = weightsname,
@@ -266,11 +269,10 @@ ddd <- function(yname,
       dp <- run_preprocess_2Periods(yname = yname,
                                     tname = tname,
                                     idname = idname,
-                                    dname = dname,
-                                    gname = NULL,
-                                    partition_name = partition_name,
+                                    gname = gname,
+                                    pname = pname,
                                     xformla = xformla,
-                                    data = data,
+                                    dta = dta,
                                     control_group = NULL,
                                     est_method = "dml",
                                     learners = learners,
@@ -293,20 +295,24 @@ ddd <- function(yname,
 
   # multiple time periods case: dr or dml
   if (multiple_periods){
-    if (est_method == "dr"){
+    # RUN DR for multiple periods
+    if (est_method %in% c("dr", "reg", "ipw")){
       att_gt_dr <- att_gt(dp)
     } else {
+      # RUN DML for multiple time periods
       stop("DML for multiple time periods is not yet supported")
       # TODO: IMPLEMENT att_gt_dml PROCEDURE AND ADJUST PARAMETERS
       # att_gt_dml <- att_gt_dml(dp)
-    }#RUN DML for multiple time periods
+    }
   } else {
-    if (est_method == "dr"){
+    if (est_method %in% c("dr", "reg", "ipw")){
+      # RUN DR for 2 time periods
       att_dr <- att_dr(dp)
     } else {
+      # RUN DML for 2 time periods
       att_dml <- att_dml(dp)
-    }#RUN DML for 2 time periods
-  }#RUN DR for 2 time periods
+    }
+  }
 
   #------------------------------------------
   # Return the results
@@ -320,7 +326,7 @@ ddd <- function(yname,
   args <- mget(arg_names, sys.frame(sys.nframe()))
   argu <- list(
     yname = args$yname,
-    partition_name = args$partition_name,
+    pname = args$pname,
     control_group = args$control_group,
     est_method = est_method,
     multiple_periods = multiple_periods,
@@ -335,7 +341,7 @@ ddd <- function(yname,
   )
 
   if (!multiple_periods){
-    if (est_method == "dr"){
+    if (est_method %in% c("dr", "reg", "ipw")){
         ret <- list(
           ATT = att_dr$ATT,
           se = att_dr$se,
@@ -363,7 +369,7 @@ ddd <- function(yname,
 
   # multiple time periods case: dr or dml
   if (multiple_periods){
-    if (est_method == "dr"){
+    if (est_method %in% c("dr", "reg", "ipw")){
       ret <- list(
         ATT = att_gt_dr$ATT, # this is a vector of attgt
         se = att_gt_dr$se, # this is a vector of std. error for each attgt

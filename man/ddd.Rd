@@ -8,9 +8,8 @@ ddd(
   yname,
   tname,
   idname,
-  dname,
   gname,
-  partition_name,
+  pname,
   xformla,
   data,
   control_group = NULL,
@@ -37,15 +36,11 @@ ddd(
 
 \item{idname}{The name of the column containing the unit id.}
 
-\item{dname}{Valid for 2 time periods only. The name of the column containing the treatment indicator dummy (1 if treated in the post-treatment period, 0 otherwise).
-It is mutually exclusive with \code{gname}. If \code{dname} is provided, \code{gname} is ignored.}
+\item{gname}{The name of the column containing the first period when a particular observation is treated. It is a positive number
+for treated units and defines which group the unit belongs to. It takes value 0 or Inf for untreated units.}
 
-\item{gname}{Valid for multiple periods only. The name of the column containing the first period when a particular observation is treated. It is a positive number
-for treated units and defines which group the unit belongs to. It takes value 0 or Inf for untreated units. If \code{gname} is specified,
-we assume that the treatment is staggered. It is mutually exclusive with \code{dname}. If \code{gname} is provided, \code{dname} is ignored.}
-
-\item{partition_name}{The name of the column containing the partition variable (e.g., the subgroup identifier). This is an indicator variable that is 1 for
-the units targeted for treatment and 0 otherwise.}
+\item{pname}{The name of the column containing the partition variable (e.g., the subgroup identifier). This is an indicator variable that is 1 for
+the units eligible for treatment and 0 otherwise.}
 
 \item{xformla}{The formula for the covariates to be included in the model. It should be of the form \code{~ x1 + x2}.
 Default is \code{xformla = ~1} (no covariates).}
@@ -61,9 +56,9 @@ Universal base period: Fixes the base period to (g-1), reporting average changes
 Varying base period reports ATT(g,t) right before treatment. Universal base period normalizes the estimate before treatment to be 0, adding one extra estimate in an earlier period.}
 
 \item{est_method}{The estimation method to be used. Default is \code{"dr"} (doubly robust). It computes propensity score using logistic regression
-and outcome regression using OLS. The alternative is \code{"dml"} (double machine learning). It allows the user to compute propensity score using a
-machine learning algorithm and outcome regression using a different machine learning algorithm. We provide some wrappers for popular learners but
-the user can also provide their own learner. See our vignette on How to construct a use-provided learner for more details (# TODO).}
+and outcome regression using OLS. The alternative are \code{c("reg", "ipw", "dml")}. The last option allows the user to compute propensity score using a
+machine learning algorithm and outcome regression using a different machine learning algorithm based on mlr3 library. We provide some examples for popular learners but
+the user can also provide their own learner.}
 
 \item{learners}{A list of learners to be used in the estimation. It should be a list of two elements,
 the first element being the learner for the propensity score and the second element being the learner for the outcome regression.
@@ -125,8 +120,8 @@ sim_data = generate_test_panel(seed = seed,
                               initial.year = initial.year,
                               treatment.year = treatment.year)
 
-ddd(yname = "outcome", tname = "year", idname = "id", dname = "treat",
-    gname = NULL, partition_name = "partition", xformla = ~x1 + x2,
+ddd(yname = "outcome", tname = "year", idname = "id", gname = "treat",
+    pname = "partition", xformla = ~x1 + x2,
     data = sim_data, control_group = NULL,
     est_method = "dr")
 
@@ -143,8 +138,8 @@ learner_regr <- lrn("regr.xgboost")
 
 learners <- list(ml_pa = learner_rf, ml_md = learner_regr)
 
-ddd(yname = "outcome", tname = "year", idname = "id", dname = "treat",
-    gname = NULL, partition_name = "partition", xformla = ~x1 + x2,
+ddd(yname = "outcome", tname = "year", idname = "id", gname = "treat",
+    pname = "partition", xformla = ~x1 + x2,
     data = sim_data, control_group = NULL,
     est_method = "dml", learners = learners, n_folds = 3)
 
@@ -153,8 +148,8 @@ ddd(yname = "outcome", tname = "year", idname = "id", dname = "treat",
 #----------------------------------------------------------
 data <- gen_dgp_mult_periods(size = 1000, dgp_type = 1)[["data"]]
 
-ddd(yname = "y", tname = "time", idname = "id", dname = NULL,
-     gname = "state", partition_name = "partition", xformla = ~cov1 + cov2 + cov3 + cov4,
+ddd(yname = "y", tname = "time", idname = "id",
+     gname = "state", pname = "partition", xformla = ~cov1 + cov2 + cov3 + cov4,
      data = data, control_group = "nevertreated", base_period = "varying",
      est_method = "dr")
 

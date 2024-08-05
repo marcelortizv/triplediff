@@ -26,11 +26,19 @@ print.ddd <- function(x, alpha = NULL, ...) {
   # Methods used
   if (x$argu$multiple_periods == FALSE){
     if (x$argu$est_method[1] == 'dr') {
-      est_method1 <- "DRDDD estimation for the ATT: \n"
+      est_method1 <- "DR-DDD estimation for the ATT: \n"
       est_method2 <- "Outcome Regression estimated using: OLS"
       est_method3 <- "Propensity score estimated using: Maximum Likelihood"
-    } else {
-      est_method1 <- "DMLDDD estimation for the ATT: \n"
+    } else if (x$argu$est_method[1] == 'ipw') {
+      est_method1 <- "IPW-DDD estimation for the ATT: \n"
+      est_method2 <- "Outcome Regression estimated using: N/A"
+      est_method3 <- "Propensity score estimated using: Maximum Likelihood"
+    } else if (x$argu$est_method[1] == 'reg') {
+      est_method1 <- "REG-DDD estimation for the ATT: \n"
+      est_method2 <- "Outcome Regression estimated using: OLS"
+      est_method3 <- "Propensity score estimated using: N/A"
+    } else if (x$argu$est_method[1] == 'dml') {
+      est_method1 <- "DML-DDD estimation for the ATT: \n"
       est_method2 <- paste0("Outcome Regression estimated using: ", x$argu$learners$ml_pa$label)
       est_method3 <- paste0("Propensity score estimated using: ", x$argu$learners$ml_md$label)
     }
@@ -59,11 +67,19 @@ print.ddd <- function(x, alpha = NULL, ...) {
 
   if (x$argu$multiple_periods == TRUE){
     if (x$argu$est_method[1] == 'dr') {
-      est_method1 <- "DRDDD estimation for the ATT(g,t): \n"
+      est_method1 <- "DR-DDD estimation for the ATT(g,t): \n"
       est_method2 <- "Outcome Regression estimated using: OLS"
       est_method3 <- "Propensity score estimated using: Maximum Likelihood"
-    } else {
-      est_method1 <- "DMLDDD estimation for the ATT(g,t): \n"
+    } else if (x$argu$est_method[1] == 'ipw') {
+      est_method1 <- "IPW-DDD estimation for the ATT(g,t): \n"
+      est_method2 <- "Outcome Regression estimated using: N/A"
+      est_method3 <- "Propensity score estimated using: Maximum Likelihood"
+    } else if (x$argu$est_method[1] == 'reg') {
+      est_method1 <- "REG-DDD estimation for the ATT(g,t): \n"
+      est_method2 <- "Outcome Regression estimated using: OLS"
+      est_method3 <- "Propensity score estimated using: N/A"
+    } else if (x$argu$est_method[1] == 'dml') {
+      est_method1 <- "DML-DDD estimation for the ATT(g,t): \n"
       est_method2 <- paste("Outcome Regression estimated using:", x$argu$learners[1]$name)
       est_method3 <- paste("Propensity score estimated using:", x$argu$learners[1]$name)
     }
@@ -106,7 +122,7 @@ print.ddd <- function(x, alpha = NULL, ...) {
   cat("\n", "Panel data")
   cat("\n", paste0("Outcome variable: ", x$argu$yname))
   # add partition variable name
-  cat("\n", paste0("Partition variable: ", x$argu$partition_name))
+  cat("\n", paste0("Partition variable: ", x$argu$pname))
   if(x$argu$multiple_periods == FALSE){
     cat("\n", "No. of observations for each partition:")
     cat("\n", paste0("  (treat = 1, partition = 1): ", x$subgroup_counts$V1[1]))

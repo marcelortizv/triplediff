@@ -10,7 +10,7 @@ NULL
 #' @param yname A character string specifying the name of the outcome variable in the data.
 #' @param tname A character string specifying the name of the time variable in the data.
 #' @param dname A character string specifying the name of the state variable in the data.
-#' @param partition_name A character string specifying the name of the partition variable in the data.
+#' @param pname A character string specifying the name of the partition variable in the data.
 #' @param xformla A formula specifying the covariates to be included in the regression.
 #' @param data A data frame containing the preprocessed data.
 #'
@@ -20,12 +20,12 @@ NULL
 #' @export
 
 twfe_ddd <- function(yname, tname, dname,
-                    partition_name, xformla = ~1, data) {
+                    pname, xformla = ~1, data) {
 
   # Extract data
   y <- data[[yname]]
   state <- data[[dname]]
-  partition <- data[[partition_name]]
+  partition <- data[[pname]]
 
   # Creating a post dummy variable based on tlist[2] (second period = post treatment)
   tlist <- unique(data[[tname]])[base::order(unique(data[[tname]]))]
