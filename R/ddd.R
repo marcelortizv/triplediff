@@ -169,7 +169,7 @@ ddd <- function(yname,
   # Flag for control group in multiple periods
   if (multiple_periods && is.null(control_group)) {
       warning("control_group should be provided for multiple time periods. Using 'nevertreated'")
-      control_group <- "nevetreated"
+      control_group <- "nevertreated"
   }
 
   #------------------------------------------
