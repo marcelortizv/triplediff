@@ -1,6 +1,7 @@
 #' @import data.table
 #' @importFrom stats model.matrix
 #' @import BMisc
+#' @export
 NULL
 #--------------------------------------------------
 # Function to pre-process the data to use on ddd estimator
