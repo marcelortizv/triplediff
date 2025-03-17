@@ -20,7 +20,6 @@
 #' - outcome: Outcome variable
 #'
 #' @export
-
 generate_test_panel <- function(seed = 123,
                                 num_ids = 100,
                                 time = 2,

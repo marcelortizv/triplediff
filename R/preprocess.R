@@ -417,6 +417,7 @@ run_preprocess_2Periods <- function(yname,
 }
 
 # Preprocess function for multiple periods case.
+#' @export
 run_preprocess_multPeriods <- function(yname,
                                        tname,
                                        idname,
@@ -728,7 +729,7 @@ run_preprocess_multPeriods <- function(yname,
   return(out)
 }
 
-
+#' @export
 # Process results inside att_gt_dr function
 process_attgt <- function(attgt_list){
   groups <- length(unique(unlist(BMisc::getListElement(attgt_list, "group"))))

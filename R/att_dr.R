@@ -25,9 +25,6 @@
 #' @return A list with the estimated ATT, standard error, upper and lower confidence intervals, and influence function.
 #' @noRd
 #' @export
-NULL
-# ------------------------------------------------------------------------------
-
 att_dr <- function(did_preprocessed) {
 
   data <- did_preprocessed$preprocessed_data
