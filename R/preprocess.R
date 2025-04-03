@@ -449,11 +449,11 @@ run_preprocess_multPeriods <- function(yname,
   #-------------------------------------
 
   # TODO; DROP THIS WHEN NOT-YET-TREATED IS IMPLEMENTED
-  if (control_group == "notyettreated") {
-    warning("control_group = 'notyettreated' is temporarily unavailable. Using control_group = 'nevertreated' instead.")
-    control_group <- "nevertreated"
-    args$control_group <- control_group
-  }
+  # if (control_group == "notyettreated") {
+  #   warning("control_group = 'notyettreated' is temporarily unavailable. Using control_group = 'nevertreated' instead.")
+  #   control_group <- "nevertreated"
+  #   args$control_group <- control_group
+  # }
 
   # Flag for parallel and cores
   if (boot){
