@@ -102,6 +102,11 @@ fps <- function(psi_index, coefs, xvars){
   return(psi_index * elem_wise_mult)
 }
 
+fps2 <- function(psi_index, coefs, xvars, c){
+  elem_wise_mult <- c + xvars %*% coefs
+  return(psi_index * elem_wise_mult)
+}
+
 freg <- function(coefs, xvars){
   return(210 + xvars %*% coefs)
 }
@@ -635,11 +640,11 @@ gen_dgp_mult_periods <- function(size, dgp_type = 1){
     # index for pscores
 
     # Generalize Propensity score (3 groups and two partitions)
-    pi_2A <- exp(fps(Xsi.ps, w1, z))
-    pi_2B <- exp(fps(-Xsi.ps, w1, z))
-    pi_3A <- exp(fps(Xsi.ps, w2, z))
-    pi_3B <- exp(fps(-Xsi.ps, w2, z))
-    pi_0A <- exp(fps(Xsi.ps, w3, z))
+    pi_2A <- exp(fps2(Xsi.ps, w1, z, 1.25))
+    pi_2B <- exp(fps2(-Xsi.ps, w1, z, -0.5))
+    pi_3A <- exp(fps2(Xsi.ps, w2, z, 2))
+    pi_3B <- exp(fps2(-Xsi.ps, w2, z, -1.25))
+    pi_0A <- exp(fps2(Xsi.ps, w3, z, -0.5))
     # Get the sum of the exponentials
     sum_pi <- 1 + pi_2A + pi_2B + pi_3A + pi_3B + pi_0A
     # Construct the generalized pscore
@@ -678,7 +683,7 @@ gen_dgp_mult_periods <- function(size, dgp_type = 1){
     # (fixed effects that are correlated with X, partition, and cohort)
     v <- stats::rnorm(size, mean = index_unobs_het, sd = 1)
     # Index to violates the parallel trends assumption
-    index_pt_violation <- v
+    index_pt_violation <- v/10
 
     # Index for per-period ATT(g,t)
     index_att_g2 <- 10
@@ -713,8 +718,13 @@ gen_dgp_mult_periods <- function(size, dgp_type = 1){
       index_att_g3 * partition # This is the treatment effects for cohort 2
     #-----------------------------------------------------------------------------
     # Get the realized outcomes now
-    y_t2<- y_t2_g2*(cohort == 2) + y_t2_g3*(cohort==3) + y_t2_never*(cohort==0)
-    y_t3<- y_t3_g2*(cohort == 2) + y_t3_g3*(cohort==3) + y_t3_never*(cohort==0)
+    # y_t2<- y_t2_g2*(cohort == 2) + y_t2_g3*(cohort==3) + y_t2_never*(cohort==0)
+    # y_t3<- y_t3_g2*(cohort == 2) + y_t3_g3*(cohort==3) + y_t3_never*(cohort==0)
+
+    y_t2<-  ifelse(cohort == 2 & partition==1, y_t2_g2, y_t2_never)
+    y_t3<- ifelse(cohort == 2 & partition==1, y_t3_g2,
+                  ifelse(cohort == 3 & partition==1, y_t3_g3,
+                         y_t3_never))
     #-----------------------------------------------------------------------------
     # Get the event study parameter
     # Get unfeasible ATT(g,t) (assuming we see the Potential outcomes)
@@ -767,11 +777,11 @@ gen_dgp_mult_periods <- function(size, dgp_type = 1){
     # index for pscores
 
     # Generalize Propensity score (3 groups and two partitions)
-    pi_2A <- exp(fps(Xsi.ps, w1, x))
-    pi_2B <- exp(fps(-Xsi.ps, w1, x))
-    pi_3A <- exp(fps(Xsi.ps, w2, x))
-    pi_3B <- exp(fps(-Xsi.ps, w2, x))
-    pi_0A <- exp(fps(Xsi.ps, w3, x))
+    pi_2A <- exp(fps2(Xsi.ps, w1, x, 1.25))
+    pi_2B <- exp(fps2(-Xsi.ps, w1, x, -0.5))
+    pi_3A <- exp(fps2(Xsi.ps, w2, x, 2))
+    pi_3B <- exp(fps2(-Xsi.ps, w2, x, -1.25))
+    pi_0A <- exp(fps2(Xsi.ps, w3, x, -0.5))
     # Get the sum of the exponentials
     sum_pi <- 1 + pi_2A + pi_2B + pi_3A + pi_3B + pi_0A
     # Construct the generalized pscore
@@ -810,7 +820,7 @@ gen_dgp_mult_periods <- function(size, dgp_type = 1){
     # (fixed effects that are correlated with X, partition, and cohort)
     v <- stats::rnorm(size, mean = index_unobs_het, sd = 1)
     # Index to violates the parallel trends assumption
-    index_pt_violation <- v
+    index_pt_violation <- v/10
 
     # Index for per-period ATT(g,t)
     index_att_g2 <- 10
@@ -845,8 +855,13 @@ gen_dgp_mult_periods <- function(size, dgp_type = 1){
       index_att_g3 * partition # This is the treatment effects for cohort 2
     #-----------------------------------------------------------------------------
     # Get the realized outcomes now
-    y_t2<- y_t2_g2*(cohort == 2) + y_t2_g3*(cohort==3) + y_t2_never*(cohort==0)
-    y_t3<- y_t3_g2*(cohort == 2) + y_t3_g3*(cohort==3) + y_t3_never*(cohort==0)
+    # y_t2<- y_t2_g2*(cohort == 2) + y_t2_g3*(cohort==3) + y_t2_never*(cohort==0)
+    # y_t3<- y_t3_g2*(cohort == 2) + y_t3_g3*(cohort==3) + y_t3_never*(cohort==0)
+
+    y_t2<-  ifelse(cohort == 2 & partition==1, y_t2_g2, y_t2_never)
+    y_t3<- ifelse(cohort == 2 & partition==1, y_t3_g2,
+                  ifelse(cohort == 3 & partition==1, y_t3_g3,
+                         y_t3_never))
     #-----------------------------------------------------------------------------
     # Get the event study parameter
     # Get unfeasible ATT(g,t) (assuming we see the Potential outcomes)
@@ -895,11 +910,11 @@ gen_dgp_mult_periods <- function(size, dgp_type = 1){
     # index for pscores
 
     # Generalize Propensity score (3 groups and two partitions)
-    pi_2A <- exp(fps(Xsi.ps, w1, z))
-    pi_2B <- exp(fps(-Xsi.ps, w1, z))
-    pi_3A <- exp(fps(Xsi.ps, w2, z))
-    pi_3B <- exp(fps(-Xsi.ps, w2, z))
-    pi_0A <- exp(fps(Xsi.ps, w3, z))
+    pi_2A <- exp(fps2(Xsi.ps, w1, z, 1.25))
+    pi_2B <- exp(fps2(-Xsi.ps, w1, z, -0.5))
+    pi_3A <- exp(fps2(Xsi.ps, w2, z, 2))
+    pi_3B <- exp(fps2(-Xsi.ps, w2, z, -1.25))
+    pi_0A <- exp(fps2(Xsi.ps, w3, z, -0.5))
     # Get the sum of the exponentials
     sum_pi <- 1 + pi_2A + pi_2B + pi_3A + pi_3B + pi_0A
     # Construct the generalized pscore
@@ -938,7 +953,7 @@ gen_dgp_mult_periods <- function(size, dgp_type = 1){
     # (fixed effects that are correlated with X, partition, and cohort)
     v <- stats::rnorm(size, mean = index_unobs_het, sd = 1)
     # Index to violates the parallel trends assumption
-    index_pt_violation <- v
+    index_pt_violation <- v/10
 
     # Index for per-period ATT(g,t)
     index_att_g2 <- 10
@@ -973,8 +988,13 @@ gen_dgp_mult_periods <- function(size, dgp_type = 1){
       index_att_g3 * partition # This is the treatment effects for cohort 2
     #-----------------------------------------------------------------------------
     # Get the realized outcomes now
-    y_t2<- y_t2_g2*(cohort == 2) + y_t2_g3*(cohort==3) + y_t2_never*(cohort==0)
-    y_t3<- y_t3_g2*(cohort == 2) + y_t3_g3*(cohort==3) + y_t3_never*(cohort==0)
+    # y_t2<- y_t2_g2*(cohort == 2) + y_t2_g3*(cohort==3) + y_t2_never*(cohort==0)
+    # y_t3<- y_t3_g2*(cohort == 2) + y_t3_g3*(cohort==3) + y_t3_never*(cohort==0)
+
+    y_t2<-  ifelse(cohort == 2 & partition==1, y_t2_g2, y_t2_never)
+    y_t3<- ifelse(cohort == 2 & partition==1, y_t3_g2,
+                  ifelse(cohort == 3 & partition==1, y_t3_g3,
+                         y_t3_never))
     #-----------------------------------------------------------------------------
     # Get the event study parameter
     # Get unfeasible ATT(g,t) (assuming we see the Potential outcomes)
@@ -1023,11 +1043,11 @@ gen_dgp_mult_periods <- function(size, dgp_type = 1){
     # index for pscores
 
     # Generalize Propensity score (3 groups and two partitions)
-    pi_2A <- exp(fps(Xsi.ps, w1, x))
-    pi_2B <- exp(fps(-Xsi.ps, w1, x))
-    pi_3A <- exp(fps(Xsi.ps, w2, x))
-    pi_3B <- exp(fps(-Xsi.ps, w2, x))
-    pi_0A <- exp(fps(Xsi.ps, w3, x))
+    pi_2A <- exp(fps2(Xsi.ps, w1, x, 1.25))
+    pi_2B <- exp(fps2(-Xsi.ps, w1, x, -0.5))
+    pi_3A <- exp(fps2(Xsi.ps, w2, x, 2))
+    pi_3B <- exp(fps2(-Xsi.ps, w2, x, -1.25))
+    pi_0A <- exp(fps2(Xsi.ps, w3, x, -0.5))
     # Get the sum of the exponentials
     sum_pi <- 1 + pi_2A + pi_2B + pi_3A + pi_3B + pi_0A
     # Construct the generalized pscore
@@ -1066,7 +1086,7 @@ gen_dgp_mult_periods <- function(size, dgp_type = 1){
     # (fixed effects that are correlated with X, partition, and cohort)
     v <- stats::rnorm(size, mean = index_unobs_het, sd = 1)
     # Index to violates the parallel trends assumption
-    index_pt_violation <- v
+    index_pt_violation <- v/10
 
     # Index for per-period ATT(g,t)
     index_att_g2 <- 10
@@ -1101,8 +1121,13 @@ gen_dgp_mult_periods <- function(size, dgp_type = 1){
       index_att_g3 * partition # This is the treatment effects for cohort 2
     #-----------------------------------------------------------------------------
     # Get the realized outcomes now
-    y_t2<- y_t2_g2*(cohort == 2) + y_t2_g3*(cohort==3) + y_t2_never*(cohort==0)
-    y_t3<- y_t3_g2*(cohort == 2) + y_t3_g3*(cohort==3) + y_t3_never*(cohort==0)
+    # y_t2<- y_t2_g2*(cohort == 2) + y_t2_g3*(cohort==3) + y_t2_never*(cohort==0)
+    # y_t3<- y_t3_g2*(cohort == 2) + y_t3_g3*(cohort==3) + y_t3_never*(cohort==0)
+
+    y_t2<-  ifelse(cohort == 2 & partition==1, y_t2_g2, y_t2_never)
+    y_t3<- ifelse(cohort == 2 & partition==1, y_t3_g2,
+                  ifelse(cohort == 3 & partition==1, y_t3_g3,
+                         y_t3_never))
     #-----------------------------------------------------------------------------
     # Get the event study parameter
     # Get unfeasible ATT(g,t) (assuming we see the Potential outcomes)
