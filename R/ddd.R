@@ -150,9 +150,10 @@ ddd <- function(yname,
     stop("gname should be provided")
   } else {
     unique_gname_values <- dta[, uniqueN(get(gname))]
-    if (unique_gname_values == 2) {
+    unique_tname_values <- dta[, uniqueN(get(tname))]
+    if (max(unique_gname_values,unique_tname_values) == 2) {
       multiple_periods <- FALSE
-    } else if (unique_gname_values > 2) {
+    } else if (max(unique_gname_values,unique_tname_values)  > 2) {
       multiple_periods <- TRUE
     } else {
       stop("Invalid gname. Please check your arguments.")
