@@ -539,7 +539,7 @@ run_preprocess_multPeriods <- function(yname,
   n_new <- dta[, .N]
   n_diff <- n_orig - n_new
   if (n_diff != 0) {
-    warning(paste0("dropped ", n_diff, " rows from original data due to missing data"))
+    warning(paste0("Dropped ", n_diff, " rows from original data due to missing data."))
   }
 
   # set weights
@@ -637,8 +637,16 @@ run_preprocess_multPeriods <- function(yname,
 
   # Make it a balanced data set
   n_old <- uniqueN(dta[[idname]])
+  row_orig <- dta[, .N]
   dta <- BMisc::makeBalancedPanel(dta, idname, tname)
   n <- uniqueN(dta[[idname]])
+  row_new <- dta[, .N]
+  row_diff <- row_orig - row_new
+
+
+  if (n < n_old) {
+    warning(paste0("Dropped observations from ", n_old - n, " units ", "(", row_diff ," rows)" ," while converting to balanced panel."))
+  }
 
   #-------------------------------------
   # Generate the output for estimation
@@ -653,11 +661,6 @@ run_preprocess_multPeriods <- function(yname,
   # Add cluster column if cluster argument is provided
   if (!is.null(cluster)) {
     cleaned_data[, cluster := dta[[cluster]]]
-  }
-
-
-  if (n < n_old) {
-    warning(paste0("Dropped ", n_old - n, " observations while converting to balanced panel."))
   }
 
   # If drop all data, you do not have a panel.
