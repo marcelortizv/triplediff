@@ -91,7 +91,7 @@ test_that("Testing error handling in run_preprocess_2periods() function", {
   # Test 5: error for missing values in treatment variable "gname"
   expect_error(ddd(yname = "outcome", tname = "year", idname = "id", gname = "treat",
                    pname = "partition", xformla = ~x1 + x2,
-                   data = missing_values_treat_df, control_group = NULL, base_period = NULL, est_method = "dr", learners = NULL,
+                   data = missing_values_treat_df, control_group = "nevertreated", base_period = NULL, est_method = "dr", learners = NULL,
                    weightsname = NULL, boot = FALSE, nboot = NULL,
                    inffunc = FALSE, skip_data_checks = FALSE))
 
@@ -168,7 +168,7 @@ test_that("Testing error handling in run_preprocess_2periods() function", {
   # Test 16: More that 2 time periods
   expect_error(ddd(yname = "outcome", tname = "year", idname = "id", gname = "treat",
                    pname = "partition", xformla = ~x1 + x2,
-                   data = more_than_two_periods_df, control_group = NULL, base_period = NULL, est_method = "dr", learners = NULL,
+                   data = more_than_two_periods_df, control_group = "nevertreated", base_period = NULL, est_method = "dr", learners = NULL,
                    weightsname = NULL, boot = FALSE, nboot = NULL,
                    inffunc = FALSE, skip_data_checks = FALSE))
 

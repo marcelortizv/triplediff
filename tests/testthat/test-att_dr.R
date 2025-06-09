@@ -10,7 +10,7 @@ test_that("multiplication works", {
   ddd_analytical <- ddd(yname = "outcome", tname = "year", idname = "id", gname = "treat",
                  pname = "partition", xformla = ~x1 + x2,
                   data = test_panel, control_group = NULL, base_period = NULL, est_method = "dr", learners = NULL, n_folds = NULL,
-                  weightsname = NULL, boot = TRUE, nboot = NULL,
+                  weightsname = NULL, boot = TRUE, nboot = 1000,
                   inffunc = FALSE, skip_data_checks = FALSE)
 
   ddd_boostrap <- ddd(yname = "outcome", tname = "year", idname = "id", gname = "treat",

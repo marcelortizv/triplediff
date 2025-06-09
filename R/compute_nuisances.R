@@ -77,11 +77,22 @@ compute_pscore <- function(data, condition_subgroup, xformula) {
   uid_condition_data <- unique(condition_data, by = "id")
 
   # Fit logistic regression model using parglm
-  model <- parglm::parglm(formula_pscore, data = uid_condition_data,
-                          family = stats::binomial(),
-                          weights = weights,
-                          control = parglm.control(nthreads = data.table::getDTthreads()),
-                          intercept = FALSE)
+  model <- withCallingHandlers(
+    parglm::parglm(
+      formula_pscore,
+      data     = uid_condition_data,
+      family   = stats::binomial(),
+      weights  = weights,
+      control  = parglm.control(nthreads = data.table::getDTthreads()),
+      intercept = FALSE
+    ),
+    warning = function(w) {
+      msg <- conditionMessage(w)
+      if (grepl("^Too few observation compared to the number of threads", msg)) {
+        invokeRestart("muffleWarning")
+      }
+    }
+  )
 
   # Flag for convergence of glm
   if (!model$converged) {
@@ -228,7 +239,8 @@ compute_did <- function(data, condition_subgroup, pscores, reg_adjustment, xform
   }
 
   # get weights
-  i_weights = condition_data[condition_data$post == 0, weights]
+  # i_weights = condition_data[condition_data$post == 0, weights]
+  i_weights = condition_data$weights
 
   ################################
   # Get doubly-robust estimation #
