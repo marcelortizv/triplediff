@@ -175,6 +175,6 @@ print.ddd <- function(x, alpha = NULL, ...) {
     cat("\n", paste0("Clustering Std. Errors by: ", x$argu$cluster))
   }
   cat("\n ==================================================================")
-  cat("\n See Ortiz-Villavicencio and Sant'Anna (2024) for details.")
+  cat("\n See Ortiz-Villavicencio and Sant'Anna (2025) for details.")
 
 }

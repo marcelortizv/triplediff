@@ -147,7 +147,12 @@ att_gt <- function(did_preprocessed){
 
       # add post treatment dummy variable if period is equal to t + tfac
       cohort_data[, post := 0]
-      cohort_data[(period == tlist[max(t, pret) + tfac]), post := 1]
+
+      # Ypre is always the baseline, even in pre-treatment periods were baseline could be in later periods with respect to t.
+      pseudo_post = ifelse(post_treat == 1, tlist[max(t, pret) + tfac], tlist[t + tfac])
+      cohort_data[(period == pseudo_post), post := 1]
+
+      # cohort_data[(period == tlist[max(t, pret) + tfac]), post := 1]
       # Calculate the size of each subgroup in the 'subgroup' column
       subgroup_counts <- cohort_data[, .N/2, by = subgroup][order(-subgroup)]
 

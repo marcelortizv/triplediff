@@ -68,9 +68,9 @@ att_dr <- function(did_preprocessed) {
   }
 
   # Compute Doubly Robust Triple Difference Estimator
-  dr_att_inf_func_3 <- compute_did(data, condition_subgroup = 3, pscores, reg_adjust, xformula, est_method) # S=2, L=A
-  dr_att_inf_func_2 <- compute_did(data, condition_subgroup = 2, pscores, reg_adjust, xformula, est_method) # S=\infty, L=B
-  dr_att_inf_func_1 <- compute_did(data, condition_subgroup = 1, pscores, reg_adjust, xformula, est_method) # S=\infty, L=A
+  dr_att_inf_func_3 <- compute_did(data, condition_subgroup = 3, pscores = pscores, reg_adjustment = reg_adjust, xformula = xformula, est_method = est_method) # S=g, Q=1 vs. S=g, Q=0
+  dr_att_inf_func_2 <- compute_did(data, condition_subgroup = 2, pscores = pscores, reg_adjustment = reg_adjust, xformula = xformula, est_method = est_method) # S=g, Q=1 vs. S=\infty, Q=1
+  dr_att_inf_func_1 <- compute_did(data, condition_subgroup = 1, pscores = pscores, reg_adjustment = reg_adjust, xformula = xformula, est_method = est_method) # S=g, Q=1 vs. S=\infty, Q=0
 
   dr_ddd <- dr_att_inf_func_3$dr_att + dr_att_inf_func_2$dr_att - dr_att_inf_func_1$dr_att
   n <- data[, .N/2]
