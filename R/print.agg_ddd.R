@@ -106,5 +106,5 @@ print.agg_ddd <- function(x, ...) {
     cat("\n", paste0("Clustering Std. Errors by: ", x$aggte_ddd$argu$cluster))
   }
   cat("\n ==================================================================")
-  cat("\n See Ortiz-Villavicencio and Sant'Anna (2024) for details.")
+  cat("\n See Ortiz-Villavicencio and Sant'Anna (2025) for details.")
 }
