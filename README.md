@@ -13,7 +13,7 @@ in Triple Differences Designs (also known as
 Difference-in-Differences-in-Differences or DDD). DDD designs are widely
 used in empirical work to relax parallel trends assumptions in
 Difference-in-Differences settings. This package provides functions to
-estimate group-time average treatment effect on the treated and
+estimate group-time average treatment effect and
 event-study type estimands associated with DDD designs. The setups
 allowed are:
 
@@ -52,10 +52,10 @@ familiar with it should feel comfortable using `triplediff`.
 regression adjustment, inverse probability weighing, and doubly robust
 estimators that are valid under conditional DDD parallel trends.
 
-The `ddd` function requires a data frame with the following columns:
+To use `ddd`, the minimal data requirements include:
 
 - `id`: Unit unique identifier (e.g., firm, individual, etc.). Its
-  column name is associated with parameter `id`.
+  column name is associated with parameter `idname`.
 
 - `period`: Time identifier (e.g., year, month, etc.). Its column name
   is associated with parameter `tname`.
@@ -74,14 +74,14 @@ The `ddd` function requires a data frame with the following columns:
 
 The following are two simplified examples of how to use the `ddd`
 function. The first one is for a two-periods DDD setup, while the second
-one is for a multiple periods DDD setup with staggered treatment
+one is for a multiple-period DDD setup with staggered treatment
 adoption.
 
 #### Case: Two-Periods DDD with covariates
 
 First, we simulate some data with a built-in function `gen_dgp_2periods`
-that generates a two-periods DDD setup with a single treatment date.
-This function receives the numbers of units and the type of DGP design
+that generates a two-period DDD setup with a single treatment date.
+This function receives the number of units and the type of DGP design
 to generate. The `gen_dgp_2periods` function returns a data frame with
 the required columns for the `ddd` function with 4 covariates.
 
@@ -155,8 +155,8 @@ summary(att_22)
 #>  See Ortiz-Villavicencio and Sant'Anna (2025) for details.
 ```
 
-We can also leverage the fact the our estimators are based on efficient
-influence function to rely on data-driven models for estimating the
+We can also leverage the fact that our estimators are doubly robust 
+to rely on data-driven models for estimating the
 nuisance parameters. For example, we can use a flexible machine learning
 like `xgboost` to estimate outcome models and `ranger` (Random Forest)
 to estimate the propensity scores. The engine behind this approach is
@@ -236,15 +236,15 @@ summary(att_22_dml)
 #### Case: Multiple Periods DDD with staggered treatment adoption
 
 In this case, we simulate some data with a built-in function
-`gen_dgp_staggered` that generates a multiple periods DDD setup with
-staggered treatment adoption. This function receives the numbers of
+`gen_dgp_staggered` that generates a multiple-period DDD setup with
+staggered treatment adoption. This function receives the number of
 units and the type of DGP design to generate. The `gen_dgp_staggered`
 function returns a data frame with the required columns for the `ddd`
 function with 4 covariates.
 
 ``` r
 set.seed(1234) # Set seed for reproducibility
-# simulate data for a multiple periods DDD setup with staggered treatment adoption
+# Simulate data for a multiple-period DDD setup with staggered treatment adoption
 data <- gen_dgp_mult_periods(size = 500, dgp_type = 1)$data
 
 head(data)
@@ -446,8 +446,8 @@ summary(att_gt_nyt)
 
 The current version is released in an **alpha** stage: the core features
 are implemented and made available so users can try them out and provide
-feedback. Please, be aware it remains under active development, so
-long-term stability is not guaranteed—APIs may evolve adding more
+feedback. Please, be aware that it remains under active development, so
+long-term stability is not guaranteed---APIs may evolve, adding more
 features and/or breaking changes can occur at any time, without a
 deprecation cycle.
 
@@ -471,5 +471,5 @@ to report bugs, request features or provide feedback.
 - 🔲 Built-in plotting capabilities for visualizing results.
   - This can be done easily by users. E.g., event-study type estimates
     can be plotted using `ggplot2`. See the quick start example.
-- 🔲 Repeated cross-sections data.
+- 🔲 Repeated cross-sectional data.
 - 🔲 Unbalanced panel data.
