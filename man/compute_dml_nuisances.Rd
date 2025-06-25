@@ -32,3 +32,4 @@ A list containing ids, estimator for each k fold, and scores
 \description{
 Compute the propensity score for the given condition subgroup
 }
+\keyword{internal}

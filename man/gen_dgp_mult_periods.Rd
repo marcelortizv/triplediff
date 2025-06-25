@@ -2,7 +2,7 @@
 % Please edit documentation in R/generate_data.R
 \name{gen_dgp_mult_periods}
 \alias{gen_dgp_mult_periods}
-\title{Function that generates panel data with staggered treatment assignment for multiple periods}
+\title{Function that generates panel data with staggered treatment assignment and multiple periods}
 \usage{
 gen_dgp_mult_periods(size, dgp_type = 1)
 }
@@ -10,27 +10,31 @@ gen_dgp_mult_periods(size, dgp_type = 1)
 \item{size}{number of units}
 
 \item{dgp_type}{type of DGP to generate.
-1 if both nuisance functions are correct,
-2 if only the outcome model is correct,
-3 if only the pscore is correct,
-4 if both nuisance functions are incorrect}
+1 if both nuisance functions are correct;
+2 if only the outcome model is correct;
+3 if only the pscore is correct;
+4 if both nuisance functions are incorrect.}
 }
 \value{
-A list of 2 data.table with the following columns in long and wide format:
+A list with 2 data.table with the following columns in long and wide format.
+\item{data}{data.table with the generated data in long format.}
+\item{data_wide}{data.table with the generated data in wide format.}
 \itemize{
-\item id: ID for panel data
-\item cohort: Indicate the first period where the treatment is assigned
-\item partition: Partition variable
+\item id: ID for panel data.
+\item cohort: Indicate the first period where the treatment is assigned.
+\item partition: Partition variable.
 \item x1: Covariate 1
 \item x2: Covariate 2
 \item x3: Covariate 3
 \item x4: Covariate 4
-\item cluster: Cluster variables (there's no actual within-cluster correlation)
-\item time: Time periods
-\item y: Outcome variable
+\item cluster: Cluster variable (there's no actual within-cluster correlation).
+\item time: Time periods.
+\item y: Outcome variable.
+\item{ES_0_unf}{Unfeasible event-study parameter for the DGP.}
+\item{prob_g2_p1}{Proportion of units in group 2 and eligibility = 1.}
+\item{prob_g3_p1}{Proportion of units in group 3 and eligibility = 1.}
 }
 }
 \description{
-Function to generate data with staggered treatment adoption.
-Without loss of generality, the number of time periods is set to be 3.
+Function to generate data with staggered treatment adoption. Without loss of generality, the number of time periods is set to be 3.
 }

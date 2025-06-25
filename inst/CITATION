@@ -1,0 +1,24 @@
+note <- sprintf("R package version %s", meta$Version)
+
+bibentry(bibtype = "Article",
+         title = "Better Understanding Triple Differences Estimators",
+         author = c(person("Marcelo","Ortiz-Villavicencio"),
+                    person("Pedro H.C.", "Sant\'Anna")),
+         year = "2025",
+         journal = "ArXiv",
+         url = "https://arxiv.org/abs/2505.09942",
+         header = "To cite the paper that the R did package is based on:\n"
+)
+
+
+bibentry(
+  bibtype  = "Misc",
+  title    = "triplediff: Triple Differences Estimators",
+  author   = c(person("Marcelo", "Ortiz-Villavicencio"),
+               person("Pedro H.C.", "Sant\'Anna")
+               ),
+  year     = "2025",
+  note     = note,
+  url      = "http://marcelortiz.com/triplediff/",
+  header   = "To cite the did R package:\n"
+)

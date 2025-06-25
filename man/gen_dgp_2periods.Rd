@@ -2,7 +2,7 @@
 % Please edit documentation in R/generate_data.R
 \name{gen_dgp_2periods}
 \alias{gen_dgp_2periods}
-\title{Function that generates panel data with staggered treatment assignment for 2 time periods}
+\title{Function that generates panel data with single treatment date assignment and two time periods.}
 \usage{
 gen_dgp_2periods(size, dgp_type)
 }
@@ -10,30 +10,30 @@ gen_dgp_2periods(size, dgp_type)
 \item{size}{number of units}
 
 \item{dgp_type}{type of DGP to generate.
-1 if both nuisance functions are correct,
-2 if only the outcome model is correct,
-3 if only the pscore is correct,
-4 if both nuisance functions are incorrect}
+1 if both nuisance functions are correct;
+2 if only the outcome model is correct;
+3 if only the pscore is correct;
+4 if both nuisance functions are incorrect.}
 }
 \value{
 A list with the following elements:
+\item{data}{data.table with the generated data in long format:}
 \itemize{
-\item data: data.table with the generated data with columns
-- id: ID
-- state: State variable
-- time: Time variable
-- partition: Partition variable
-- x1: Covariate 1
-- x2: Covariate 2
-- x3: Covariate 3
-- x4: Covariate 4
-- y: Outcome variable
-- cluster: Cluster variables (there's no actual within-cluster correlation)
-\item att: True ATT. Set to be equal to 0.
-\item att.unf: Computation of unfeasible ATT
-\item eff: value of the theoretical efficiency bound
+\item id: ID
+\item state: State variable
+\item time: Time variable
+\item partition: Partition variable
+\item x1: Covariate 1
+\item x2: Covariate 2
+\item x3: Covariate 3
+\item x4: Covariate 4
+\item y: Outcome variable
+\item cluster: Cluster variables (there's no actual within-cluster correlation)
+\item{att}{True ATT. Set to be equal to 0.}
+\item{att.unf}{Computation of unfeasible ATT.}
+\item{eff}{value of the theoretical efficiency bound}
 }
 }
 \description{
-Function to generate data with staggered treatment adoption.
+Function that generates panel data with single treatment date assignment and two time periods.
 }

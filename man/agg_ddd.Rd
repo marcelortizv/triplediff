@@ -2,8 +2,7 @@
 % Please edit documentation in R/agg_ddd.R
 \name{agg_ddd}
 \alias{agg_ddd}
-\title{Aggregate Group-Time Average Treatment Effects in Staggered Triple-Differences Designs
-Aggregation procedures}
+\title{Aggregate Group-Time Average Treatment Effects in Staggered Triple-Differences Designs.}
 \usage{
 agg_ddd(
   ddd_obj,
@@ -19,7 +18,7 @@ agg_ddd(
 )
 }
 \arguments{
-\item{ddd_obj}{a ddd object (i.e., the results of the \code{\link[=ddd]{ddd()}} function)}
+\item{ddd_obj}{a \code{ddd} object (i.e., the results of the \code{\link[=ddd]{ddd()}} function)}
 
 \item{type}{Which type of aggregated treatment effect parameter to compute.
 \code{"simple"} just computes a weighted average of all
@@ -70,25 +69,25 @@ use the value set in the ddd object.}
 }
 \value{
 A object (list) of class \code{\link{agg_ddd}} that holds the results from the
-aggregation step.  The object contains the following elements:
+aggregation step.
 }
 \description{
 \code{agg_ddd} is a function that take group-time average treatment effects
 and aggregate them into a smaller number of summary parameters in staggered triple differences designs.
-There are several possible aggregations including "simple", "eventstudy", "group",
-and "calendar."  Default is \code{"eventstudy"}.
+There are several possible aggregations including \code{"simple"}, \code{"eventstudy"}, \code{"group"},
+and \code{"calendar"}.  Default is \code{"eventstudy"}.
 }
 \examples{
 #----------------------------------------------------------
 # Triple Diff with multiple time periods
 #----------------------------------------------------------
 
-data <- gen_dgp_mult_periods(size = 1000, dgp_type = 1)[["data"]]
+data <- gen_dgp_mult_periods(size = 500, dgp_type = 1)[["data"]]
 
 out <- ddd(yname = "y", tname = "time", idname = "id",
             gname = "state", pname = "partition", xformla = ~cov1 + cov2 + cov3 + cov4,
             data = data, control_group = "nevertreated", base_period = "varying",
-            est_method = "trad")
+            est_method = "dr")
 # Simple aggregation
 agg_ddd(out, type = "simple", alpha = 0.10)
 

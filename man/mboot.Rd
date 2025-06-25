@@ -18,13 +18,14 @@ bootstrap, default is \code{use_parallel=FALSE}}
 }
 \value{
 A list with following elements
-\item{bres}{results from each bootstrap iteration}
-\item{V}{variance matrix}
-\item{se}{standard errors}
-\item{crit_val}{a critical value for computing uniform confidence bands}
+\item{bres}{results from each bootstrap iteration.}
+\item{V}{variance matrix.}
+\item{se}{standard errors.}
+\item{crit_val}{a critical value for computing uniform confidence bands.}
 }
 \description{
 This function take an influence function and use the
 multiplier bootstrap to compute standard errors and critical values for
 uniform confidence bands.
 }
+\keyword{internal}

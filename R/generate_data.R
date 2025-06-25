@@ -1,6 +1,6 @@
-#' Function to generate a fake dataset for testing
+#' Function to generate a fake dataset for testing purposes only.
 #' @description
-#' Function to generate fake dataset to test procedure
+#' Function to generate fake dataset to test internal procedures.
 #'
 #' @param seed Seed for reproducibility
 #' @param num_ids Number of IDs
@@ -19,7 +19,7 @@
 #' - treat: Treatment variable
 #' - outcome: Outcome variable
 #'
-#' @export
+#' @keywords internal
 generate_test_panel <- function(seed = 123,
                                 num_ids = 100,
                                 time = 2,
@@ -163,35 +163,34 @@ sd.z4 <-  56.63891
 # Generate data for 2 time treatment periods
 # ---------------------------------------------------------------------
 
-#' Function that generates panel data with staggered treatment assignment for 2 time periods
+#' Function that generates panel data with single treatment date assignment and two time periods.
 #' @description
-#' Function to generate data with staggered treatment adoption.
+#' Function that generates panel data with single treatment date assignment and two time periods.
 #'
 #' @param size number of units
 #' @param dgp_type type of DGP to generate.
-#'           1 if both nuisance functions are correct,
-#'           2 if only the outcome model is correct,
-#'           3 if only the pscore is correct,
-#'           4 if both nuisance functions are incorrect
+#'           1 if both nuisance functions are correct;
+#'           2 if only the outcome model is correct;
+#'           3 if only the pscore is correct;
+#'           4 if both nuisance functions are incorrect.
 #'
 #' @return A list with the following elements:
-#' - data: data.table with the generated data with columns
-#'        - id: ID
-#'        - state: State variable
-#'        - time: Time variable
-#'        - partition: Partition variable
-#'        - x1: Covariate 1
-#'        - x2: Covariate 2
-#'        - x3: Covariate 3
-#'        - x4: Covariate 4
-#'        - y: Outcome variable
-#'        - cluster: Cluster variables (there's no actual within-cluster correlation)
-#' - att: True ATT. Set to be equal to 0.
-#' - att.unf: Computation of unfeasible ATT
-#' - eff: value of the theoretical efficiency bound
+#' \item{data}{data.table with the generated data in long format:}
+#'  - id: ID
+#'  - state: State variable
+#'  - time: Time variable
+#'  - partition: Partition variable
+#'  - x1: Covariate 1
+#'  - x2: Covariate 2
+#'  - x3: Covariate 3
+#'  - x4: Covariate 4
+#'  - y: Outcome variable
+#'  - cluster: Cluster variables (there's no actual within-cluster correlation)
+#' \item{att}{True ATT. Set to be equal to 0.}
+#' \item{att.unf}{Computation of unfeasible ATT.}
+#' \item{eff}{value of the theoretical efficiency bound}
 #'
 #' @export
-
 gen_dgp_2periods <- function(size, dgp_type){
   # Generate data for MC simulations
   # size: number of observations
@@ -574,30 +573,33 @@ gen_dgp_2periods <- function(size, dgp_type){
 # Functions to generate data for multiple time periods
 # ---------------------------------------------------------------------
 
-#' Function that generates panel data with staggered treatment assignment for multiple periods
+#' Function that generates panel data with staggered treatment assignment and multiple periods
 #' @description
-#' Function to generate data with staggered treatment adoption.
-#' Without loss of generality, the number of time periods is set to be 3.
+#' Function to generate data with staggered treatment adoption. Without loss of generality, the number of time periods is set to be 3.
 #'
 #' @param size number of units
 #' @param dgp_type type of DGP to generate.
-#'           1 if both nuisance functions are correct,
-#'           2 if only the outcome model is correct,
-#'           3 if only the pscore is correct,
-#'           4 if both nuisance functions are incorrect
+#'           1 if both nuisance functions are correct;
+#'           2 if only the outcome model is correct;
+#'           3 if only the pscore is correct;
+#'           4 if both nuisance functions are incorrect.
 #'
-#' @return A list of 2 data.table with the following columns in long and wide format:
-#' - id: ID for panel data
-#' - cohort: Indicate the first period where the treatment is assigned
-#' - partition: Partition variable
-#' - x1: Covariate 1
-#' - x2: Covariate 2
-#' - x3: Covariate 3
-#' - x4: Covariate 4
-#' - cluster: Cluster variables (there's no actual within-cluster correlation)
-#' - time: Time periods
-#' - y: Outcome variable
-#'
+#' @return A list with 2 data.table with the following columns in long and wide format.
+#' \item{data}{data.table with the generated data in long format.}
+#' \item{data_wide}{data.table with the generated data in wide format.}
+#' - id: ID for panel data.
+#' - cohort: Indicate the first period where the treatment is assigned.
+#' - partition: Partition variable.
+#'  - x1: Covariate 1
+#'  - x2: Covariate 2
+#'  - x3: Covariate 3
+#'  - x4: Covariate 4
+#' - cluster: Cluster variable (there's no actual within-cluster correlation).
+#' - time: Time periods.
+#' - y: Outcome variable.
+#' \item{ES_0_unf}{Unfeasible event-study parameter for the DGP.}
+#' \item{prob_g2_p1}{Proportion of units in group 2 and eligibility = 1.}
+#' \item{prob_g3_p1}{Proportion of units in group 3 and eligibility = 1.}
 #' @export
 gen_dgp_mult_periods <- function(size, dgp_type = 1){
 

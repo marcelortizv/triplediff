@@ -1,12 +1,12 @@
 # Main function for triplediff
 NULL
-#' Doubly Robust DDD estimators for the ATT and beyond
+#' Doubly Robust DDD estimators for the group-time average treatment effects.
 #'
 #' @description
-#' \code{ddd} is the main function for computing the Doubly Robust DDD estimators for the ATT, with panel data.
+#' \code{ddd} is the main function for computing the Doubly Robust DDD estimators for the ATT, with balanced panel data.
 #' It can be used with covariates and/or under multiple time periods. At its core, \code{triplediff} employs
 #' the doubly robust estimator for the ATT, which is a combination of the propensity score weighting and the outcome regression.
-#' Furthermore, this package supports the application of machine learning methods for the estimation of the nuisance functions.
+#' Furthermore, this package supports the application of machine learning methods for the estimation of the nuisance parameters.
 #' @param yname The name of the outcome variable.
 #' @param tname The name of the column containing the time periods.
 #' @param idname The name of the column containing the unit id.
@@ -51,29 +51,27 @@ NULL
 #' \item{uci}{The upper confidence interval of the ATT.}
 #' \item{lci}{The lower confidence interval of the ATT.}
 #' \item{inf_func}{The estimate of the influence function.}
-#' \item{...}{Other elements that are specific to the estimation method.}
 #'
 #'
 #' @examples
 #' #----------------------------------------------------------
 #' # Triple Diff with covariates and 2 time periods
 #' #----------------------------------------------------------
-#' seed = 123
-#' num_ids = 500
-#' time = 2
-#' initial.year = 2019
-#' treatment.year = 2020
+#' set.seed(1234) # Set seed for reproducibility
+#' # Simulate data for a two-periods DDD setup
+#' df <- gen_dgp_2periods(
+#' size = 500, # Number of units
+#' dgp_type = 1 # Type of DGP design
+#' )$data
 #'
-#' sim_data = generate_test_panel(seed = seed,
-#'                               num_ids = num_ids,
-#'                               time = time,
-#'                               initial.year = initial.year,
-#'                               treatment.year = treatment.year)
+#' head(df)
 #'
-#' ddd(yname = "outcome", tname = "year", idname = "id", gname = "treat",
-#'     pname = "partition", xformla = ~x1 + x2,
-#'     data = sim_data, control_group = NULL,
-#'     est_method = "dr")
+#' att_22 <- ddd(yname = "y", tname = "time", idname = "id", gname = "state",
+#'               pname = "partition", xformla = ~cov1 + cov2 + cov3 + cov4,
+#'              data = df, control_group = "nevertreated", est_method = "dr")
+#'
+#' summary(att_22)
+#'
 #'
 #' #----------------------------------------------------------
 #' # DML Triple Diff with covariates and 2 time periods
@@ -82,16 +80,17 @@ NULL
 #' library(mlr3learners)
 #'
 #' learner_rf <- lrn("classif.ranger", predict_type = "prob", num.trees = 100,
-#'                  min.node.size = 1, importance = 'impurity')
-#'
+#'                min.node.size = 1, importance = 'impurity')
 #' learner_regr <- lrn("regr.xgboost")
 #'
 #' learners <- list(ml_pa = learner_rf, ml_md = learner_regr)
 #'
-#' ddd(yname = "outcome", tname = "year", idname = "id", gname = "treat",
-#'     pname = "partition", xformla = ~x1 + x2,
-#'     data = sim_data, control_group = NULL,
-#'     est_method = "dml", learners = learners, n_folds = 3)
+#' att_22_dml <- ddd(yname = "y", tname = "time", idname = "id", gname = "state",
+#'                   pname = "partition", xformla = ~cov1 + cov2 + cov3 + cov4,
+#'                  data = df, control_group = "nevertreated",
+#'                  est_method = "dml", learners = learners, n_folds = 3)
+#'
+#' summary(att_22_dml)
 #'
 #' #----------------------------------------------------------
 #' # Triple Diff with multiple time periods
@@ -103,12 +102,7 @@ NULL
 #'      data = data, control_group = "nevertreated", base_period = "varying",
 #'      est_method = "dr")
 #'
-#' #----------------------------------------------------------
-#' # DML Triple Diff with multiple time periods
-#' #----------------------------------------------------------
-#' # TBA
 #' @export
-
 ddd <- function(yname,
                 tname,
                 idname,

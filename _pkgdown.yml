@@ -1,0 +1,31 @@
+url: http://marcelortiz.com/triplediff/
+template:
+  bootstrap: 5
+
+authors:
+  Marcelo Ortiz-Villavicencio:
+    href: https://marcelortiz.com/
+
+  Pedro H. C. Sant'Anna:
+    href: https://psantanna.com/
+
+home:
+  sidebar:
+    structure: [links, license, community, citation]
+  logo: man/figures/triplediff-logo.png
+  links:
+    - text: Source Code
+      href: https://github.com/marcelortizv/triplediff
+    - text: Report Bugs or Feature Requests
+      href: https://github.com/marcelortizv/triplediff/issues
+
+navbar:
+  structure:
+    left: [reference, articles, news]
+    right: [github]
+  components:
+    github:
+      icon: fa-github
+      href: https://github.com/marcelortizv/triplediff
+
+

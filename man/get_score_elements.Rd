@@ -15,6 +15,10 @@ get_score_elements(y, d, p_hat, m_hat)
 
 \item{m_hat}{Outcome regression}
 }
+\value{
+A list containing the score elements psi_a and psi_b
+}
 \description{
 Compute the score elements for the ATT
 }
+\keyword{internal}

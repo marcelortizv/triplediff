@@ -2,7 +2,7 @@
 % Please edit documentation in R/generate_data.R
 \name{generate_test_panel}
 \alias{generate_test_panel}
-\title{Function to generate a fake dataset for testing}
+\title{Function to generate a fake dataset for testing purposes only.}
 \usage{
 generate_test_panel(
   seed = 123,
@@ -37,5 +37,6 @@ A data.table with the following columns:
 }
 }
 \description{
-Function to generate fake dataset to test procedure
+Function to generate fake dataset to test internal procedures.
 }
+\keyword{internal}

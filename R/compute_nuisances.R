@@ -320,12 +320,14 @@ compute_did <- function(data, condition_subgroup, pscores, reg_adjustment, xform
 # ---------------------------- #
 
 # Function to get components of a linear score
+#' Compute the score elements for the ATT
+#' @param y Outcome variable
+#' @param d Treatment variable
+#' @param p_hat Propensity score
+#' @param m_hat Outcome regression
+#' @return A list containing the score elements psi_a and psi_b
+#' @keywords internal
 get_score_elements <- function(y, d, p_hat, m_hat){
-  #' Compute the score elements for the ATT
-  #' @param y Outcome variable
-  #' @param d Treatment variable
-  #' @param p_hat Propensity score
-  #' @param m_hat Outcome regression
 
   # check if treatment variable is a factor
   if (is.factor(d)) {
@@ -345,12 +347,14 @@ get_score_elements <- function(y, d, p_hat, m_hat){
 }
 
 # Function to get the predicted score for each k fold
+#' Function to compute scores based on first step nuisances predictions
+#' @param ml_pa MLR3 object for propensity score estimation
+#' @param ml_md MLR3 object for regression adjustment estimation
+#' @param condition_subgroup Subgroup to analyze
+#' @return: A list of scores and id for each k fold
+#' @keywords internal
 compute_scores <- function(ml_pa, ml_md, condition_subgroup){
-  #' Function to compute scores based on first step nuisances predictions
-  #' @param ml_pa MLR3 object for propensity score estimation
-  #' @param ml_md MLR3 object for regression adjustment estimation
-  #' @param condition_subgroup Subgroup to analyze
-  #' @return: A list of scores and id for each k fold
+
 
   # Warning for overlap condition
   if (any(ml_pa$prediction()$prob[,2] < 0.01) | any(ml_pa$prediction()$prob[,2] > 0.99)) {
@@ -410,15 +414,16 @@ compute_dml = function(scores) {
 
 
 # Function to compute the DML ATT + score function
+#' Compute the propensity score for the given condition subgroup
+#' @param data A data.table containing the data processed
+#' @param condition_subgroup The condition subgroup for which to compute the propensity score
+#' @param xformula The formula for the propensity score model
+#' @param ml_pa The machine learning algorithm to use for the propensity score model
+#' @param ml_md The machine learning algorithm to use for the regression adjustment model
+#' @param n_folds The number of folds for cross-fitting
+#' @return A list containing ids, estimator for each k fold, and scores
+#' @keywords internal
 compute_dml_nuisances <- function(data, condition_subgroup, xformula, ml_pa, ml_md, n_folds) {
-  #' Compute the propensity score for the given condition subgroup
-  #' @param data A data.table containing the data processed
-  #' @param condition_subgroup The condition subgroup for which to compute the propensity score
-  #' @param xformula The formula for the propensity score model
-  #' @param ml_pa The machine learning algorithm to use for the propensity score model
-  #' @param ml_md The machine learning algorithm to use for the regression adjustment model
-  #' @param n_folds The number of folds for cross-fitting
-  #' @return A list containing ids, estimator for each k fold, and scores
 
   set.seed(123)
 
@@ -492,9 +497,9 @@ compute_se_dml <- function(dml_scores1, dml_scores2, dml_scores3) {
   return(se)
 }
 
-# ---------------------------- #
-# FUNCTIONS FOR AGGREGATION
-# ---------------------------- #
+# --------------------------------------
+# FUNCTIONS FOR AGGREGATION PROCEDURES
+# --------------------------------------
 
 #' @title Compute extra term in influence function due to estimating weights
 #'

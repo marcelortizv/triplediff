@@ -6,18 +6,17 @@
 #'
 #' @param inf_func an influence function
 #' @param did_preprocessed A `dp` object obtained after preprocess
-# #' @param multiple_periods Boolean of whether or not to use multiple periods. This is useful to get the right tlist. Default is \code{multiple_periods=TRUE}.
 #' @param use_parallel Boolean of whether or not to use parallel processing in the multiplier
 #'  bootstrap, default is \code{use_parallel=FALSE}
 #' @param cores the number of cores to use with parallel processing, default is \code{cores=1}
 #'
 #' @return A list with following elements
-#' \item{bres}{results from each bootstrap iteration}
-#' \item{V}{variance matrix}
-#' \item{se}{standard errors}
-#' \item{crit_val}{a critical value for computing uniform confidence bands}
+#' \item{bres}{results from each bootstrap iteration.}
+#' \item{V}{variance matrix.}
+#' \item{se}{standard errors.}
+#' \item{crit_val}{a critical value for computing uniform confidence bands.}
 #'
-#' @export
+#' @keywords internal
 mboot <- function(inf_func, did_preprocessed, use_parallel = FALSE, cores = 1) {
 
   # setup needed variables

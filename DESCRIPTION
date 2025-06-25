@@ -2,7 +2,7 @@ Package: triplediff
 Title: Triple Differences Estimators
 Version: 0.0.0.9000
 Authors@R: c(person("Marcelo", "Ortiz-Villavicencio", email = "marcelo.ortiz@emory.edu", role = c("aut", "cre")),
-              person("Pedro H.C.", "Sant'Anna", email = "pedro.santanna@emory.edu", role = c("aut"))
+              person("Pedro H. C.", "Sant'Anna", email = "pedro.santanna@emory.edu", role = c("aut"))
             )
 Description: Implements the Triple Differences (DDD) estimators for  assesing the average treatment effect on the treated
               proposed by Ortiz-Villavicencio and Sant'Anna (2024). It offers tools for
@@ -32,3 +32,4 @@ LinkingTo:
 Suggests: 
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
+URL: http://marcelortiz.com/triplediff/
