@@ -47,7 +47,7 @@
 </h1></div>
 <p><img src="https://img.shields.io/badge/release%20lifecycle-alpha-orange.svg"><a href="https://github.com/marcelortizv/triplediff" class="external-link"><img src="https://img.shields.io/badge/devel%20version-0.0.0.9000-blue.svg"></a> <a href="https://github.com/marcelortizv/triplediff/commits/main" class="external-link"><img src="https://img.shields.io/github/last-commit/marcelortizv/triplediff.svg"></a> <a href="https://doi.org/10.48550/arXiv.2505.09942" class="external-link"><img src="https://img.shields.io/badge/doi-10.48550/arXiv.2505.09942-yellow.svg"></a></p>
 <!-- README.md is generated from README.Rmd. Please edit that file -->
-<p><strong>triplediff</strong> is an R package for computing average treatment effects in Triple Differences Designs (also known as Difference-in-Differences-in-Differences or DDD). DDD designs are widely used in empirical work to relax parallel trends assumptions in Difference-in-Differences settings. This package provides functions to estimate group-time average treatment effect on the treated and event-study type estimands associated with DDD designs. The setups allowed are:</p>
+<p><strong>triplediff</strong> is an R package for computing average treatment effects in Triple Differences Designs (also known as Difference-in-Differences-in-Differences or DDD). DDD designs are widely used in empirical work to relax parallel trends assumptions in Difference-in-Differences settings. This package provides functions to estimate group-time average treatment effect and event-study type estimands associated with DDD designs. The setups allowed are:</p>
 <ul>
 <li>Two-periods or Multiple Periods DDD.</li>
 <li>Single Treatment Date and Variation in Treatment Timing (i.e., staggered adoption).</li>
@@ -73,19 +73,19 @@
 </h2>
 <p>We provide a quick start example to illustrate the main features of the package. The UX is designed to be similar to the <code>did</code> package, so users familiar with it should feel comfortable using <code>triplediff</code>.</p>
 <p><code>ddd</code> is the main function for computing the DDD estimators proposed in <a href="https://arxiv.org/abs/2505.09942" class="external-link">Ortiz-Villavicencio and Sant’Anna (2025)</a>. At its core, <code>ddd</code> employs regression adjustment, inverse probability weighing, and doubly robust estimators that are valid under conditional DDD parallel trends.</p>
-<p>The <code>ddd</code> function requires a data frame with the following columns:</p>
+<p>To use <code>ddd</code>, the minimal data requirements include:</p>
 <ul>
-<li><p><code>id</code>: Unit unique identifier (e.g., firm, individual, etc.). Its column name is associated with parameter <code>id</code>.</p></li>
+<li><p><code>id</code>: Unit unique identifier (e.g., firm, individual, etc.). Its column name is associated with parameter <code>idname</code>.</p></li>
 <li><p><code>period</code>: Time identifier (e.g., year, month, etc.). Its column name is associated with parameter <code>tname</code>.</p></li>
 <li><p><code>outcome</code>: Outcome variable of interest. Its column name is associated with parameter <code>yname</code>.</p></li>
 <li><p><code>state</code>: First period when treatment is enabled for a particular unit. It is a positive number for treated units and defines which group the unit belongs to. It takes value <code>0</code> or <code>Inf</code> for never-enabling units. Its column name is associated with parameter <code>gname</code>.</p></li>
 <li><p><code>partition</code>: This is an indicator variable that is 1 for the units eligible for treatment and 0 otherwise. Its column name is associated with parameter <code>pname</code>.</p></li>
 </ul>
-<p>The following are two simplified examples of how to use the <code>ddd</code> function. The first one is for a two-periods DDD setup, while the second one is for a multiple periods DDD setup with staggered treatment adoption.</p>
+<p>The following are two simplified examples of how to use the <code>ddd</code> function. The first one is for a two-periods DDD setup, while the second one is for a multiple-period DDD setup with staggered treatment adoption.</p>
 <div class="section level4">
 <h4 id="case-two-periods-ddd-with-covariates">Case: Two-Periods DDD with covariates<a class="anchor" aria-label="anchor" href="#case-two-periods-ddd-with-covariates"></a>
 </h4>
-<p>First, we simulate some data with a built-in function <code>gen_dgp_2periods</code> that generates a two-periods DDD setup with a single treatment date. This function receives the numbers of units and the type of DGP design to generate. The <code>gen_dgp_2periods</code> function returns a data frame with the required columns for the <code>ddd</code> function with 4 covariates.</p>
+<p>First, we simulate some data with a built-in function <code>gen_dgp_2periods</code> that generates a two-period DDD setup with a single treatment date. This function receives the number of units and the type of DGP design to generate. The <code>gen_dgp_2periods</code> function returns a data frame with the required columns for the <code>ddd</code> function with 4 covariates.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">1234</span><span class="op">)</span> <span class="co"># Set seed for reproducibility</span></span>
 <span><span class="co"># Simulate data for a two-periods DDD setup</span></span>
@@ -150,7 +150,7 @@
 <span><span class="co">#&gt;  Type of confidence band:  Pointwise Confidence Interval</span></span>
 <span><span class="co">#&gt;  ==================================================================</span></span>
 <span><span class="co">#&gt;  See Ortiz-Villavicencio and Sant'Anna (2025) for details.</span></span></code></pre></div>
-<p>We can also leverage the fact the our estimators are based on efficient influence function to rely on data-driven models for estimating the nuisance parameters. For example, we can use a flexible machine learning like <code>xgboost</code> to estimate outcome models and <code>ranger</code> (Random Forest) to estimate the propensity scores. The engine behind this approach is the <a href="https://mlr3.mlr-org.com/index.html" class="external-link">mlr3</a> package, which provides a unified interface for machine learning in R.</p>
+<p>We can also leverage the fact that our estimators are doubly robust to rely on data-driven models for estimating the nuisance parameters. For example, we can use a flexible machine learning like <code>xgboost</code> to estimate outcome models and <code>ranger</code> (Random Forest) to estimate the propensity scores. The engine behind this approach is the <a href="https://mlr3.mlr-org.com/index.html" class="external-link">mlr3</a> package, which provides a unified interface for machine learning in R.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://mlr3.mlr-org.com" class="external-link">mlr3</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://mlr3learners.mlr-org.com" class="external-link">mlr3learners</a></span><span class="op">)</span></span>
@@ -223,10 +223,10 @@
 <div class="section level4">
 <h4 id="case-multiple-periods-ddd-with-staggered-treatment-adoption">Case: Multiple Periods DDD with staggered treatment adoption<a class="anchor" aria-label="anchor" href="#case-multiple-periods-ddd-with-staggered-treatment-adoption"></a>
 </h4>
-<p>In this case, we simulate some data with a built-in function <code>gen_dgp_staggered</code> that generates a multiple periods DDD setup with staggered treatment adoption. This function receives the numbers of units and the type of DGP design to generate. The <code>gen_dgp_staggered</code> function returns a data frame with the required columns for the <code>ddd</code> function with 4 covariates.</p>
+<p>In this case, we simulate some data with a built-in function <code>gen_dgp_staggered</code> that generates a multiple-period DDD setup with staggered treatment adoption. This function receives the number of units and the type of DGP design to generate. The <code>gen_dgp_staggered</code> function returns a data frame with the required columns for the <code>ddd</code> function with 4 covariates.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">1234</span><span class="op">)</span> <span class="co"># Set seed for reproducibility</span></span>
-<span><span class="co"># simulate data for a multiple periods DDD setup with staggered treatment adoption</span></span>
+<span><span class="co"># Simulate data for a multiple-period DDD setup with staggered treatment adoption</span></span>
 <span><span class="va">data</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/gen_dgp_mult_periods.html">gen_dgp_mult_periods</a></span><span class="op">(</span>size <span class="op">=</span> <span class="fl">500</span>, dgp_type <span class="op">=</span> <span class="fl">1</span><span class="op">)</span><span class="op">$</span><span class="va">data</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">data</span><span class="op">)</span></span>
@@ -406,7 +406,7 @@
 <div class="section level2">
 <h2 id="release-note-">Release Note 📢<a class="anchor" aria-label="anchor" href="#release-note-"></a>
 </h2>
-<p>The current version is released in an <strong>alpha</strong> stage: the core features are implemented and made available so users can try them out and provide feedback. Please, be aware it remains under active development, so long-term stability is not guaranteed—APIs may evolve adding more features and/or breaking changes can occur at any time, without a deprecation cycle.</p>
+<p>The current version is released in an <strong>alpha</strong> stage: the core features are implemented and made available so users can try them out and provide feedback. Please, be aware that it remains under active development, so long-term stability is not guaranteed—APIs may evolve, adding more features and/or breaking changes can occur at any time, without a deprecation cycle.</p>
 <p>Use <a href="https://github.com/marcelortizv/triplediff/issues" class="external-link">GitHub Issues</a> to report bugs, request features or provide feedback.</p>
 <div class="section level3">
 <h3 id="id_-currently-supported">🚀 Currently Supported<a class="anchor" aria-label="anchor" href="#id_-currently-supported"></a>
@@ -429,7 +429,7 @@
 <li>This can be done easily by users. E.g., event-study type estimates can be plotted using <code>ggplot2</code>. See the quick start example.</li>
 </ul>
 </li>
-<li>🔲 Repeated cross-sections data.</li>
+<li>🔲 Repeated cross-sectional data.</li>
 <li>🔲 Unbalanced panel data.</li>
 </ul>
 </div>
