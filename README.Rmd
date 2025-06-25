@@ -50,7 +50,7 @@ devtools::install_github("marcelortizv/triplediff")
 library(triplediff)
 ```
 
-## Quick Start: How to use triplediff
+## Quick Start: How to use `triplediff`
 
 We provide a quick start example to illustrate the main features of the package. The UX is designed to be similar to the `did` package, so users familiar with it should feel comfortable using `triplediff`.
 

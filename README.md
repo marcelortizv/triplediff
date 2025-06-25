@@ -40,7 +40,7 @@ devtools::install_github("marcelortizv/triplediff")
 library(triplediff)
 ```
 
-## Quick Start: How to use triplediff
+## Quick Start: How to use `triplediff`
 
 We provide a quick start example to illustrate the main features of the
 package. The UX is designed to be similar to the `did` package, so users
@@ -178,24 +178,24 @@ att_22_dml <- ddd(yname = "y", tname = "time", idname = "id", gname = "state",
                   pname = "partition", xformla = ~cov1 + cov2 + cov3 + cov4,
                   data = df, control_group = "nevertreated",
                   est_method = "dml", learners = learners, n_folds = 3)
-#> INFO  [14:58:26.817] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 1/3)
-#> INFO  [14:58:26.881] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 2/3)
-#> INFO  [14:58:26.901] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 3/3)
-#> INFO  [14:58:26.930] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 1/3)
-#> INFO  [14:58:27.007] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 2/3)
-#> INFO  [14:58:27.071] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 3/3)
-#> INFO  [14:58:27.159] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 1/3)
-#> INFO  [14:58:27.175] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 2/3)
-#> INFO  [14:58:27.192] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 3/3)
-#> INFO  [14:58:27.213] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 1/3)
-#> INFO  [14:58:27.274] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 2/3)
-#> INFO  [14:58:27.341] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 3/3)
-#> INFO  [14:58:27.423] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 1/3)
-#> INFO  [14:58:27.439] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 2/3)
-#> INFO  [14:58:27.455] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 3/3)
-#> INFO  [14:58:27.480] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 1/3)
-#> INFO  [14:58:27.543] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 2/3)
-#> INFO  [14:58:27.608] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 3/3)
+#> INFO  [18:44:33.698] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 1/3)
+#> INFO  [18:44:33.759] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 2/3)
+#> INFO  [18:44:33.779] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 3/3)
+#> INFO  [18:44:33.807] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 1/3)
+#> INFO  [18:44:33.882] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 2/3)
+#> INFO  [18:44:33.945] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 3/3)
+#> INFO  [18:44:34.031] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 1/3)
+#> INFO  [18:44:34.046] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 2/3)
+#> INFO  [18:44:34.062] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 3/3)
+#> INFO  [18:44:34.083] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 1/3)
+#> INFO  [18:44:34.144] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 2/3)
+#> INFO  [18:44:34.209] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 3/3)
+#> INFO  [18:44:34.289] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 1/3)
+#> INFO  [18:44:34.305] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 2/3)
+#> INFO  [18:44:34.321] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 3/3)
+#> INFO  [18:44:34.345] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 1/3)
+#> INFO  [18:44:34.407] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 2/3)
+#> INFO  [18:44:34.469] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 3/3)
 
 summary(att_22_dml)
 #>  Call:

@@ -4,12 +4,10 @@ Version: 0.0.0.9000
 Authors@R: c(person("Marcelo", "Ortiz-Villavicencio", email = "marcelo.ortiz@emory.edu", role = c("aut", "cre")),
               person("Pedro H. C.", "Sant'Anna", email = "pedro.santanna@emory.edu", role = c("aut"))
             )
-Description: Implements the Triple Differences (DDD) estimators for  assesing the average treatment effect on the treated
-              proposed by Ortiz-Villavicencio and Sant'Anna (2024). It offers tools for
-              estimating the DDD accomodating covariates and/or under multiple time periods. 
-              At its core, the DDD estimator employs a combination of inverse probability weighting
-              and outcome regression adjustment (i.e., nuisance functions) ensuring a doubly-robust property. 
-              Furthemore, this package supports the implementation of machine learning methods for estimation of nuisance functions.
+Description: triplediff implements the triple-differences (DDD) estimators proposed by Ortiz-Villavicencio and Sant’Anna (2025) for both 
+             average treatment effects and event-study parameters. It supports staggered treatment timing and multiple pre- and post-periods, 
+             with covariate adjustment. Under the hood, triplediff offers regression-adjustment, inverse-probability weighting, and doubly-robust estimators
+             that all rest on a conditional DDD parallel-trends assumption.
 License: MIT + file LICENSE
 Encoding: UTF-8
 Depends:
