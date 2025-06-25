@@ -11,8 +11,8 @@
 <script src="deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="Triple Differences Estimators">
-<meta name="description" content="Implements the Triple Differences (DDD) estimators for assesing the average treatment effect on the treated proposed by Ortiz-Villavicencio and Sant'Anna (2024). It offers tools for estimating the DDD accomodating covariates and/or under multiple time periods. At its core, the DDD estimator employs a combination of inverse probability weighting and outcome regression adjustment (i.e., nuisance functions) ensuring a doubly-robust property. Furthemore, this package supports the implementation of machine learning methods for estimation of nuisance functions.">
-<meta property="og:description" content="Implements the Triple Differences (DDD) estimators for assesing the average treatment effect on the treated proposed by Ortiz-Villavicencio and Sant'Anna (2024). It offers tools for estimating the DDD accomodating covariates and/or under multiple time periods. At its core, the DDD estimator employs a combination of inverse probability weighting and outcome regression adjustment (i.e., nuisance functions) ensuring a doubly-robust property. Furthemore, this package supports the implementation of machine learning methods for estimation of nuisance functions.">
+<meta name="description" content="triplediff implements the triple-differences (DDD) estimators proposed by Ortiz-Villavicencio and Sant’Anna (2025) for both average treatment effects and event-study parameters. It supports staggered treatment timing and multiple pre- and post-periods, with covariate adjustment. Under the hood, triplediff offers regression-adjustment, inverse-probability weighting, and doubly-robust estimators that all rest on a conditional DDD parallel-trends assumption.">
+<meta property="og:description" content="triplediff implements the triple-differences (DDD) estimators proposed by Ortiz-Villavicencio and Sant’Anna (2025) for both average treatment effects and event-study parameters. It supports staggered treatment timing and multiple pre- and post-periods, with covariate adjustment. Under the hood, triplediff offers regression-adjustment, inverse-probability weighting, and doubly-robust estimators that all rest on a conditional DDD parallel-trends assumption.">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -68,7 +68,8 @@
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="http://marcelortiz.com/triplediff/">triplediff</a></span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
-<h2 id="quick-start-how-to-use-triplediff">Quick Start: How to use triplediff<a class="anchor" aria-label="anchor" href="#quick-start-how-to-use-triplediff"></a>
+<h2 id="quick-start-how-to-use-triplediff">Quick Start: How to use <code>triplediff</code>
+<a class="anchor" aria-label="anchor" href="#quick-start-how-to-use-triplediff"></a>
 </h2>
 <p>We provide a quick start example to illustrate the main features of the package. The UX is designed to be similar to the <code>did</code> package, so users familiar with it should feel comfortable using <code>triplediff</code>.</p>
 <p><code>ddd</code> is the main function for computing the DDD estimators proposed in <a href="https://arxiv.org/abs/2505.09942" class="external-link">Ortiz-Villavicencio and Sant’Anna (2025)</a>. At its core, <code>ddd</code> employs regression adjustment, inverse probability weighing, and doubly robust estimators that are valid under conditional DDD parallel trends.</p>
@@ -165,24 +166,24 @@
 <span>                  pname <span class="op">=</span> <span class="st">"partition"</span>, xformla <span class="op">=</span> <span class="op">~</span><span class="va">cov1</span> <span class="op">+</span> <span class="va">cov2</span> <span class="op">+</span> <span class="va">cov3</span> <span class="op">+</span> <span class="va">cov4</span>,</span>
 <span>                  data <span class="op">=</span> <span class="va">df</span>, control_group <span class="op">=</span> <span class="st">"nevertreated"</span>,</span>
 <span>                  est_method <span class="op">=</span> <span class="st">"dml"</span>, learners <span class="op">=</span> <span class="va">learners</span>, n_folds <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
-<span><span class="co">#&gt; INFO  [14:58:26.817] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 1/3)</span></span>
-<span><span class="co">#&gt; INFO  [14:58:26.881] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 2/3)</span></span>
-<span><span class="co">#&gt; INFO  [14:58:26.901] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 3/3)</span></span>
-<span><span class="co">#&gt; INFO  [14:58:26.930] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 1/3)</span></span>
-<span><span class="co">#&gt; INFO  [14:58:27.007] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 2/3)</span></span>
-<span><span class="co">#&gt; INFO  [14:58:27.071] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 3/3)</span></span>
-<span><span class="co">#&gt; INFO  [14:58:27.159] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 1/3)</span></span>
-<span><span class="co">#&gt; INFO  [14:58:27.175] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 2/3)</span></span>
-<span><span class="co">#&gt; INFO  [14:58:27.192] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 3/3)</span></span>
-<span><span class="co">#&gt; INFO  [14:58:27.213] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 1/3)</span></span>
-<span><span class="co">#&gt; INFO  [14:58:27.274] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 2/3)</span></span>
-<span><span class="co">#&gt; INFO  [14:58:27.341] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 3/3)</span></span>
-<span><span class="co">#&gt; INFO  [14:58:27.423] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 1/3)</span></span>
-<span><span class="co">#&gt; INFO  [14:58:27.439] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 2/3)</span></span>
-<span><span class="co">#&gt; INFO  [14:58:27.455] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 3/3)</span></span>
-<span><span class="co">#&gt; INFO  [14:58:27.480] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 1/3)</span></span>
-<span><span class="co">#&gt; INFO  [14:58:27.543] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 2/3)</span></span>
-<span><span class="co">#&gt; INFO  [14:58:27.608] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 3/3)</span></span>
+<span><span class="co">#&gt; INFO  [18:44:33.698] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 1/3)</span></span>
+<span><span class="co">#&gt; INFO  [18:44:33.759] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 2/3)</span></span>
+<span><span class="co">#&gt; INFO  [18:44:33.779] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 3/3)</span></span>
+<span><span class="co">#&gt; INFO  [18:44:33.807] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 1/3)</span></span>
+<span><span class="co">#&gt; INFO  [18:44:33.882] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 2/3)</span></span>
+<span><span class="co">#&gt; INFO  [18:44:33.945] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 3/3)</span></span>
+<span><span class="co">#&gt; INFO  [18:44:34.031] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 1/3)</span></span>
+<span><span class="co">#&gt; INFO  [18:44:34.046] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 2/3)</span></span>
+<span><span class="co">#&gt; INFO  [18:44:34.062] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 3/3)</span></span>
+<span><span class="co">#&gt; INFO  [18:44:34.083] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 1/3)</span></span>
+<span><span class="co">#&gt; INFO  [18:44:34.144] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 2/3)</span></span>
+<span><span class="co">#&gt; INFO  [18:44:34.209] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 3/3)</span></span>
+<span><span class="co">#&gt; INFO  [18:44:34.289] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 1/3)</span></span>
+<span><span class="co">#&gt; INFO  [18:44:34.305] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 2/3)</span></span>
+<span><span class="co">#&gt; INFO  [18:44:34.321] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 3/3)</span></span>
+<span><span class="co">#&gt; INFO  [18:44:34.345] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 1/3)</span></span>
+<span><span class="co">#&gt; INFO  [18:44:34.407] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 2/3)</span></span>
+<span><span class="co">#&gt; INFO  [18:44:34.469] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 3/3)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">att_22_dml</span><span class="op">)</span></span>
 <span><span class="co">#&gt;  Call:</span></span>
