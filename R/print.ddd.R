@@ -39,8 +39,8 @@ print.ddd <- function(x, alpha = NULL, ...) {
       est_method3 <- "Propensity score estimated using: N/A"
     } else if (x$argu$est_method[1] == 'dml') {
       est_method1 <- "DML-DDD estimation for the ATT: \n"
-      est_method2 <- paste0("Outcome Regression estimated using: ", x$argu$learners$ml_pa$label)
-      est_method3 <- paste0("Propensity score estimated using: ", x$argu$learners$ml_md$label)
+      est_method2 <- paste0("Outcome Regression estimated using: ", x$argu$learners$ml_md$label)
+      est_method3 <- paste0("Propensity score estimated using: ", x$argu$learners$ml_pa$label)
     }
 
     # Front-end Summary Table
@@ -80,7 +80,7 @@ print.ddd <- function(x, alpha = NULL, ...) {
       est_method3 <- "Propensity score estimated using: N/A"
     } else if (x$argu$est_method[1] == 'dml') {
       est_method1 <- "DML-DDD estimation for the ATT(g,t): \n"
-      est_method2 <- paste("Outcome Regression estimated using:", x$argu$learners[1]$name)
+      est_method2 <- paste("Outcome Regression estimated using:", x$argu$learners[2]$name)
       est_method3 <- paste("Propensity score estimated using:", x$argu$learners[1]$name)
     }
 
