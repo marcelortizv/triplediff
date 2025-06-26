@@ -105,17 +105,19 @@ We can also leverage the fact that our estimators are doubly robust to rely on d
 library(mlr3)
 library(mlr3learners)
 
-learner_rf <- lrn("classif.ranger", predict_type = "prob", num.trees = 100,
-                 min.node.size = 1, importance = 'impurity')
+# suppress messages during fitting
+lgr::get_logger("mlr3")$set_threshold("warn")
 
-learner_regr <- lrn("regr.xgboost")
+# set learners for nuisance functions
+learner_lm <- lrn("regr.lm")
+learner_logit <- lrn("classif.log_reg", predict_type = "prob")
+learners <- list(ml_pa = learner_logit, ml_md = learner_lm)
 
-learners <- list(ml_pa = learner_rf, ml_md = learner_regr)
-
+# estimation
 att_22_dml <- ddd(yname = "y", tname = "time", idname = "id", gname = "state",
                   pname = "partition", xformla = ~cov1 + cov2 + cov3 + cov4,
                   data = df, control_group = "nevertreated",
-                  est_method = "dml", learners = learners, n_folds = 3)
+                  est_method = "dml", learners = learners, n_folds = 5)
 
 summary(att_22_dml)
 ```
@@ -215,9 +217,9 @@ Use [GitHub Issues](https://github.com/marcelortizv/triplediff/issues) to report
 
 ### 🚀 Currently Supported
 
-- ️✅ Two-periods with single treatment date.
-- ️✅ Multiple periods with single treatment date.
-- ️✅ Staggered treatment adoption (i.e., more than two periods and variation in treatment timing).
+- ️✅ Two-period DDD with single treatment date.
+- ️✅ Multiple-period DDD with single treatment date.
+- ️✅ DDD with staggered treatment adoption (i.e., more than two periods and variation in treatment timing).
 - ️✅ Aggregations procedures (e.g., event-study type estimates).
 - ️✅ GMM-based estimations with not-yet-treated units as comparison group.
 

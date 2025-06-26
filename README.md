@@ -2,7 +2,7 @@
 # Triple Differences Estimators <img src="man/figures/triplediff-logo.png" align="right" alt="" width="155" />
 
 ![](https://img.shields.io/badge/release%20lifecycle-alpha-orange.svg)
-[![](https://img.shields.io/badge/devel%20version-0.0.0.9000-blue.svg)](https://github.com/marcelortizv/triplediff)
+[![](https://img.shields.io/badge/devel%20version-0.1.0-blue.svg)](https://github.com/marcelortizv/triplediff)
 [![](https://img.shields.io/github/last-commit/marcelortizv/triplediff.svg)](https://github.com/marcelortizv/triplediff/commits/main)
 [![](https://img.shields.io/badge/doi-10.48550/arXiv.2505.09942-yellow.svg)](https://doi.org/10.48550/arXiv.2505.09942)
 
@@ -165,46 +165,30 @@ unified interface for machine learning in R.
 library(mlr3)
 library(mlr3learners)
 
-learner_rf <- lrn("classif.ranger", predict_type = "prob", num.trees = 100,
-                 min.node.size = 1, importance = 'impurity')
+# suppress messages during fitting
+lgr::get_logger("mlr3")$set_threshold("warn")
 
-learner_regr <- lrn("regr.xgboost")
+# set learners for nuisance functions
+learner_lm <- lrn("regr.lm")
+learner_logit <- lrn("classif.log_reg", predict_type = "prob")
+learners <- list(ml_pa = learner_logit, ml_md = learner_lm)
 
-learners <- list(ml_pa = learner_rf, ml_md = learner_regr)
-
+# estimation
 att_22_dml <- ddd(yname = "y", tname = "time", idname = "id", gname = "state",
                   pname = "partition", xformla = ~cov1 + cov2 + cov3 + cov4,
                   data = df, control_group = "nevertreated",
-                  est_method = "dml", learners = learners, n_folds = 3)
-#> INFO  [14:30:06.412] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 1/3)
-#> INFO  [14:30:06.477] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 2/3)
-#> INFO  [14:30:06.498] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 3/3)
-#> INFO  [14:30:06.570] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 1/3)
-#> INFO  [14:30:06.760] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 2/3)
-#> INFO  [14:30:06.826] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 3/3)
-#> INFO  [14:30:06.927] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 1/3)
-#> INFO  [14:30:06.944] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 2/3)
-#> INFO  [14:30:06.960] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 3/3)
-#> INFO  [14:30:06.982] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 1/3)
-#> INFO  [14:30:07.047] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 2/3)
-#> INFO  [14:30:07.119] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 3/3)
-#> INFO  [14:30:07.209] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 1/3)
-#> INFO  [14:30:07.225] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 2/3)
-#> INFO  [14:30:07.242] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 3/3)
-#> INFO  [14:30:07.265] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 1/3)
-#> INFO  [14:30:07.329] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 2/3)
-#> INFO  [14:30:07.394] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 3/3)
+                  est_method = "dml", learners = learners, n_folds = 5)
 
 summary(att_22_dml)
 #>  Call:
 #> ddd(yname = "y", tname = "time", idname = "id", gname = "state", 
 #>     pname = "partition", xformla = ~cov1 + cov2 + cov3 + cov4, 
 #>     data = df, control_group = "nevertreated", est_method = "dml", 
-#>     learners = learners, n_folds = 3)
+#>     learners = learners, n_folds = 5)
 #> =========================== DDD Summary ==============================
 #>  DML-DDD estimation for the ATT: 
 #>      ATT       Std. Error    Pr(>|t|)  [95% Ptwise. Conf. Band]              
-#>     -4.3046       2.4784       0.0824      -9.1621       0.5529              
+#>     -0.9096       1.4701       0.5361      -3.7911       1.9718              
 #> 
 #>  Note: * indicates that the confidence interval does not contain zero.
 #>  --------------------------- Data Info   -----------------------------
@@ -217,10 +201,10 @@ summary(att_22_dml)
 #>    eligible-but-untreated: 116
 #>    untreated-and-ineligible: 120
 #>  --------------------------- Algorithms ------------------------------
-#>  Outcome Regression estimated using: Extreme Gradient Boosting
-#>  Propensity score estimated using: Random Forest
+#>  Outcome Regression estimated using: Linear Model
+#>  Propensity score estimated using: Logistic Regression
 #>  -------------------------- Cross-fitting  ---------------------------
-#>  No. of folds:  3
+#>  No. of folds:  5
 #>  Apply cross-fitting: TRUE
 #>  --------------------------- Std. Errors  ----------------------------
 #>  Level of significance:  0.05
@@ -451,10 +435,10 @@ to report bugs, request features or provide feedback.
 
 ### 🚀 Currently Supported
 
-- ️✅ Two-periods with single treatment date.
-- ️✅ Multiple periods with single treatment date.
-- ️✅ Staggered treatment adoption (i.e., more than two periods and
-  variation in treatment timing).
+- ️✅ Two-period DDD with single treatment date.
+- ️✅ Multiple-period DDD with single treatment date.
+- ️✅ DDD with staggered treatment adoption (i.e., more than two periods
+  and variation in treatment timing).
 - ️✅ Aggregations procedures (e.g., event-study type estimates).
 - ️✅ GMM-based estimations with not-yet-treated units as comparison
   group.
