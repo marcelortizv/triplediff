@@ -23,7 +23,7 @@ print.agg_ddd <- function(x, ...) {
   # Printing results in console
   cat(" Call:\n")
   print(x$call.params)
-  cat("========================= DDD Aggregation ==========================")
+  cat("========================= DDD Aggregation ============================")
   if (x$aggte$type == "simple") cat("\n", "Overall ATT:")
   if (x$aggte$type == "eventstudy") cat("\n", "Overall summary of ATT\'s based on event-study/dynamic aggregation: ")
   if (x$aggte$type == "group") cat("\n", "Overall summary of ATT\'s based on group/cohort aggregation: ")
@@ -80,18 +80,19 @@ print.agg_ddd <- function(x, ...) {
     print(out2, row.names=FALSE, justify = "centre")
   }
   cat("\n")
-  cat(" Note: * indicates that confidence interval does not contain zero.")
+  cat(" Note: * indicates that the confidence interval does not contain zero.")
 
-  cat("\n --------------------------- Data Info   --------------------------")
+  cat("\n --------------------------- Data Info   -----------------------------")
   cat("\n", paste("Outcome variable:", x$aggte_ddd$yname))
   # add partition variable name
   cat("\n", paste("Partition variable:", x$aggte_ddd$pname))
   ifelse(x$aggte_ddd$control_group == "nevertreated", control_type <- "Never Treated", control_type <- "Not yet Treated")
   cat("\n", paste("Control group: ", control_type))
-  cat("\n", paste("Level of significance: ", x$aggte_ddd$argu$alpha))
+
 
   # Analytical vs bootstrapped standard errors
-  cat("\n --------------------------- Std. Errors  -------------------------")
+  cat("\n --------------------------- Std. Errors  ----------------------------")
+  cat("\n", paste("Level of significance: ", x$aggte_ddd$argu$alpha))
   if (x$aggte_ddd$argu$boot == T) {
     boot1 <-
       cat(
@@ -105,6 +106,6 @@ print.agg_ddd <- function(x, ...) {
   if (!is.null(x$aggte_ddd$argu$cluster)){
     cat("\n", paste0("Clustering Std. Errors by: ", x$aggte_ddd$argu$cluster))
   }
-  cat("\n ==================================================================")
+  cat("\n =====================================================================")
   cat("\n See Ortiz-Villavicencio and Sant'Anna (2025) for details.")
 }

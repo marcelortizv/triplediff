@@ -11,7 +11,8 @@ knitr::opts_chunk$set(
 ```
 
 ```{r, echo=FALSE, results="hide", warning=FALSE, message=FALSE}
-library(triplediff)
+#library(triplediff)
+devtools::load_all()
 ```
 
 # Triple Differences Estimators <img src="man/figures/triplediff-logo.png" align="right" alt="" width="155" />
@@ -155,7 +156,6 @@ From these event-study type estimates, we can plot the results using the `ggplot
 ```{r, echo=FALSE, results="hide", warning=FALSE, message=FALSE}
 library(ggplot2)
 library(dplyr)
-devtools::load_all()
 ```
 
 ```{r}

@@ -127,30 +127,29 @@ summary(att_22)
 #> ddd(yname = "y", tname = "time", idname = "id", gname = "state", 
 #>     pname = "partition", xformla = ~cov1 + cov2 + cov3 + cov4, 
 #>     data = df, control_group = "nevertreated", est_method = "dr")
-#> =========================== DDD Summary ===========================
+#> =========================== DDD Summary ==============================
 #>  DR-DDD estimation for the ATT: 
 #>      ATT       Std. Error    Pr(>|t|)  [95% Ptwise. Conf. Band]              
 #>      0.0439       0.2626       0.8672      -0.4708       0.5586              
 #> 
-#>  Note: * indicates that confidence interval does not contain zero.
-#>  --------------------------- Data Info   --------------------------
+#>  Note: * indicates that the confidence interval does not contain zero.
+#>  --------------------------- Data Info   -----------------------------
 #>  Panel data
 #>  Outcome variable: y
-#>  Partition variable: partition
-#>  No. of observations for each partition:
-#>    (treat = 1, partition = 1): 131
-#>    (treat = 1, partition = 0): 133
-#>    (treat = 0, partition = 1): 116
-#>    (treat = 0, partition = 0): 120
-#>  
-#>  Level of significance:  0.05
-#>  --------------------------- Algorithm   --------------------------
+#>  Qualification variable: partition
+#>  No. of units at each subgroup:
+#>    treated-and-eligible: 131
+#>    treated-but-ineligible: 133
+#>    eligible-but-untreated: 116
+#>    untreated-and-ineligible: 120
+#>  --------------------------- Algorithms ------------------------------
 #>  Outcome Regression estimated using: OLS
 #>  Propensity score estimated using: Maximum Likelihood
-#>  --------------------------- Std. Errors  -------------------------
+#>  --------------------------- Std. Errors  ----------------------------
+#>  Level of significance:  0.05
 #>  Analytical standard errors.
 #>  Type of confidence band:  Pointwise Confidence Interval
-#>  ==================================================================
+#>  =====================================================================
 #>  See Ortiz-Villavicencio and Sant'Anna (2025) for details.
 ```
 
@@ -177,24 +176,24 @@ att_22_dml <- ddd(yname = "y", tname = "time", idname = "id", gname = "state",
                   pname = "partition", xformla = ~cov1 + cov2 + cov3 + cov4,
                   data = df, control_group = "nevertreated",
                   est_method = "dml", learners = learners, n_folds = 3)
-#> INFO  [21:59:27.081] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 1/3)
-#> INFO  [21:59:27.145] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 2/3)
-#> INFO  [21:59:27.165] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 3/3)
-#> INFO  [21:59:27.194] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 1/3)
-#> INFO  [21:59:27.276] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 2/3)
-#> INFO  [21:59:27.341] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 3/3)
-#> INFO  [21:59:27.433] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 1/3)
-#> INFO  [21:59:27.450] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 2/3)
-#> INFO  [21:59:27.466] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 3/3)
-#> INFO  [21:59:27.488] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 1/3)
-#> INFO  [21:59:27.556] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 2/3)
-#> INFO  [21:59:27.625] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 3/3)
-#> INFO  [21:59:27.707] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 1/3)
-#> INFO  [21:59:27.723] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 2/3)
-#> INFO  [21:59:27.739] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 3/3)
-#> INFO  [21:59:27.764] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 1/3)
-#> INFO  [21:59:27.827] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 2/3)
-#> INFO  [21:59:27.889] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 3/3)
+#> INFO  [23:42:01.107] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 1/3)
+#> INFO  [23:42:01.170] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 2/3)
+#> INFO  [23:42:01.191] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 3/3)
+#> INFO  [23:42:01.266] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 1/3)
+#> INFO  [23:42:01.455] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 2/3)
+#> INFO  [23:42:01.521] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 3/3)
+#> INFO  [23:42:01.625] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 1/3)
+#> INFO  [23:42:01.642] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 2/3)
+#> INFO  [23:42:01.659] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 3/3)
+#> INFO  [23:42:01.682] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 1/3)
+#> INFO  [23:42:01.752] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 2/3)
+#> INFO  [23:42:01.824] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 3/3)
+#> INFO  [23:42:01.916] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 1/3)
+#> INFO  [23:42:01.933] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 2/3)
+#> INFO  [23:42:01.949] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 3/3)
+#> INFO  [23:42:01.971] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 1/3)
+#> INFO  [23:42:02.037] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 2/3)
+#> INFO  [23:42:02.102] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 3/3)
 
 summary(att_22_dml)
 #>  Call:
@@ -202,33 +201,32 @@ summary(att_22_dml)
 #>     pname = "partition", xformla = ~cov1 + cov2 + cov3 + cov4, 
 #>     data = df, control_group = "nevertreated", est_method = "dml", 
 #>     learners = learners, n_folds = 3)
-#> =========================== DDD Summary ===========================
+#> =========================== DDD Summary ==============================
 #>  DML-DDD estimation for the ATT: 
 #>      ATT       Std. Error    Pr(>|t|)  [95% Ptwise. Conf. Band]              
 #>     -4.3046       2.4784       0.0824      -9.1621       0.5529              
 #> 
-#>  Note: * indicates that confidence interval does not contain zero.
-#>  --------------------------- Data Info   --------------------------
+#>  Note: * indicates that the confidence interval does not contain zero.
+#>  --------------------------- Data Info   -----------------------------
 #>  Panel data
 #>  Outcome variable: y
-#>  Partition variable: partition
-#>  No. of observations for each partition:
-#>    (treat = 1, partition = 1): 131
-#>    (treat = 1, partition = 0): 133
-#>    (treat = 0, partition = 1): 116
-#>    (treat = 0, partition = 0): 120
-#>  
-#>  Level of significance:  0.05
-#>  --------------------------- Algorithm   --------------------------
+#>  Qualification variable: partition
+#>  No. of units at each subgroup:
+#>    treated-and-eligible: 131
+#>    treated-but-ineligible: 133
+#>    eligible-but-untreated: 116
+#>    untreated-and-ineligible: 120
+#>  --------------------------- Algorithms ------------------------------
 #>  Outcome Regression estimated using: Random Forest
 #>  Propensity score estimated using: Extreme Gradient Boosting
-#>  -------------------------- Cross-fitting  ------------------------
+#>  -------------------------- Cross-fitting  ---------------------------
 #>  No. of folds:  3
 #>  Apply cross-fitting: TRUE
-#>  --------------------------- Std. Errors  -------------------------
+#>  --------------------------- Std. Errors  ----------------------------
+#>  Level of significance:  0.05
 #>  Analytical standard errors.
 #>  Type of confidence band:  Pointwise Confidence Interval
-#>  ==================================================================
+#>  =====================================================================
 #>  See Ortiz-Villavicencio and Sant'Anna (2025) for details.
 ```
 
@@ -283,7 +281,7 @@ summary(att_gt)
 #>     pname = "partition", xformla = ~cov1 + cov2 + cov3 + cov4, 
 #>     data = data, control_group = "nevertreated", base_period = "universal", 
 #>     est_method = "dr")
-#> =========================== DDD Summary ===========================
+#> =========================== DDD Summary ==============================
 #>  DR-DDD estimation for the ATT(g,t): 
 #> Group Time  ATT(g,t)  Std. Error [95% Pointwise  Conf. Band]  
 #>   2    1       0.0000         NA           NA            NA   
@@ -293,25 +291,24 @@ summary(att_gt)
 #>   3    2       0.0000         NA           NA            NA   
 #>   3    3      24.5983     0.3333      23.9450       25.2515  *
 #> 
-#>  Note: * indicates that confidence interval does not contain zero.
-#>  --------------------------- Data Info   --------------------------
+#>  Note: * indicates that the confidence interval does not contain zero.
+#>  --------------------------- Data Info   -----------------------------
 #>  Panel data
 #>  Outcome variable: y
-#>  Partition variable: partition
-#>  No. of observations per treatment group:
-#>   Group starting treatment at period 3: 198
-#>   Group starting treatment at period 2: 195
-#>   Group that remains untreated: 107
+#>  Qualification variable: partition
 #>  Control group: Never Treated
-#>  
-#>  Level of significance:  0.05
-#>  --------------------------- Algorithm   --------------------------
+#>  No. of units per treatment group:
+#>   Units enabling treatment at period 3: 198
+#>   Units enabling treatment at period 2: 195
+#>   Units never enabling treatment: 107
+#>  --------------------------- Algorithms ------------------------------
 #>  Outcome Regression estimated using: OLS
 #>  Propensity score estimated using: Maximum Likelihood
-#>  --------------------------- Std. Errors  -------------------------
+#>  --------------------------- Std. Errors  ----------------------------
+#>  Level of significance:  0.05
 #>  Analytical standard errors.
 #>  Type of confidence band:  Pointwise Confidence Interval
-#>  ==================================================================
+#>  =====================================================================
 #>  See Ortiz-Villavicencio and Sant'Anna (2025) for details.
 ```
 
@@ -325,7 +322,7 @@ es_e <- agg_ddd(att_gt, type = "eventstudy")
 summary(es_e)
 #>  Call:
 #> agg_ddd(ddd_obj = att_gt, type = "eventstudy")
-#> ========================= DDD Aggregation ==========================
+#> ========================= DDD Aggregation ============================
 #>  Overall summary of ATT's based on event-study/dynamic aggregation: 
 #>      ATT    Std. Error     [ 95%  Conf. Int.]  
 #>  19.0983        0.3213    18.4685     19.7281 *
@@ -337,15 +334,15 @@ summary(es_e)
 #>           0  17.5980     0.4095       16.7955     18.4005 *
 #>           1  20.5986     0.3868       19.8405     21.3568 *
 #> 
-#>  Note: * indicates that confidence interval does not contain zero.
-#>  --------------------------- Data Info   --------------------------
+#>  Note: * indicates that the confidence interval does not contain zero.
+#>  --------------------------- Data Info   -----------------------------
 #>  Outcome variable: y
 #>  Partition variable: partition
 #>  Control group:  Never Treated
+#>  --------------------------- Std. Errors  ----------------------------
 #>  Level of significance:  0.05
-#>  --------------------------- Std. Errors  -------------------------
 #>  Analytical standard errors.
-#>  ==================================================================
+#>  =====================================================================
 #>  See Ortiz-Villavicencio and Sant'Anna (2025) for details.
 ```
 
@@ -409,7 +406,7 @@ summary(att_gt_nyt)
 #>     pname = "partition", xformla = ~cov1 + cov2 + cov3 + cov4, 
 #>     data = data, control_group = "notyettreated", base_period = "universal", 
 #>     est_method = "dr")
-#> =========================== DDD Summary ===========================
+#> =========================== DDD Summary ==============================
 #>  DR-DDD estimation for the ATT(g,t): 
 #> Group Time  ATT(g,t)  Std. Error [95% Pointwise  Conf. Band]  
 #>   2    1       0.0000         NA           NA            NA   
@@ -419,25 +416,24 @@ summary(att_gt_nyt)
 #>   3    2       0.0000         NA           NA            NA   
 #>   3    3      24.5983     0.3333      23.9450       25.2515  *
 #> 
-#>  Note: * indicates that confidence interval does not contain zero.
-#>  --------------------------- Data Info   --------------------------
+#>  Note: * indicates that the confidence interval does not contain zero.
+#>  --------------------------- Data Info   -----------------------------
 #>  Panel data
 #>  Outcome variable: y
-#>  Partition variable: partition
-#>  No. of observations per treatment group:
-#>   Group starting treatment at period 3: 198
-#>   Group starting treatment at period 2: 195
-#>   Group that remains untreated: 107
+#>  Qualification variable: partition
 #>  Control group: Not yet Treated
-#>  
-#>  Level of significance:  0.05
-#>  --------------------------- Algorithm   --------------------------
+#>  No. of units per treatment group:
+#>   Units enabling treatment at period 3: 198
+#>   Units enabling treatment at period 2: 195
+#>   Units never enabling treatment: 107
+#>  --------------------------- Algorithms ------------------------------
 #>  Outcome Regression estimated using: OLS
 #>  Propensity score estimated using: Maximum Likelihood
-#>  --------------------------- Std. Errors  -------------------------
+#>  --------------------------- Std. Errors  ----------------------------
+#>  Level of significance:  0.05
 #>  Analytical standard errors.
 #>  Type of confidence band:  Pointwise Confidence Interval
-#>  ==================================================================
+#>  =====================================================================
 #>  See Ortiz-Villavicencio and Sant'Anna (2025) for details.
 ```
 
@@ -470,7 +466,7 @@ to report bugs, request features or provide feedback.
   - This is partially implemented via the `mlr3` package, which provides
     a unified interface for off-the-shelf ML algorithms in R. Users can
     specify their own models for estimating outcome models and
-    propensity scores. Currently, two-periods DDD with single treatment
+    propensity scores. Currently, two-period DDD with single treatment
     date is the only setting supported.
 - 🔲 Built-in plotting capabilities for visualizing results.
   - This can be done easily by users. E.g., event-study type estimates

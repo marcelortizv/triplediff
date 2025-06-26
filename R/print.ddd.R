@@ -109,57 +109,58 @@ print.ddd <- function(x, alpha = NULL, ...) {
   # Printing results in console
   cat(" Call:\n")
   print(x$call.params)
-  cat("=========================== DDD Summary ===========================")
+  cat("=========================== DDD Summary ==============================")
   cat("\n", est_method1)
   utils::write.table(format(rbind(header, body), justify = "centre", digits = 4, nsmall = 4),
                      row.names=FALSE, col.names=FALSE, quote=FALSE, sep=" ")
 
   cat("\n")
-  cat(" Note: * indicates that confidence interval does not contain zero.")
+  cat(" Note: * indicates that the confidence interval does not contain zero.")
 
-  cat("\n --------------------------- Data Info   --------------------------")
+  cat("\n --------------------------- Data Info   -----------------------------")
   # Panel data
   cat("\n", "Panel data")
   cat("\n", paste0("Outcome variable: ", x$argu$yname))
   # add partition variable name
-  cat("\n", paste0("Partition variable: ", x$argu$pname))
-  if(x$argu$multiple_periods == FALSE){
-    cat("\n", "No. of observations for each partition:")
-    cat("\n", paste0("  (treat = 1, partition = 1): ", x$subgroup_counts$V1[1]))
-    cat("\n", paste0("  (treat = 1, partition = 0): ", x$subgroup_counts$V1[2]))
-    cat("\n", paste0("  (treat = 0, partition = 1): ", x$subgroup_counts$V1[3]))
-    cat("\n", paste0("  (treat = 0, partition = 0): ", x$subgroup_counts$V1[4]))
-  } else {
-    cat("\n", "No. of observations per treatment group:")
-    for (i in 1:nrow(x$cohort_size)) {
-
-      if (x$cohort_size$first_treat[i] == 0) {
-        cat("\n", paste0("  Group that remains untreated: ", x$cohort_size$V1[i]), sep = "")
-      } else {
-        cat("\n", paste0("  Group starting treatment at period ", x$cohort_size$first_treat[i], ": ", x$cohort_size$V1[i]), sep = "")
-      }
-    }
-  }
+  cat("\n", paste0("Qualification variable: ", x$argu$pname))
   # add control group for multiple periods
   if(x$argu$multiple_periods == TRUE){
     ifelse(x$argu$control_group == "nevertreated", control_type <- "Never Treated", control_type <- "Not yet Treated")
     cat("\n", paste0("Control group: ", control_type))
   }
-  cat("\n \n", paste("Level of significance: ", x$argu$alpha))
+  if(x$argu$multiple_periods == FALSE){
+    cat("\n", "No. of units at each subgroup:")
+    cat("\n", paste0("  treated-and-eligible: ", x$subgroup_counts$V1[1]))
+    cat("\n", paste0("  treated-but-ineligible: ", x$subgroup_counts$V1[2]))
+    cat("\n", paste0("  eligible-but-untreated: ", x$subgroup_counts$V1[3]))
+    cat("\n", paste0("  untreated-and-ineligible: ", x$subgroup_counts$V1[4]))
+  } else {
+    cat("\n", "No. of units per treatment group:")
+    for (i in 1:nrow(x$cohort_size)) {
+
+      if (x$cohort_size$first_treat[i] == 0) {
+        cat("\n", paste0("  Units never enabling treatment: ", x$cohort_size$V1[i]), sep = "")
+      } else {
+        cat("\n", paste0("  Units enabling treatment at period ", x$cohort_size$first_treat[i], ": ", x$cohort_size$V1[i]), sep = "")
+      }
+    }
+  }
+
   # TODO: ADD number of covariates and some examples
 
-  cat("\n --------------------------- Algorithm   --------------------------")
+  cat("\n --------------------------- Algorithms ------------------------------")
   # Estimation Method
   cat("\n", est_method2)
   cat("\n", est_method3)
 
   if (x$argu$est_method[1] == 'dml'){
-    cat("\n -------------------------- Cross-fitting  ------------------------")
+    cat("\n -------------------------- Cross-fitting  ---------------------------")
     cat("\n No. of folds: ", x$argu$n_folds)
     cat("\n Apply cross-fitting: TRUE")
   }
   # Analytical vs bootstrapped standard errors
-  cat("\n --------------------------- Std. Errors  -------------------------")
+  cat("\n --------------------------- Std. Errors  ----------------------------")
+  cat("\n", paste("Level of significance: ", x$argu$alpha))
   if (x$argu$boot == T) {
     boot1 <-
       cat(
@@ -174,7 +175,7 @@ print.ddd <- function(x, alpha = NULL, ...) {
   if (!is.null(x$argu$cluster)){
     cat("\n", paste0("Clustering Std. Errors by: ", x$argu$cluster))
   }
-  cat("\n ==================================================================")
+  cat("\n =====================================================================")
   cat("\n See Ortiz-Villavicencio and Sant'Anna (2025) for details.")
 
 }
