@@ -368,10 +368,10 @@ p <- ggplot(es_df, aes(period, estimate)) +
 
 ![](man/figures/README-unnamed-chunk-11-1.png)<!-- -->
 
-Finally, we can also estimate the group-time average treatment effect on
-the treated using a GMM-based estimator with not-yet-treated units as
-comparison group. This is done by setting the `control_group` parameter
-to `"notyettreated"` in the `ddd` function.
+Finally, we can also estimate the group-time average treatment effect
+using a GMM-based estimator with not-yet-treated units as comparison
+group. This is done by setting the `control_group` parameter to
+`"notyettreated"` in the `ddd` function.
 
 - ⚠️ We recommend users to read our paper for more details on the
   GMM-based procedure and its difference with other estimators relying
