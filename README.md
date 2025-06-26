@@ -13,9 +13,8 @@ in Triple Differences Designs (also known as
 Difference-in-Differences-in-Differences or DDD). DDD designs are widely
 used in empirical work to relax parallel trends assumptions in
 Difference-in-Differences settings. This package provides functions to
-estimate group-time average treatment effect and
-event-study type estimands associated with DDD designs. The setups
-allowed are:
+estimate group-time average treatment effect and event-study type
+estimands associated with DDD designs. The setups allowed are:
 
 - Two-periods or Multiple Periods DDD.
 - Single Treatment Date and Variation in Treatment Timing (i.e.,
@@ -73,17 +72,17 @@ To use `ddd`, the minimal data requirements include:
   with parameter `pname`.
 
 The following are two simplified examples of how to use the `ddd`
-function. The first one is for a two-periods DDD setup, while the second
+function. The first one is for a two-period DDD setup, while the second
 one is for a multiple-period DDD setup with staggered treatment
 adoption.
 
 #### Case: Two-Periods DDD with covariates
 
 First, we simulate some data with a built-in function `gen_dgp_2periods`
-that generates a two-period DDD setup with a single treatment date.
-This function receives the number of units and the type of DGP design
-to generate. The `gen_dgp_2periods` function returns a data frame with
-the required columns for the `ddd` function with 4 covariates.
+that generates a two-period DDD setup with a single treatment date. This
+function receives the number of units and the type of DGP design to
+generate. The `gen_dgp_2periods` function returns a data frame with the
+required columns for the `ddd` function with 4 covariates.
 
 ``` r
 set.seed(1234) # Set seed for reproducibility
@@ -155,13 +154,13 @@ summary(att_22)
 #>  See Ortiz-Villavicencio and Sant'Anna (2025) for details.
 ```
 
-We can also leverage the fact that our estimators are doubly robust 
-to rely on data-driven models for estimating the
-nuisance parameters. For example, we can use a flexible machine learning
-like `xgboost` to estimate outcome models and `ranger` (Random Forest)
-to estimate the propensity scores. The engine behind this approach is
-the [mlr3](https://mlr3.mlr-org.com/index.html) package, which provides
-a unified interface for machine learning in R.
+We can also leverage the fact that our estimators are doubly robust to
+rely on data-driven models for estimating the nuisance parameters. For
+example, we can use a flexible machine learning like `xgboost` to
+estimate outcome models and `ranger` (Random Forest) to estimate the
+propensity scores. The engine behind this approach is the
+[mlr3](https://mlr3.mlr-org.com/index.html) package, which provides a
+unified interface for machine learning in R.
 
 ``` r
 library(mlr3)
@@ -178,24 +177,24 @@ att_22_dml <- ddd(yname = "y", tname = "time", idname = "id", gname = "state",
                   pname = "partition", xformla = ~cov1 + cov2 + cov3 + cov4,
                   data = df, control_group = "nevertreated",
                   est_method = "dml", learners = learners, n_folds = 3)
-#> INFO  [18:44:33.698] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 1/3)
-#> INFO  [18:44:33.759] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 2/3)
-#> INFO  [18:44:33.779] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 3/3)
-#> INFO  [18:44:33.807] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 1/3)
-#> INFO  [18:44:33.882] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 2/3)
-#> INFO  [18:44:33.945] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 3/3)
-#> INFO  [18:44:34.031] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 1/3)
-#> INFO  [18:44:34.046] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 2/3)
-#> INFO  [18:44:34.062] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 3/3)
-#> INFO  [18:44:34.083] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 1/3)
-#> INFO  [18:44:34.144] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 2/3)
-#> INFO  [18:44:34.209] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 3/3)
-#> INFO  [18:44:34.289] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 1/3)
-#> INFO  [18:44:34.305] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 2/3)
-#> INFO  [18:44:34.321] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 3/3)
-#> INFO  [18:44:34.345] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 1/3)
-#> INFO  [18:44:34.407] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 2/3)
-#> INFO  [18:44:34.469] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 3/3)
+#> INFO  [21:59:27.081] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 1/3)
+#> INFO  [21:59:27.145] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 2/3)
+#> INFO  [21:59:27.165] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 3/3)
+#> INFO  [21:59:27.194] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 1/3)
+#> INFO  [21:59:27.276] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 2/3)
+#> INFO  [21:59:27.341] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 3/3)
+#> INFO  [21:59:27.433] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 1/3)
+#> INFO  [21:59:27.450] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 2/3)
+#> INFO  [21:59:27.466] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 3/3)
+#> INFO  [21:59:27.488] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 1/3)
+#> INFO  [21:59:27.556] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 2/3)
+#> INFO  [21:59:27.625] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 3/3)
+#> INFO  [21:59:27.707] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 1/3)
+#> INFO  [21:59:27.723] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 2/3)
+#> INFO  [21:59:27.739] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 3/3)
+#> INFO  [21:59:27.764] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 1/3)
+#> INFO  [21:59:27.827] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 2/3)
+#> INFO  [21:59:27.889] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 3/3)
 
 summary(att_22_dml)
 #>  Call:
@@ -237,10 +236,10 @@ summary(att_22_dml)
 
 In this case, we simulate some data with a built-in function
 `gen_dgp_staggered` that generates a multiple-period DDD setup with
-staggered treatment adoption. This function receives the number of
-units and the type of DGP design to generate. The `gen_dgp_staggered`
-function returns a data frame with the required columns for the `ddd`
-function with 4 covariates.
+staggered treatment adoption. This function receives the number of units
+and the type of DGP design to generate. The `gen_dgp_staggered` function
+returns a data frame with the required columns for the `ddd` function
+with 4 covariates.
 
 ``` r
 set.seed(1234) # Set seed for reproducibility
@@ -447,7 +446,7 @@ summary(att_gt_nyt)
 The current version is released in an **alpha** stage: the core features
 are implemented and made available so users can try them out and provide
 feedback. Please, be aware that it remains under active development, so
-long-term stability is not guaranteed---APIs may evolve, adding more
+long-term stability is not guaranteed—APIs may evolve, adding more
 features and/or breaking changes can occur at any time, without a
 deprecation cycle.
 
@@ -468,6 +467,11 @@ to report bugs, request features or provide feedback.
 
 - 🔲 User-specified data-driven models for estimations of nuisance
   parameters.
+  - This is partially implemented via the `mlr3` package, which provides
+    a unified interface for off-the-shelf ML algorithms in R. Users can
+    specify their own models for estimating outcome models and
+    propensity scores. Currently, two-periods DDD with single treatment
+    date is the only setting supported.
 - 🔲 Built-in plotting capabilities for visualizing results.
   - This can be done easily by users. E.g., event-study type estimates
     can be plotted using `ggplot2`. See the quick start example.
