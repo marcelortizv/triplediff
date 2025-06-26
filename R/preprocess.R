@@ -417,7 +417,8 @@ run_preprocess_2Periods <- function(yname,
 }
 
 # Preprocess function for multiple periods case.
-#' @export
+# @keywords internal
+# @export
 run_preprocess_multPeriods <- function(yname,
                                        tname,
                                        idname,
@@ -447,13 +448,6 @@ run_preprocess_multPeriods <- function(yname,
   #-------------------------------------
   # Error checking
   #-------------------------------------
-
-  # TODO; DROP THIS WHEN NOT-YET-TREATED IS IMPLEMENTED
-  # if (control_group == "notyettreated") {
-  #   warning("control_group = 'notyettreated' is temporarily unavailable. Using control_group = 'nevertreated' instead.")
-  #   control_group <- "nevertreated"
-  #   args$control_group <- control_group
-  # }
 
   # Flag for parallel and cores
   if (boot){
@@ -732,7 +726,8 @@ run_preprocess_multPeriods <- function(yname,
   return(out)
 }
 
-#' @export
+# @keywords internal
+# @export
 # Process results inside att_gt_dr function
 process_attgt <- function(attgt_list){
   groups <- length(unique(unlist(BMisc::getListElement(attgt_list, "group"))))

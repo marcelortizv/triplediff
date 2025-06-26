@@ -7,33 +7,33 @@
 gen_dgp_2periods(size, dgp_type)
 }
 \arguments{
-\item{size}{number of units}
+\item{size}{Integer. Number of units.}
 
-\item{dgp_type}{type of DGP to generate.
-1 if both nuisance functions are correct;
-2 if only the outcome model is correct;
-3 if only the pscore is correct;
-4 if both nuisance functions are incorrect.}
+\item{dgp_type}{Integer in \{1,2,3,4\}.
+1 = both nuisance functions correct;
+2 = only the outcome model correct;
+3 = only the propensity score correct;
+4 = both nuisance functions incorrect.}
 }
 \value{
 A list with the following elements:
-\item{data}{data.table with the generated data in long format:}
+\describe{
+\item{data}{A \code{data.table} in long format with columns:
 \itemize{
-\item id: ID
-\item state: State variable
-\item time: Time variable
-\item partition: Partition variable
-\item x1: Covariate 1
-\item x2: Covariate 2
-\item x3: Covariate 3
-\item x4: Covariate 4
-\item y: Outcome variable
-\item cluster: Cluster variables (there's no actual within-cluster correlation)
-\item{att}{True ATT. Set to be equal to 0.}
-\item{att.unf}{Computation of unfeasible ATT.}
-\item{eff}{value of the theoretical efficiency bound}
+\item \code{id}: unit identifier
+\item \code{state}: state variable
+\item \code{time}: time variable
+\item \code{partition}: partition assignment
+\item \code{x1}, \code{x2}, \code{x3}, \code{x4}: covariates
+\item \code{y}: outcome variable
+\item \code{cluster}: cluster ID (no within-cluster correlation)
+}
+}
+\item{att}{True average treatment effect on the treated (ATT), set to 0.}
+\item{att.unf}{“Oracle” ATT computed under the unfeasible specification.}
+\item{eff}{Theoretical efficiency bound for the estimator.}
 }
 }
 \description{
-Function that generates panel data with single treatment date assignment and two time periods.
+Generate panel data with a single treatment date and two periods
 }

@@ -165,30 +165,32 @@ sd.z4 <-  56.63891
 
 #' Function that generates panel data with single treatment date assignment and two time periods.
 #' @description
-#' Function that generates panel data with single treatment date assignment and two time periods.
+#' Generate panel data with a single treatment date and two periods
 #'
-#' @param size number of units
-#' @param dgp_type type of DGP to generate.
-#'           1 if both nuisance functions are correct;
-#'           2 if only the outcome model is correct;
-#'           3 if only the pscore is correct;
-#'           4 if both nuisance functions are incorrect.
+#' @param size Integer. Number of units.
+#' @param dgp_type Integer in \{1,2,3,4\}.
+#'   1 = both nuisance functions correct;
+#'   2 = only the outcome model correct;
+#'   3 = only the propensity score correct;
+#'   4 = both nuisance functions incorrect.
 #'
 #' @return A list with the following elements:
-#' \item{data}{data.table with the generated data in long format:}
-#'  - id: ID
-#'  - state: State variable
-#'  - time: Time variable
-#'  - partition: Partition variable
-#'  - x1: Covariate 1
-#'  - x2: Covariate 2
-#'  - x3: Covariate 3
-#'  - x4: Covariate 4
-#'  - y: Outcome variable
-#'  - cluster: Cluster variables (there's no actual within-cluster correlation)
-#' \item{att}{True ATT. Set to be equal to 0.}
-#' \item{att.unf}{Computation of unfeasible ATT.}
-#' \item{eff}{value of the theoretical efficiency bound}
+#' \describe{
+#'   \item{data}{A \code{data.table} in long format with columns:
+#'     \itemize{
+#'       \item \code{id}: unit identifier
+#'       \item \code{state}: state variable
+#'       \item \code{time}: time variable
+#'       \item \code{partition}: partition assignment
+#'       \item \code{x1}, \code{x2}, \code{x3}, \code{x4}: covariates
+#'       \item \code{y}: outcome variable
+#'       \item \code{cluster}: cluster ID (no within-cluster correlation)
+#'     }
+#'   }
+#'   \item{att}{True average treatment effect on the treated (ATT), set to 0.}
+#'   \item{att.unf}{“Oracle” ATT computed under the unfeasible specification.}
+#'   \item{eff}{Theoretical efficiency bound for the estimator.}
+#' }
 #'
 #' @export
 gen_dgp_2periods <- function(size, dgp_type){
@@ -573,33 +575,41 @@ gen_dgp_2periods <- function(size, dgp_type){
 # Functions to generate data for multiple time periods
 # ---------------------------------------------------------------------
 
-#' Function that generates panel data with staggered treatment assignment and multiple periods
+#' Generate panel data with staggered treatment adoption (three periods)
 #' @description
-#' Function to generate data with staggered treatment adoption. Without loss of generality, the number of time periods is set to be 3.
+#' Generate panel data where units adopt treatment at different times across three periods.
 #'
-#' @param size number of units
-#' @param dgp_type type of DGP to generate.
-#'           1 if both nuisance functions are correct;
-#'           2 if only the outcome model is correct;
-#'           3 if only the pscore is correct;
-#'           4 if both nuisance functions are incorrect.
+#' @param size Integer. Number of units to simulate.
+#' @param dgp_type Integer in \{1,2,3,4\}.
+#'   1 = both nuisance functions correct;
+#'   2 = only the outcome model correct;
+#'   3 = only the propensity-score model correct;
+#'   4 = both nuisance functions misspecified.
 #'
-#' @return A list with 2 data.table with the following columns in long and wide format.
-#' \item{data}{data.table with the generated data in long format.}
-#' \item{data_wide}{data.table with the generated data in wide format.}
-#' - id: ID for panel data.
-#' - cohort: Indicate the first period where the treatment is assigned.
-#' - partition: Partition variable.
-#'  - x1: Covariate 1
-#'  - x2: Covariate 2
-#'  - x3: Covariate 3
-#'  - x4: Covariate 4
-#' - cluster: Cluster variable (there's no actual within-cluster correlation).
-#' - time: Time periods.
-#' - y: Outcome variable.
-#' \item{ES_0_unf}{Unfeasible event-study parameter for the DGP.}
-#' \item{prob_g2_p1}{Proportion of units in group 2 and eligibility = 1.}
-#' \item{prob_g3_p1}{Proportion of units in group 3 and eligibility = 1.}
+#' @return A named list with components:
+#' \describe{
+#'   \item{data}{A \code{data.table} in long format with columns:
+#'     \itemize{
+#'       \item \code{id}: unit identifier
+#'       \item \code{cohort}: first period when treatment is assigned
+#'       \item \code{partition}: partition indicator
+#'       \item \code{x1}, \code{x2}, \code{x3}, \code{x4}: covariates
+#'       \item \code{cluster}: cluster identifier (no within-cluster correlation)
+#'       \item \code{time}: time period index
+#'       \item \code{y}: observed outcome
+#'     }
+#'   }
+#'   \item{data_wide}{A \code{data.table} in wide format (one row per \code{id}) with columns:
+#'     \itemize{
+#'       \item \code{id}, \code{cohort}, \code{partition}, \code{x1}, \code{x2}, \code{x3}, \code{x4}, \code{cluster}
+#'       \item \code{y_t0}, \code{y_t1}, \code{y_t2}: outcomes in periods 0, 1, and 2
+#'     }
+#'   }
+#'   \item{ES_0_unf}{Unfeasible (oracle) event-study parameter at time 0.}
+#'   \item{prob_g2_p1}{Proportion of units with \code{cohort == 2} and eligibility in period 1.}
+#'   \item{prob_g3_p1}{Proportion of units with \code{cohort == 3} and eligibility in period 1.}
+#' }
+#'
 #' @export
 gen_dgp_mult_periods <- function(size, dgp_type = 1){
 

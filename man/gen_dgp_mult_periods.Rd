@@ -2,39 +2,44 @@
 % Please edit documentation in R/generate_data.R
 \name{gen_dgp_mult_periods}
 \alias{gen_dgp_mult_periods}
-\title{Function that generates panel data with staggered treatment assignment and multiple periods}
+\title{Generate panel data with staggered treatment adoption (three periods)}
 \usage{
 gen_dgp_mult_periods(size, dgp_type = 1)
 }
 \arguments{
-\item{size}{number of units}
+\item{size}{Integer. Number of units to simulate.}
 
-\item{dgp_type}{type of DGP to generate.
-1 if both nuisance functions are correct;
-2 if only the outcome model is correct;
-3 if only the pscore is correct;
-4 if both nuisance functions are incorrect.}
+\item{dgp_type}{Integer in \{1,2,3,4\}.
+1 = both nuisance functions correct;
+2 = only the outcome model correct;
+3 = only the propensity-score model correct;
+4 = both nuisance functions misspecified.}
 }
 \value{
-A list with 2 data.table with the following columns in long and wide format.
-\item{data}{data.table with the generated data in long format.}
-\item{data_wide}{data.table with the generated data in wide format.}
+A named list with components:
+\describe{
+\item{data}{A \code{data.table} in long format with columns:
 \itemize{
-\item id: ID for panel data.
-\item cohort: Indicate the first period where the treatment is assigned.
-\item partition: Partition variable.
-\item x1: Covariate 1
-\item x2: Covariate 2
-\item x3: Covariate 3
-\item x4: Covariate 4
-\item cluster: Cluster variable (there's no actual within-cluster correlation).
-\item time: Time periods.
-\item y: Outcome variable.
-\item{ES_0_unf}{Unfeasible event-study parameter for the DGP.}
-\item{prob_g2_p1}{Proportion of units in group 2 and eligibility = 1.}
-\item{prob_g3_p1}{Proportion of units in group 3 and eligibility = 1.}
+\item \code{id}: unit identifier
+\item \code{cohort}: first period when treatment is assigned
+\item \code{partition}: partition indicator
+\item \code{x1}, \code{x2}, \code{x3}, \code{x4}: covariates
+\item \code{cluster}: cluster identifier (no within-cluster correlation)
+\item \code{time}: time period index
+\item \code{y}: observed outcome
+}
+}
+\item{data_wide}{A \code{data.table} in wide format (one row per \code{id}) with columns:
+\itemize{
+\item \code{id}, \code{cohort}, \code{partition}, \code{x1}, \code{x2}, \code{x3}, \code{x4}, \code{cluster}
+\item \code{y_t0}, \code{y_t1}, \code{y_t2}: outcomes in periods 0, 1, and 2
+}
+}
+\item{ES_0_unf}{Unfeasible (oracle) event-study parameter at time 0.}
+\item{prob_g2_p1}{Proportion of units with \code{cohort == 2} and eligibility in period 1.}
+\item{prob_g3_p1}{Proportion of units with \code{cohort == 3} and eligibility in period 1.}
 }
 }
 \description{
-Function to generate data with staggered treatment adoption. Without loss of generality, the number of time periods is set to be 3.
+Generate panel data where units adopt treatment at different times across three periods.
 }
