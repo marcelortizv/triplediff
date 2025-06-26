@@ -176,24 +176,24 @@ att_22_dml <- ddd(yname = "y", tname = "time", idname = "id", gname = "state",
                   pname = "partition", xformla = ~cov1 + cov2 + cov3 + cov4,
                   data = df, control_group = "nevertreated",
                   est_method = "dml", learners = learners, n_folds = 3)
-#> INFO  [23:42:01.107] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 1/3)
-#> INFO  [23:42:01.170] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 2/3)
-#> INFO  [23:42:01.191] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 3/3)
-#> INFO  [23:42:01.266] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 1/3)
-#> INFO  [23:42:01.455] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 2/3)
-#> INFO  [23:42:01.521] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 3/3)
-#> INFO  [23:42:01.625] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 1/3)
-#> INFO  [23:42:01.642] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 2/3)
-#> INFO  [23:42:01.659] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 3/3)
-#> INFO  [23:42:01.682] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 1/3)
-#> INFO  [23:42:01.752] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 2/3)
-#> INFO  [23:42:01.824] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 3/3)
-#> INFO  [23:42:01.916] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 1/3)
-#> INFO  [23:42:01.933] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 2/3)
-#> INFO  [23:42:01.949] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 3/3)
-#> INFO  [23:42:01.971] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 1/3)
-#> INFO  [23:42:02.037] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 2/3)
-#> INFO  [23:42:02.102] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 3/3)
+#> INFO  [14:30:06.412] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 1/3)
+#> INFO  [14:30:06.477] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 2/3)
+#> INFO  [14:30:06.498] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 3/3)
+#> INFO  [14:30:06.570] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 1/3)
+#> INFO  [14:30:06.760] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 2/3)
+#> INFO  [14:30:06.826] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 3/3)
+#> INFO  [14:30:06.927] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 1/3)
+#> INFO  [14:30:06.944] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 2/3)
+#> INFO  [14:30:06.960] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 3/3)
+#> INFO  [14:30:06.982] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 1/3)
+#> INFO  [14:30:07.047] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 2/3)
+#> INFO  [14:30:07.119] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 3/3)
+#> INFO  [14:30:07.209] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 1/3)
+#> INFO  [14:30:07.225] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 2/3)
+#> INFO  [14:30:07.242] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 3/3)
+#> INFO  [14:30:07.265] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 1/3)
+#> INFO  [14:30:07.329] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 2/3)
+#> INFO  [14:30:07.394] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 3/3)
 
 summary(att_22_dml)
 #>  Call:
@@ -217,8 +217,8 @@ summary(att_22_dml)
 #>    eligible-but-untreated: 116
 #>    untreated-and-ineligible: 120
 #>  --------------------------- Algorithms ------------------------------
-#>  Outcome Regression estimated using: Random Forest
-#>  Propensity score estimated using: Extreme Gradient Boosting
+#>  Outcome Regression estimated using: Extreme Gradient Boosting
+#>  Propensity score estimated using: Random Forest
 #>  -------------------------- Cross-fitting  ---------------------------
 #>  No. of folds:  3
 #>  Apply cross-fitting: TRUE
