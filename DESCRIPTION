@@ -1,6 +1,6 @@
 Package: triplediff
 Title: Triple Differences Estimators
-Version: 0.0.0.9000
+Version: 0.1.0
 Authors@R: c(person("Marcelo", "Ortiz-Villavicencio", email = "marcelo.ortiz@emory.edu", role = c("aut", "cre")),
               person("Pedro H. C.", "Sant'Anna", email = "pedro.santanna@emory.edu", role = c("aut"))
             )
