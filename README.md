@@ -321,7 +321,7 @@ summary(es_e)
 #>  Note: * indicates that the confidence interval does not contain zero.
 #>  --------------------------- Data Info   -----------------------------
 #>  Outcome variable: y
-#>  Partition variable: partition
+#>  Qualification variable: partition
 #>  Control group:  Never Treated
 #>  --------------------------- Std. Errors  ----------------------------
 #>  Level of significance:  0.05
@@ -405,7 +405,7 @@ summary(att_gt_nyt)
 #>  Panel data
 #>  Outcome variable: y
 #>  Qualification variable: partition
-#>  Control group: Not yet Treated
+#>  Control group: Not yet Treated (GMM-based)
 #>  No. of units per treatment group:
 #>   Units enabling treatment at period 3: 198
 #>   Units enabling treatment at period 2: 195

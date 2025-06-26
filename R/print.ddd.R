@@ -125,7 +125,7 @@ print.ddd <- function(x, alpha = NULL, ...) {
   cat("\n", paste0("Qualification variable: ", x$argu$pname))
   # add control group for multiple periods
   if(x$argu$multiple_periods == TRUE){
-    ifelse(x$argu$control_group == "nevertreated", control_type <- "Never Treated", control_type <- "Not yet Treated")
+    ifelse(x$argu$control_group == "nevertreated", control_type <- "Never Treated", control_type <- "Not yet Treated (GMM-based)")
     cat("\n", paste0("Control group: ", control_type))
   }
   if(x$argu$multiple_periods == FALSE){
