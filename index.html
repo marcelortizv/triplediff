@@ -45,7 +45,7 @@
   <main id="main" class="col-md-9"><div class="section level1">
 <div class="page-header"><h1 id="triple-differences-estimators-">Triple Differences Estimators <img src="reference/figures/triplediff-logo.png" align="right" alt="" width="155"><a class="anchor" aria-label="anchor" href="#triple-differences-estimators-"></a>
 </h1></div>
-<p><img src="https://img.shields.io/badge/release%20lifecycle-alpha-orange.svg"><a href="https://github.com/marcelortizv/triplediff" class="external-link"><img src="https://img.shields.io/badge/devel%20version-0.0.0.9000-blue.svg"></a> <a href="https://github.com/marcelortizv/triplediff/commits/main" class="external-link"><img src="https://img.shields.io/github/last-commit/marcelortizv/triplediff.svg"></a> <a href="https://doi.org/10.48550/arXiv.2505.09942" class="external-link"><img src="https://img.shields.io/badge/doi-10.48550/arXiv.2505.09942-yellow.svg"></a></p>
+<p><img src="https://img.shields.io/badge/release%20lifecycle-alpha-orange.svg"><a href="https://github.com/marcelortizv/triplediff" class="external-link"><img src="https://img.shields.io/badge/devel%20version-0.1.0-blue.svg"></a> <a href="https://github.com/marcelortizv/triplediff/commits/main" class="external-link"><img src="https://img.shields.io/github/last-commit/marcelortizv/triplediff.svg"></a> <a href="https://doi.org/10.48550/arXiv.2505.09942" class="external-link"><img src="https://img.shields.io/badge/doi-10.48550/arXiv.2505.09942-yellow.svg"></a></p>
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 <p><strong>triplediff</strong> is an R package for computing average treatment effects in Triple Differences Designs (also known as Difference-in-Differences-in-Differences or DDD). DDD designs are widely used in empirical work to relax parallel trends assumptions in Difference-in-Differences settings. This package provides functions to estimate group-time average treatment effect and event-study type estimands associated with DDD designs. The setups allowed are:</p>
 <ul>
@@ -154,46 +154,30 @@
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://mlr3.mlr-org.com" class="external-link">mlr3</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://mlr3learners.mlr-org.com" class="external-link">mlr3learners</a></span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">learner_rf</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://mlr3.mlr-org.com/reference/mlr_sugar.html" class="external-link">lrn</a></span><span class="op">(</span><span class="st">"classif.ranger"</span>, predict_type <span class="op">=</span> <span class="st">"prob"</span>, num.trees <span class="op">=</span> <span class="fl">100</span>,</span>
-<span>                 min.node.size <span class="op">=</span> <span class="fl">1</span>, importance <span class="op">=</span> <span class="st">'impurity'</span><span class="op">)</span></span>
+<span><span class="co"># suppress messages during fitting</span></span>
+<span><span class="fu">lgr</span><span class="fu">::</span><span class="fu"><a href="https://s-fleck.github.io/lgr/reference/get_logger.html" class="external-link">get_logger</a></span><span class="op">(</span><span class="st">"mlr3"</span><span class="op">)</span><span class="op">$</span><span class="fu">set_threshold</span><span class="op">(</span><span class="st">"warn"</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">learner_regr</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://mlr3.mlr-org.com/reference/mlr_sugar.html" class="external-link">lrn</a></span><span class="op">(</span><span class="st">"regr.xgboost"</span><span class="op">)</span></span>
+<span><span class="co"># set learners for nuisance functions</span></span>
+<span><span class="va">learner_lm</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://mlr3.mlr-org.com/reference/mlr_sugar.html" class="external-link">lrn</a></span><span class="op">(</span><span class="st">"regr.lm"</span><span class="op">)</span></span>
+<span><span class="va">learner_logit</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://mlr3.mlr-org.com/reference/mlr_sugar.html" class="external-link">lrn</a></span><span class="op">(</span><span class="st">"classif.log_reg"</span>, predict_type <span class="op">=</span> <span class="st">"prob"</span><span class="op">)</span></span>
+<span><span class="va">learners</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>ml_pa <span class="op">=</span> <span class="va">learner_logit</span>, ml_md <span class="op">=</span> <span class="va">learner_lm</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">learners</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>ml_pa <span class="op">=</span> <span class="va">learner_rf</span>, ml_md <span class="op">=</span> <span class="va">learner_regr</span><span class="op">)</span></span>
-<span></span>
+<span><span class="co"># estimation</span></span>
 <span><span class="va">att_22_dml</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/ddd.html">ddd</a></span><span class="op">(</span>yname <span class="op">=</span> <span class="st">"y"</span>, tname <span class="op">=</span> <span class="st">"time"</span>, idname <span class="op">=</span> <span class="st">"id"</span>, gname <span class="op">=</span> <span class="st">"state"</span>,</span>
 <span>                  pname <span class="op">=</span> <span class="st">"partition"</span>, xformla <span class="op">=</span> <span class="op">~</span><span class="va">cov1</span> <span class="op">+</span> <span class="va">cov2</span> <span class="op">+</span> <span class="va">cov3</span> <span class="op">+</span> <span class="va">cov4</span>,</span>
 <span>                  data <span class="op">=</span> <span class="va">df</span>, control_group <span class="op">=</span> <span class="st">"nevertreated"</span>,</span>
-<span>                  est_method <span class="op">=</span> <span class="st">"dml"</span>, learners <span class="op">=</span> <span class="va">learners</span>, n_folds <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
-<span><span class="co">#&gt; INFO  [14:30:06.412] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 1/3)</span></span>
-<span><span class="co">#&gt; INFO  [14:30:06.477] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 2/3)</span></span>
-<span><span class="co">#&gt; INFO  [14:30:06.498] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 3/3)</span></span>
-<span><span class="co">#&gt; INFO  [14:30:06.570] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 1/3)</span></span>
-<span><span class="co">#&gt; INFO  [14:30:06.760] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 2/3)</span></span>
-<span><span class="co">#&gt; INFO  [14:30:06.826] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 3/3)</span></span>
-<span><span class="co">#&gt; INFO  [14:30:06.927] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 1/3)</span></span>
-<span><span class="co">#&gt; INFO  [14:30:06.944] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 2/3)</span></span>
-<span><span class="co">#&gt; INFO  [14:30:06.960] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 3/3)</span></span>
-<span><span class="co">#&gt; INFO  [14:30:06.982] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 1/3)</span></span>
-<span><span class="co">#&gt; INFO  [14:30:07.047] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 2/3)</span></span>
-<span><span class="co">#&gt; INFO  [14:30:07.119] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 3/3)</span></span>
-<span><span class="co">#&gt; INFO  [14:30:07.209] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 1/3)</span></span>
-<span><span class="co">#&gt; INFO  [14:30:07.225] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 2/3)</span></span>
-<span><span class="co">#&gt; INFO  [14:30:07.242] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 3/3)</span></span>
-<span><span class="co">#&gt; INFO  [14:30:07.265] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 1/3)</span></span>
-<span><span class="co">#&gt; INFO  [14:30:07.329] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 2/3)</span></span>
-<span><span class="co">#&gt; INFO  [14:30:07.394] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 3/3)</span></span>
+<span>                  est_method <span class="op">=</span> <span class="st">"dml"</span>, learners <span class="op">=</span> <span class="va">learners</span>, n_folds <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">att_22_dml</span><span class="op">)</span></span>
 <span><span class="co">#&gt;  Call:</span></span>
 <span><span class="co">#&gt; ddd(yname = "y", tname = "time", idname = "id", gname = "state", </span></span>
 <span><span class="co">#&gt;     pname = "partition", xformla = ~cov1 + cov2 + cov3 + cov4, </span></span>
 <span><span class="co">#&gt;     data = df, control_group = "nevertreated", est_method = "dml", </span></span>
-<span><span class="co">#&gt;     learners = learners, n_folds = 3)</span></span>
+<span><span class="co">#&gt;     learners = learners, n_folds = 5)</span></span>
 <span><span class="co">#&gt; =========================== DDD Summary ==============================</span></span>
 <span><span class="co">#&gt;  DML-DDD estimation for the ATT: </span></span>
 <span><span class="co">#&gt;      ATT       Std. Error    Pr(&gt;|t|)  [95% Ptwise. Conf. Band]              </span></span>
-<span><span class="co">#&gt;     -4.3046       2.4784       0.0824      -9.1621       0.5529              </span></span>
+<span><span class="co">#&gt;     -0.9096       1.4701       0.5361      -3.7911       1.9718              </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;  Note: * indicates that the confidence interval does not contain zero.</span></span>
 <span><span class="co">#&gt;  --------------------------- Data Info   -----------------------------</span></span>
@@ -206,10 +190,10 @@
 <span><span class="co">#&gt;    eligible-but-untreated: 116</span></span>
 <span><span class="co">#&gt;    untreated-and-ineligible: 120</span></span>
 <span><span class="co">#&gt;  --------------------------- Algorithms ------------------------------</span></span>
-<span><span class="co">#&gt;  Outcome Regression estimated using: Extreme Gradient Boosting</span></span>
-<span><span class="co">#&gt;  Propensity score estimated using: Random Forest</span></span>
+<span><span class="co">#&gt;  Outcome Regression estimated using: Linear Model</span></span>
+<span><span class="co">#&gt;  Propensity score estimated using: Logistic Regression</span></span>
 <span><span class="co">#&gt;  -------------------------- Cross-fitting  ---------------------------</span></span>
-<span><span class="co">#&gt;  No. of folds:  3</span></span>
+<span><span class="co">#&gt;  No. of folds:  5</span></span>
 <span><span class="co">#&gt;  Apply cross-fitting: TRUE</span></span>
 <span><span class="co">#&gt;  --------------------------- Std. Errors  ----------------------------</span></span>
 <span><span class="co">#&gt;  Level of significance:  0.05</span></span>
@@ -408,9 +392,9 @@
 <h3 id="id_-currently-supported">🚀 Currently Supported<a class="anchor" aria-label="anchor" href="#id_-currently-supported"></a>
 </h3>
 <ul>
-<li>️✅ Two-periods with single treatment date.</li>
-<li>️✅ Multiple periods with single treatment date.</li>
-<li>️✅ Staggered treatment adoption (i.e., more than two periods and variation in treatment timing).</li>
+<li>️✅ Two-period DDD with single treatment date.</li>
+<li>️✅ Multiple-period DDD with single treatment date.</li>
+<li>️✅ DDD with staggered treatment adoption (i.e., more than two periods and variation in treatment timing).</li>
 <li>️✅ Aggregations procedures (e.g., event-study type estimates).</li>
 <li>️✅ GMM-based estimations with not-yet-treated units as comparison group.</li>
 </ul>
