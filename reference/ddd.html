@@ -238,30 +238,29 @@ with fixed probability <code>1-alpha</code>.  In order to compute uniform confid
 <span class="r-out co"><span class="r-pr">#&gt;</span> ddd(yname = "y", tname = "time", idname = "id", gname = "state", </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     pname = "partition", xformla = ~cov1 + cov2 + cov3 + cov4, </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     data = df, control_group = "nevertreated", est_method = "dr")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> =========================== DDD Summary ===========================</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> =========================== DDD Summary ==============================</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  DR-DDD estimation for the ATT: </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>      ATT       Std. Error    Pr(&gt;|t|)  [95% Ptwise. Conf. Band]              </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>      0.0439       0.2626       0.8672      -0.4708       0.5586              </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Note: * indicates that confidence interval does not contain zero.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  --------------------------- Data Info   --------------------------</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Note: * indicates that the confidence interval does not contain zero.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  --------------------------- Data Info   -----------------------------</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Panel data</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Outcome variable: y</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Partition variable: partition</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  No. of observations for each partition:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    (treat = 1, partition = 1): 131</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    (treat = 1, partition = 0): 133</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    (treat = 0, partition = 1): 116</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    (treat = 0, partition = 0): 120</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Level of significance:  0.05</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  --------------------------- Algorithm   --------------------------</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Qualification variable: partition</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  No. of units at each subgroup:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    treated-and-eligible: 131</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    treated-but-ineligible: 133</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    eligible-but-untreated: 116</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    untreated-and-ineligible: 120</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  --------------------------- Algorithms ------------------------------</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Outcome Regression estimated using: OLS</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Propensity score estimated using: Maximum Likelihood</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  --------------------------- Std. Errors  -------------------------</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  --------------------------- Std. Errors  ----------------------------</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Level of significance:  0.05</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Analytical standard errors.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Type of confidence band:  Pointwise Confidence Interval</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  ==================================================================</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  =====================================================================</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  See Ortiz-Villavicencio and Sant'Anna (2025) for details.</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span></span></span>
@@ -302,7 +301,7 @@ with fixed probability <code>1-alpha</code>.  In order to compute uniform confid
 <span class="r-out co"><span class="r-pr">#&gt;</span>     pname = "partition", xformla = ~cov1 + cov2 + cov3 + cov4, </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     data = data, control_group = "nevertreated", base_period = "varying", </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     est_method = "dr")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> =========================== DDD Summary ===========================</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> =========================== DDD Summary ==============================</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  DR-DDD estimation for the ATT(g,t): </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Group Time  ATT(g,t)  Std. Error [95% Pointwise  Conf. Band]  </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   2    2      10.3177     0.2715       9.7856       10.8498  *</span>
@@ -310,25 +309,24 @@ with fixed probability <code>1-alpha</code>.  In order to compute uniform confid
 <span class="r-out co"><span class="r-pr">#&gt;</span>   3    2      -0.2019     0.2735      -0.7379        0.3341   </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   3    3      25.1996     0.2700      24.6704       25.7288  *</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Note: * indicates that confidence interval does not contain zero.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  --------------------------- Data Info   --------------------------</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Note: * indicates that the confidence interval does not contain zero.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  --------------------------- Data Info   -----------------------------</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Panel data</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Outcome variable: y</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Partition variable: partition</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  No. of observations per treatment group:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Group starting treatment at period 3: 468</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Group starting treatment at period 2: 341</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Group that remains untreated: 191</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Qualification variable: partition</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Control group: Never Treated</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Level of significance:  0.05</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  --------------------------- Algorithm   --------------------------</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  No. of units per treatment group:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Units enabling treatment at period 3: 468</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Units enabling treatment at period 2: 341</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Units never enabling treatment: 191</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  --------------------------- Algorithms ------------------------------</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Outcome Regression estimated using: OLS</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Propensity score estimated using: Maximum Likelihood</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  --------------------------- Std. Errors  -------------------------</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  --------------------------- Std. Errors  ----------------------------</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Level of significance:  0.05</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Analytical standard errors.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Type of confidence band:  Pointwise Confidence Interval</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  ==================================================================</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  =====================================================================</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  See Ortiz-Villavicencio and Sant'Anna (2025) for details.</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>

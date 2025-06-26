@@ -154,27 +154,27 @@ aggregation step.</p>
 <span class="r-in"><span><span class="fu">agg_ddd</span><span class="op">(</span><span class="va">out</span>, type <span class="op">=</span> <span class="st">"simple"</span>, alpha <span class="op">=</span> <span class="fl">0.10</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Call:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> agg_ddd(ddd_obj = out, type = "simple", alpha = 0.1)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ========================= DDD Aggregation ==========================</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ========================= DDD Aggregation ============================</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Overall ATT:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     ATT    Std. Error     [ 90%  Conf. Int.]  </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  19.005        0.3718    18.3935     19.6166 *</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Note: * indicates that confidence interval does not contain zero.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  --------------------------- Data Info   --------------------------</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Note: * indicates that the confidence interval does not contain zero.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  --------------------------- Data Info   -----------------------------</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Outcome variable: y</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Partition variable: partition</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Control group:  Never Treated</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  --------------------------- Std. Errors  ----------------------------</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Level of significance:  0.1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  --------------------------- Std. Errors  -------------------------</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Analytical standard errors.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  ==================================================================</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  =====================================================================</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  See Ortiz-Villavicencio and Sant'Anna (2025) for details.</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Event study aggregation</span></span></span>
 <span class="r-in"><span><span class="fu">agg_ddd</span><span class="op">(</span><span class="va">out</span>, type <span class="op">=</span> <span class="st">"eventstudy"</span>, alpha <span class="op">=</span> <span class="fl">0.10</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Call:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> agg_ddd(ddd_obj = out, type = "eventstudy", alpha = 0.1)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ========================= DDD Aggregation ==========================</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ========================= DDD Aggregation ============================</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Overall summary of ATT's based on event-study/dynamic aggregation: </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>      ATT    Std. Error     [ 90%  Conf. Int.]  </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  19.2985        0.3653    18.6976     19.8993 *</span>
@@ -185,22 +185,22 @@ aggregation step.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span>           0  18.5301     0.4589       17.7752     19.2850 *</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>           1  20.0668     0.4283       19.3623     20.7714 *</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Note: * indicates that confidence interval does not contain zero.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  --------------------------- Data Info   --------------------------</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Note: * indicates that the confidence interval does not contain zero.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  --------------------------- Data Info   -----------------------------</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Outcome variable: y</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Partition variable: partition</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Control group:  Never Treated</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  --------------------------- Std. Errors  ----------------------------</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Level of significance:  0.1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  --------------------------- Std. Errors  -------------------------</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Analytical standard errors.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  ==================================================================</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  =====================================================================</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  See Ortiz-Villavicencio and Sant'Anna (2025) for details.</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Group aggregation</span></span></span>
 <span class="r-in"><span><span class="fu">agg_ddd</span><span class="op">(</span><span class="va">out</span>, type <span class="op">=</span> <span class="st">"group"</span>, alpha <span class="op">=</span> <span class="fl">0.10</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Call:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> agg_ddd(ddd_obj = out, type = "group", alpha = 0.1)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ========================= DDD Aggregation ==========================</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ========================= DDD Aggregation ============================</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Overall summary of ATT's based on group/cohort aggregation: </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>      ATT    Std. Error     [ 90%  Conf. Int.]  </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  20.7971        0.2922    20.3166     21.2777 *</span>
@@ -210,22 +210,22 @@ aggregation step.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span>      2  14.9986     0.3623       14.4026     15.5946 *</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>      3  25.4900     0.4594       24.7344     26.2456 *</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Note: * indicates that confidence interval does not contain zero.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  --------------------------- Data Info   --------------------------</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Note: * indicates that the confidence interval does not contain zero.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  --------------------------- Data Info   -----------------------------</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Outcome variable: y</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Partition variable: partition</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Control group:  Never Treated</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  --------------------------- Std. Errors  ----------------------------</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Level of significance:  0.1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  --------------------------- Std. Errors  -------------------------</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Analytical standard errors.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  ==================================================================</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  =====================================================================</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  See Ortiz-Villavicencio and Sant'Anna (2025) for details.</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Calendar aggregation</span></span></span>
 <span class="r-in"><span><span class="fu">agg_ddd</span><span class="op">(</span><span class="va">out</span>, type <span class="op">=</span> <span class="st">"calendar"</span>, alpha <span class="op">=</span> <span class="fl">0.10</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Call:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> agg_ddd(ddd_obj = out, type = "calendar", alpha = 0.1)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ========================= DDD Aggregation ==========================</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ========================= DDD Aggregation ============================</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Overall summary of ATT's based on calendar time aggregation: </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>      ATT    Std. Error     [ 90%  Conf. Int.]  </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  16.4972        0.2783    16.0395      16.955 *</span>
@@ -235,15 +235,15 @@ aggregation step.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     2   9.9303     0.4422        9.2029     10.6577 *</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     3  23.0642     0.3908       22.4214     23.7069 *</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Note: * indicates that confidence interval does not contain zero.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  --------------------------- Data Info   --------------------------</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Note: * indicates that the confidence interval does not contain zero.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  --------------------------- Data Info   -----------------------------</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Outcome variable: y</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Partition variable: partition</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Control group:  Never Treated</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  --------------------------- Std. Errors  ----------------------------</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Level of significance:  0.1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  --------------------------- Std. Errors  -------------------------</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Analytical standard errors.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  ==================================================================</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  =====================================================================</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  See Ortiz-Villavicencio and Sant'Anna (2025) for details.</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span></span></span>
