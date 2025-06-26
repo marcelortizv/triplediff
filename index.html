@@ -81,7 +81,7 @@
 <li><p><code>state</code>: First period when treatment is enabled for a particular unit. It is a positive number for treated units and defines which group the unit belongs to. It takes value <code>0</code> or <code>Inf</code> for never-enabling units. Its column name is associated with parameter <code>gname</code>.</p></li>
 <li><p><code>partition</code>: This is an indicator variable that is 1 for the units eligible for treatment and 0 otherwise. Its column name is associated with parameter <code>pname</code>.</p></li>
 </ul>
-<p>The following are two simplified examples of how to use the <code>ddd</code> function. The first one is for a two-periods DDD setup, while the second one is for a multiple-period DDD setup with staggered treatment adoption.</p>
+<p>The following are two simplified examples of how to use the <code>ddd</code> function. The first one is for a two-period DDD setup, while the second one is for a multiple-period DDD setup with staggered treatment adoption.</p>
 <div class="section level4">
 <h4 id="case-two-periods-ddd-with-covariates">Case: Two-Periods DDD with covariates<a class="anchor" aria-label="anchor" href="#case-two-periods-ddd-with-covariates"></a>
 </h4>
@@ -166,24 +166,24 @@
 <span>                  pname <span class="op">=</span> <span class="st">"partition"</span>, xformla <span class="op">=</span> <span class="op">~</span><span class="va">cov1</span> <span class="op">+</span> <span class="va">cov2</span> <span class="op">+</span> <span class="va">cov3</span> <span class="op">+</span> <span class="va">cov4</span>,</span>
 <span>                  data <span class="op">=</span> <span class="va">df</span>, control_group <span class="op">=</span> <span class="st">"nevertreated"</span>,</span>
 <span>                  est_method <span class="op">=</span> <span class="st">"dml"</span>, learners <span class="op">=</span> <span class="va">learners</span>, n_folds <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
-<span><span class="co">#&gt; INFO  [18:44:33.698] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 1/3)</span></span>
-<span><span class="co">#&gt; INFO  [18:44:33.759] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 2/3)</span></span>
-<span><span class="co">#&gt; INFO  [18:44:33.779] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 3/3)</span></span>
-<span><span class="co">#&gt; INFO  [18:44:33.807] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 1/3)</span></span>
-<span><span class="co">#&gt; INFO  [18:44:33.882] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 2/3)</span></span>
-<span><span class="co">#&gt; INFO  [18:44:33.945] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 3/3)</span></span>
-<span><span class="co">#&gt; INFO  [18:44:34.031] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 1/3)</span></span>
-<span><span class="co">#&gt; INFO  [18:44:34.046] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 2/3)</span></span>
-<span><span class="co">#&gt; INFO  [18:44:34.062] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 3/3)</span></span>
-<span><span class="co">#&gt; INFO  [18:44:34.083] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 1/3)</span></span>
-<span><span class="co">#&gt; INFO  [18:44:34.144] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 2/3)</span></span>
-<span><span class="co">#&gt; INFO  [18:44:34.209] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 3/3)</span></span>
-<span><span class="co">#&gt; INFO  [18:44:34.289] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 1/3)</span></span>
-<span><span class="co">#&gt; INFO  [18:44:34.305] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 2/3)</span></span>
-<span><span class="co">#&gt; INFO  [18:44:34.321] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 3/3)</span></span>
-<span><span class="co">#&gt; INFO  [18:44:34.345] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 1/3)</span></span>
-<span><span class="co">#&gt; INFO  [18:44:34.407] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 2/3)</span></span>
-<span><span class="co">#&gt; INFO  [18:44:34.469] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 3/3)</span></span>
+<span><span class="co">#&gt; INFO  [21:59:27.081] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 1/3)</span></span>
+<span><span class="co">#&gt; INFO  [21:59:27.145] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 2/3)</span></span>
+<span><span class="co">#&gt; INFO  [21:59:27.165] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 3/3)</span></span>
+<span><span class="co">#&gt; INFO  [21:59:27.194] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 1/3)</span></span>
+<span><span class="co">#&gt; INFO  [21:59:27.276] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 2/3)</span></span>
+<span><span class="co">#&gt; INFO  [21:59:27.341] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 3/3)</span></span>
+<span><span class="co">#&gt; INFO  [21:59:27.433] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 1/3)</span></span>
+<span><span class="co">#&gt; INFO  [21:59:27.450] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 2/3)</span></span>
+<span><span class="co">#&gt; INFO  [21:59:27.466] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 3/3)</span></span>
+<span><span class="co">#&gt; INFO  [21:59:27.488] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 1/3)</span></span>
+<span><span class="co">#&gt; INFO  [21:59:27.556] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 2/3)</span></span>
+<span><span class="co">#&gt; INFO  [21:59:27.625] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 3/3)</span></span>
+<span><span class="co">#&gt; INFO  [21:59:27.707] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 1/3)</span></span>
+<span><span class="co">#&gt; INFO  [21:59:27.723] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 2/3)</span></span>
+<span><span class="co">#&gt; INFO  [21:59:27.739] [mlr3] Applying learner 'classif.ranger' on task 'pscore_task' (iter 3/3)</span></span>
+<span><span class="co">#&gt; INFO  [21:59:27.764] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 1/3)</span></span>
+<span><span class="co">#&gt; INFO  [21:59:27.827] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 2/3)</span></span>
+<span><span class="co">#&gt; INFO  [21:59:27.889] [mlr3] Applying learner 'regr.xgboost' on task 'reg_task' (iter 3/3)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">att_22_dml</span><span class="op">)</span></span>
 <span><span class="co">#&gt;  Call:</span></span>
@@ -423,7 +423,11 @@
 <h3 id="id_️-not-yet-supported">⚠️ Not Yet Supported<a class="anchor" aria-label="anchor" href="#id_%EF%B8%8F-not-yet-supported"></a>
 </h3>
 <ul>
-<li>🔲 User-specified data-driven models for estimations of nuisance parameters.</li>
+<li>🔲 User-specified data-driven models for estimations of nuisance parameters.
+<ul>
+<li>This is partially implemented via the <code>mlr3</code> package, which provides a unified interface for off-the-shelf ML algorithms in R. Users can specify their own models for estimating outcome models and propensity scores. Currently, two-periods DDD with single treatment date is the only setting supported.</li>
+</ul>
+</li>
 <li>🔲 Built-in plotting capabilities for visualizing results.
 <ul>
 <li>This can be done easily by users. E.g., event-study type estimates can be plotted using <code>ggplot2</code>. See the quick start example.</li>
