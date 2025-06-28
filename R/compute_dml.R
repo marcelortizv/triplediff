@@ -140,15 +140,12 @@ compute_dml_nuisances <- function(data, condition_subgroup, xformula, ml_pa, ml_
   # Subset data for subgroup == 4 or the given condition_subgroup
   condition_data <- data[data$subgroup %in% c(condition_subgroup, 4)]
 
-  # drop period column
-  condition_data <- condition_data[, period := NULL]
-
   # get wide panel
   condition_data <- get_wide_data(condition_data)
 
-  # Adding treatment variable P(1{PA4 = 4}|X)
+  # Adding treatment variable for model P(1{S=2, Q=1}|X)
   condition_data[, "PA4" := as.factor(ifelse(condition_data$subgroup == 4, 1, 0))]
-  # Adding outcome variable E[deltaY | X]
+  # Adding outcome variable for model E[deltaY | X]
   condition_data[, deltaY:= y1 - y0]
 
   pscore_condition_data <- as.data.table(stats::model.frame(formula_pscore, data = condition_data))

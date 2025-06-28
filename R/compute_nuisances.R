@@ -35,6 +35,9 @@ get_wide_data <- function(dt) {
     dt <- as.data.table(dt)
   }
 
+  # drop the period column
+  dt[, period := NULL]
+
   # Extract the names of the invariant columns
   invariant_cols <- setdiff(names(dt), c("id", "y", "post"))
 
