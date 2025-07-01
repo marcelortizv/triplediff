@@ -90,28 +90,28 @@
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">1234</span><span class="op">)</span> <span class="co"># Set seed for reproducibility</span></span>
 <span><span class="co"># Simulate data for a two-periods DDD setup</span></span>
 <span><span class="va">df</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/gen_dgp_2periods.html">gen_dgp_2periods</a></span><span class="op">(</span></span>
-<span>  size <span class="op">=</span> <span class="fl">500</span>, <span class="co"># Number of units</span></span>
+<span>  size <span class="op">=</span> <span class="fl">5000</span>, <span class="co"># Number of units</span></span>
 <span>  dgp_type <span class="op">=</span> <span class="fl">1</span> <span class="co"># Type of DGP design</span></span>
 <span><span class="op">)</span><span class="op">$</span><span class="va">data</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">df</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Key: &lt;id&gt;</span></span>
-<span><span class="co">#&gt;       id state partition  time        y        cov1       cov2        cov3</span></span>
-<span><span class="co">#&gt;    &lt;int&gt; &lt;num&gt;     &lt;num&gt; &lt;int&gt;    &lt;num&gt;       &lt;num&gt;      &lt;num&gt;       &lt;num&gt;</span></span>
-<span><span class="co">#&gt; 1:     1     0         0     1 216.3097 -0.97080934  1.3995704  1.48834130</span></span>
-<span><span class="co">#&gt; 2:     1     0         0     2 430.9374 -0.97080934  1.3995704  1.48834130</span></span>
-<span><span class="co">#&gt; 3:     2     1         0     1 186.5831  0.02591115 -0.9747527  0.01714001</span></span>
-<span><span class="co">#&gt; 4:     2     1         0     2 375.9393  0.02591115 -0.9747527  0.01714001</span></span>
-<span><span class="co">#&gt; 5:     3     0         1     1 425.6606  0.97147321  0.3310760 -1.51021253</span></span>
-<span><span class="co">#&gt; 6:     3     0         1     2 639.5013  0.97147321  0.3310760 -1.51021253</span></span>
+<span><span class="co">#&gt;       id state partition  time        y        cov1       cov2      cov3</span></span>
+<span><span class="co">#&gt;    &lt;int&gt; &lt;num&gt;     &lt;num&gt; &lt;int&gt;    &lt;num&gt;       &lt;num&gt;      &lt;num&gt;     &lt;num&gt;</span></span>
+<span><span class="co">#&gt; 1:     1     0         0     1 209.9152 -0.97080934 -1.1726958 2.3893945</span></span>
+<span><span class="co">#&gt; 2:     1     0         0     2 417.5260 -0.97080934 -1.1726958 2.3893945</span></span>
+<span><span class="co">#&gt; 3:     2     0         0     1 211.4919  0.02591115  0.2763066 0.1063123</span></span>
+<span><span class="co">#&gt; 4:     2     0         0     2 420.3656  0.02591115  0.2763066 0.1063123</span></span>
+<span><span class="co">#&gt; 5:     3     0         0     1 221.9431  0.97147321 -0.4292088 0.5012794</span></span>
+<span><span class="co">#&gt; 6:     3     0         0     2 440.9623  0.97147321 -0.4292088 0.5012794</span></span>
 <span><span class="co">#&gt;          cov4 cluster</span></span>
 <span><span class="co">#&gt;         &lt;num&gt;   &lt;int&gt;</span></span>
-<span><span class="co">#&gt; 1:  0.3853346      15</span></span>
-<span><span class="co">#&gt; 2:  0.3853346      15</span></span>
-<span><span class="co">#&gt; 3: -0.7822000      41</span></span>
-<span><span class="co">#&gt; 4: -0.7822000      41</span></span>
-<span><span class="co">#&gt; 5:  0.2334469       5</span></span>
-<span><span class="co">#&gt; 6:  0.2334469       5</span></span></code></pre></div>
+<span><span class="co">#&gt; 1:  0.2174955      39</span></span>
+<span><span class="co">#&gt; 2:  0.2174955      39</span></span>
+<span><span class="co">#&gt; 3: -0.1922253      29</span></span>
+<span><span class="co">#&gt; 4: -0.1922253      29</span></span>
+<span><span class="co">#&gt; 5:  1.1027248      44</span></span>
+<span><span class="co">#&gt; 6:  1.1027248      44</span></span></code></pre></div>
 <p>Now we can estimate the average treatment effect on the treated (ATT) using the <code>ddd</code> function.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Estimate the average treatment effect on the treated, ATT(2,2)</span></span>
@@ -128,7 +128,7 @@
 <span><span class="co">#&gt; =========================== DDD Summary ==============================</span></span>
 <span><span class="co">#&gt;  DR-DDD estimation for the ATT: </span></span>
 <span><span class="co">#&gt;      ATT       Std. Error    Pr(&gt;|t|)  [95% Ptwise. Conf. Band]              </span></span>
-<span><span class="co">#&gt;      0.0439       0.2626       0.8672      -0.4708       0.5586              </span></span>
+<span><span class="co">#&gt;     -0.0780       0.0828       0.3463      -0.2404       0.0843              </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;  Note: * indicates that the confidence interval does not contain zero.</span></span>
 <span><span class="co">#&gt;  --------------------------- Data Info   -----------------------------</span></span>
@@ -136,10 +136,10 @@
 <span><span class="co">#&gt;  Outcome variable: y</span></span>
 <span><span class="co">#&gt;  Qualification variable: partition</span></span>
 <span><span class="co">#&gt;  No. of units at each subgroup:</span></span>
-<span><span class="co">#&gt;    treated-and-eligible: 131</span></span>
-<span><span class="co">#&gt;    treated-but-ineligible: 133</span></span>
-<span><span class="co">#&gt;    eligible-but-untreated: 116</span></span>
-<span><span class="co">#&gt;    untreated-and-ineligible: 120</span></span>
+<span><span class="co">#&gt;    treated-and-eligible: 1232</span></span>
+<span><span class="co">#&gt;    treated-but-ineligible: 1285</span></span>
+<span><span class="co">#&gt;    eligible-but-untreated: 1256</span></span>
+<span><span class="co">#&gt;    untreated-and-ineligible: 1227</span></span>
 <span><span class="co">#&gt;  --------------------------- Algorithms ------------------------------</span></span>
 <span><span class="co">#&gt;  Outcome Regression estimated using: OLS</span></span>
 <span><span class="co">#&gt;  Propensity score estimated using: Maximum Likelihood</span></span>
@@ -149,14 +149,15 @@
 <span><span class="co">#&gt;  Type of confidence band:  Pointwise Confidence Interval</span></span>
 <span><span class="co">#&gt;  =====================================================================</span></span>
 <span><span class="co">#&gt;  See Ortiz-Villavicencio and Sant'Anna (2025) for details.</span></span></code></pre></div>
-<p>We can also leverage the fact that our estimators are doubly robust to rely on data-driven models for estimating the nuisance parameters. For example, we can use a flexible machine learning like <code>xgboost</code> to estimate outcome models and <code>ranger</code> (Random Forest) to estimate the propensity scores. The engine behind this approach is the <a href="https://mlr3.mlr-org.com/index.html" class="external-link">mlr3</a> package, which provides a unified interface for machine learning in R.</p>
+<p>We can also leverage the fact that our estimators are doubly robust to rely on data-driven models for estimating the nuisance parameters. For example, we can use a flexible machine learning like <code>xgboost</code> to estimate outcome models and <code>ranger</code> (Random Forest) to estimate the propensity scores. The engine behind this implementation is the <a href="https://mlr3.mlr-org.com/index.html" class="external-link">mlr3</a> package, which provides a unified interface for off-the-shelf ML algorithms in R, and the <a href="https://docs.doubleml.org/stable/index.html" class="external-link">DoubleML</a> package, which implements the double machine learning framework. Since our DGP is linear, we can use <code>regr.lm</code> and <code>classif.log_reg</code> learners from <code>mlr3learners</code> to estimate the outcome and propensity score models, respectively, and compare it with the previous results.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://mlr3.mlr-org.com" class="external-link">mlr3</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://mlr3learners.mlr-org.com" class="external-link">mlr3learners</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># suppress messages during fitting</span></span>
-<span><span class="fu">lgr</span><span class="fu">::</span><span class="fu"><a href="https://s-fleck.github.io/lgr/reference/get_logger.html" class="external-link">get_logger</a></span><span class="op">(</span><span class="st">"mlr3"</span><span class="op">)</span><span class="op">$</span><span class="fu">set_threshold</span><span class="op">(</span><span class="st">"warn"</span><span class="op">)</span></span>
-<span></span>
+<span><span class="fu">lgr</span><span class="fu">::</span><span class="fu"><a href="https://s-fleck.github.io/lgr/reference/get_logger.html" class="external-link">get_logger</a></span><span class="op">(</span><span class="st">"mlr3"</span><span class="op">)</span><span class="op">$</span><span class="fu">set_threshold</span><span class="op">(</span><span class="st">"warn"</span><span class="op">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span></span>
 <span><span class="co"># set learners for nuisance functions</span></span>
 <span><span class="va">learner_lm</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://mlr3.mlr-org.com/reference/mlr_sugar.html" class="external-link">lrn</a></span><span class="op">(</span><span class="st">"regr.lm"</span><span class="op">)</span></span>
 <span><span class="va">learner_logit</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://mlr3.mlr-org.com/reference/mlr_sugar.html" class="external-link">lrn</a></span><span class="op">(</span><span class="st">"classif.log_reg"</span>, predict_type <span class="op">=</span> <span class="st">"prob"</span><span class="op">)</span></span>
@@ -166,18 +167,18 @@
 <span><span class="va">att_22_dml</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/ddd.html">ddd</a></span><span class="op">(</span>yname <span class="op">=</span> <span class="st">"y"</span>, tname <span class="op">=</span> <span class="st">"time"</span>, idname <span class="op">=</span> <span class="st">"id"</span>, gname <span class="op">=</span> <span class="st">"state"</span>,</span>
 <span>                  pname <span class="op">=</span> <span class="st">"partition"</span>, xformla <span class="op">=</span> <span class="op">~</span><span class="va">cov1</span> <span class="op">+</span> <span class="va">cov2</span> <span class="op">+</span> <span class="va">cov3</span> <span class="op">+</span> <span class="va">cov4</span>,</span>
 <span>                  data <span class="op">=</span> <span class="va">df</span>, control_group <span class="op">=</span> <span class="st">"nevertreated"</span>,</span>
-<span>                  est_method <span class="op">=</span> <span class="st">"dml"</span>, learners <span class="op">=</span> <span class="va">learners</span>, n_folds <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span>
+<span>                  est_method <span class="op">=</span> <span class="st">"dml"</span>, learners <span class="op">=</span> <span class="va">learners</span>, n_folds <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">att_22_dml</span><span class="op">)</span></span>
 <span><span class="co">#&gt;  Call:</span></span>
 <span><span class="co">#&gt; ddd(yname = "y", tname = "time", idname = "id", gname = "state", </span></span>
 <span><span class="co">#&gt;     pname = "partition", xformla = ~cov1 + cov2 + cov3 + cov4, </span></span>
 <span><span class="co">#&gt;     data = df, control_group = "nevertreated", est_method = "dml", </span></span>
-<span><span class="co">#&gt;     learners = learners, n_folds = 5)</span></span>
+<span><span class="co">#&gt;     learners = learners, n_folds = 10)</span></span>
 <span><span class="co">#&gt; =========================== DDD Summary ==============================</span></span>
 <span><span class="co">#&gt;  DML-DDD estimation for the ATT: </span></span>
 <span><span class="co">#&gt;      ATT       Std. Error    Pr(&gt;|t|)  [95% Ptwise. Conf. Band]              </span></span>
-<span><span class="co">#&gt;     -0.9096       1.4701       0.5361      -3.7911       1.9718              </span></span>
+<span><span class="co">#&gt;     -0.0884       0.0461       0.0554      -0.1788       0.0021              </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;  Note: * indicates that the confidence interval does not contain zero.</span></span>
 <span><span class="co">#&gt;  --------------------------- Data Info   -----------------------------</span></span>
@@ -185,15 +186,15 @@
 <span><span class="co">#&gt;  Outcome variable: y</span></span>
 <span><span class="co">#&gt;  Qualification variable: partition</span></span>
 <span><span class="co">#&gt;  No. of units at each subgroup:</span></span>
-<span><span class="co">#&gt;    treated-and-eligible: 131</span></span>
-<span><span class="co">#&gt;    treated-but-ineligible: 133</span></span>
-<span><span class="co">#&gt;    eligible-but-untreated: 116</span></span>
-<span><span class="co">#&gt;    untreated-and-ineligible: 120</span></span>
+<span><span class="co">#&gt;    treated-and-eligible: 1232</span></span>
+<span><span class="co">#&gt;    treated-but-ineligible: 1285</span></span>
+<span><span class="co">#&gt;    eligible-but-untreated: 1256</span></span>
+<span><span class="co">#&gt;    untreated-and-ineligible: 1227</span></span>
 <span><span class="co">#&gt;  --------------------------- Algorithms ------------------------------</span></span>
 <span><span class="co">#&gt;  Outcome Regression estimated using: Linear Model</span></span>
 <span><span class="co">#&gt;  Propensity score estimated using: Logistic Regression</span></span>
 <span><span class="co">#&gt;  -------------------------- Cross-fitting  ---------------------------</span></span>
-<span><span class="co">#&gt;  No. of folds:  5</span></span>
+<span><span class="co">#&gt;  No. of folds:  10</span></span>
 <span><span class="co">#&gt;  Apply cross-fitting: TRUE</span></span>
 <span><span class="co">#&gt;  --------------------------- Std. Errors  ----------------------------</span></span>
 <span><span class="co">#&gt;  Level of significance:  0.05</span></span>
@@ -201,12 +202,13 @@
 <span><span class="co">#&gt;  Type of confidence band:  Pointwise Confidence Interval</span></span>
 <span><span class="co">#&gt;  =====================================================================</span></span>
 <span><span class="co">#&gt;  See Ortiz-Villavicencio and Sant'Anna (2025) for details.</span></span></code></pre></div>
+<p>The results suggest close agreement between the doubly robust estimator and the double machine learning estimator, which is expected since the DGP is linear. The difference in the estimates is due to randomness in the cross-fitting procedure used in double machine learning.</p>
 </div>
 <div class="section level4">
 <h4 id="case-multiple-periods-ddd-with-staggered-treatment-adoption">Case: Multiple Periods DDD with staggered treatment adoption<a class="anchor" aria-label="anchor" href="#case-multiple-periods-ddd-with-staggered-treatment-adoption"></a>
 </h4>
 <p>In this case, we simulate some data with a built-in function <code>gen_dgp_staggered</code> that generates a multiple-period DDD setup with staggered treatment adoption. This function receives the number of units and the type of DGP design to generate. The <code>gen_dgp_staggered</code> function returns a data frame with the required columns for the <code>ddd</code> function with 4 covariates.</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">1234</span><span class="op">)</span> <span class="co"># Set seed for reproducibility</span></span>
 <span><span class="co"># Simulate data for a multiple-period DDD setup with staggered treatment adoption</span></span>
 <span><span class="va">data</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/gen_dgp_mult_periods.html">gen_dgp_mult_periods</a></span><span class="op">(</span>size <span class="op">=</span> <span class="fl">500</span>, dgp_type <span class="op">=</span> <span class="fl">1</span><span class="op">)</span><span class="op">$</span><span class="va">data</span></span>
@@ -230,7 +232,7 @@
 <span><span class="co">#&gt; 5: -0.7822000      45</span></span>
 <span><span class="co">#&gt; 6: -0.7822000      45</span></span></code></pre></div>
 <p>Now we can estimate the group-time average treatment effect on the treated using the <code>ddd</code> function.</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Estimate the group-time average treatment effect on the treated, ATT(g,t)</span></span>
 <span></span>
 <span><span class="va">att_gt</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/ddd.html">ddd</a></span><span class="op">(</span>yname <span class="op">=</span> <span class="st">"y"</span>, tname <span class="op">=</span> <span class="st">"time"</span>, idname <span class="op">=</span> <span class="st">"id"</span>, gname <span class="op">=</span> <span class="st">"state"</span>, </span>
@@ -274,7 +276,7 @@
 <span><span class="co">#&gt;  =====================================================================</span></span>
 <span><span class="co">#&gt;  See Ortiz-Villavicencio and Sant'Anna (2025) for details.</span></span></code></pre></div>
 <p>Next, we can aggregate the group-time average treatment effect on the treated to obtain the event-study type estimates. The <code>agg_ddd</code> function allows us to aggregate the results from the <code>ddd</code> function.</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">es_e</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/agg_ddd.html">agg_ddd</a></span><span class="op">(</span><span class="va">att_gt</span>, type <span class="op">=</span> <span class="st">"eventstudy"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">es_e</span><span class="op">)</span></span>
@@ -303,7 +305,7 @@
 <span><span class="co">#&gt;  =====================================================================</span></span>
 <span><span class="co">#&gt;  See Ortiz-Villavicencio and Sant'Anna (2025) for details.</span></span></code></pre></div>
 <p>From these event-study type estimates, we can plot the results using the <code>ggplot</code> library to create crisp visualizations.</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">es_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/with.html" class="external-link">with</a></span><span class="op">(</span><span class="va">es_e</span><span class="op">$</span><span class="va">aggte_ddd</span>, <span class="op">{</span></span>
 <span>    <span class="fu">tibble</span><span class="fu">::</span><span class="fu"><a href="https://tibble.tidyverse.org/reference/tibble.html" class="external-link">tibble</a></span><span class="op">(</span>period   <span class="op">=</span> <span class="va">egt</span>,</span>
 <span>                   estimate <span class="op">=</span> <span class="va">att.egt</span>,</span>
@@ -334,12 +336,9 @@
 <span>          legend.position <span class="op">=</span> <span class="st">"right"</span><span class="op">)</span></span>
 <span>  </span>
 <span>  <span class="va">p</span></span></code></pre></div>
-<p><img src="reference/figures/README-unnamed-chunk-11-1.png"><!-- --></p>
+<p><img src="reference/figures/README-unnamed-chunk-13-1.png"><!-- --></p>
 <p>Finally, we can also estimate the group-time average treatment effect using a GMM-based estimator with not-yet-treated units as comparison group. This is done by setting the <code>control_group</code> parameter to <code>"notyettreated"</code> in the <code>ddd</code> function.</p>
-<ul>
-<li>⚠️ We recommend users to read our paper for more details on the GMM-based procedure and its difference with other estimators relying in not-yet-treated units as comparison group.</li>
-</ul>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># do the same but using GMM-based notyettreated</span></span>
 <span><span class="va">att_gt_nyt</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/ddd.html">ddd</a></span><span class="op">(</span>yname <span class="op">=</span> <span class="st">"y"</span>, tname <span class="op">=</span> <span class="st">"time"</span>, idname <span class="op">=</span> <span class="st">"id"</span>, gname <span class="op">=</span> <span class="st">"state"</span>, </span>
 <span>              pname <span class="op">=</span> <span class="st">"partition"</span>, xformla <span class="op">=</span> <span class="op">~</span><span class="va">cov1</span> <span class="op">+</span> <span class="va">cov2</span> <span class="op">+</span> <span class="va">cov3</span> <span class="op">+</span> <span class="va">cov4</span>,</span>
@@ -381,6 +380,10 @@
 <span><span class="co">#&gt;  Type of confidence band:  Pointwise Confidence Interval</span></span>
 <span><span class="co">#&gt;  =====================================================================</span></span>
 <span><span class="co">#&gt;  See Ortiz-Villavicencio and Sant'Anna (2025) for details.</span></span></code></pre></div>
+<p>From this result, we can observe the standard errors for <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>A</mi><mi>T</mi><mi>T</mi><mrow><mo stretchy="true" form="prefix">(</mo><mn>2</mn><mo>,</mo><mn>2</mn><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">ATT(2,2)</annotation></semantics></math> are lower than the ones obtained with the <code>control_group = "nevertreated"</code> option since we leverage the additional information from the not-yet-treated units in the estimation.</p>
+<ul>
+<li>⚠️ We recommend users to read our paper for further details on the GMM-based procedure and its difference with other estimators relying in not-yet-treated units as comparison group.</li>
+</ul>
 </div>
 </div>
 <div class="section level2">
@@ -405,7 +408,7 @@
 <ul>
 <li>🔲 User-specified data-driven models for estimations of nuisance parameters.
 <ul>
-<li>This is partially implemented via the <code>mlr3</code> package, which provides a unified interface for off-the-shelf ML algorithms in R. Users can specify their own models for estimating outcome models and propensity scores. Currently, two-period DDD with single treatment date is the only setting supported.</li>
+<li>This is partially implemented via <code>mlr3</code> and <code>DoubleML</code> under-the-hood. Users can specify their own models for estimating outcome models and propensity scores. Currently, two-period DDD with single treatment date is the only setting supported.</li>
 </ul>
 </li>
 <li>🔲 Built-in plotting capabilities for visualizing results.

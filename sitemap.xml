@@ -8,15 +8,15 @@
 <url><loc>http://marcelortiz.com/triplediff/reference/att_dr.html</loc></url>
 <url><loc>http://marcelortiz.com/triplediff/reference/compute_aggregation.html</loc></url>
 <url><loc>http://marcelortiz.com/triplediff/reference/compute_dml_nuisances.html</loc></url>
-<url><loc>http://marcelortiz.com/triplediff/reference/compute_scores.html</loc></url>
 <url><loc>http://marcelortiz.com/triplediff/reference/compute_se_agg.html</loc></url>
 <url><loc>http://marcelortiz.com/triplediff/reference/ddd.html</loc></url>
 <url><loc>http://marcelortiz.com/triplediff/reference/gen_dgp_2periods.html</loc></url>
 <url><loc>http://marcelortiz.com/triplediff/reference/gen_dgp_mult_periods.html</loc></url>
 <url><loc>http://marcelortiz.com/triplediff/reference/generate_test_panel.html</loc></url>
 <url><loc>http://marcelortiz.com/triplediff/reference/get_agg_inf_func.html</loc></url>
-<url><loc>http://marcelortiz.com/triplediff/reference/get_score_elements.html</loc></url>
+<url><loc>http://marcelortiz.com/triplediff/reference/get_local_folds.html</loc></url>
 <url><loc>http://marcelortiz.com/triplediff/reference/index.html</loc></url>
+<url><loc>http://marcelortiz.com/triplediff/reference/make_stratified_folds.html</loc></url>
 <url><loc>http://marcelortiz.com/triplediff/reference/mboot.html</loc></url>
 </urlset>
 
