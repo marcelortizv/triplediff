@@ -21,7 +21,7 @@ devtools::load_all()
 cat(
   badger::badge_custom("release lifecycle", "alpha", "orange"),
   badger::badge_devel("marcelortizv/triplediff", "blue"),
-  badger::badge_last_commit("marcelortizv/triplediff"),
+  # badger::badge_last_commit("marcelortizv/triplediff"),
   badger::badge_doi("10.48550/arXiv.2505.09942", "yellow")
 )
 ```
