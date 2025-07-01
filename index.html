@@ -234,7 +234,7 @@
 <span><span class="co">#&gt; 6: -0.7822000      45</span></span></code></pre></div>
 <p>Now we can estimate the group-time average treatment effect on the treated using the <code>ddd</code> function.</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Estimate the group-time average treatment effect on the treated, ATT(g,t)</span></span>
+<code class="sourceCode R"><span><span class="co"># Estimate the group-time average treatment effect in DDD</span></span>
 <span></span>
 <span><span class="va">att_gt</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/ddd.html">ddd</a></span><span class="op">(</span>yname <span class="op">=</span> <span class="st">"y"</span>, tname <span class="op">=</span> <span class="st">"time"</span>, idname <span class="op">=</span> <span class="st">"id"</span>, gname <span class="op">=</span> <span class="st">"state"</span>, </span>
 <span>              pname <span class="op">=</span> <span class="st">"partition"</span>, xformla <span class="op">=</span> <span class="op">~</span><span class="va">cov1</span> <span class="op">+</span> <span class="va">cov2</span> <span class="op">+</span> <span class="va">cov3</span> <span class="op">+</span> <span class="va">cov4</span>,</span>
