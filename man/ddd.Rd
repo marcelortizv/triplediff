@@ -109,7 +109,7 @@ Furthermore, this package supports the application of machine learning methods f
 #----------------------------------------------------------
 set.seed(1234) # Set seed for reproducibility
 # Simulate data for a two-periods DDD setup
-df <- gen_dgp_2periods(size = 500, dgp_type = 1)$data
+df <- gen_dgp_2periods(size = 5000, dgp_type = 1)$data
 
 head(df)
 
@@ -126,16 +126,14 @@ summary(att_22)
 library(mlr3)
 library(mlr3learners)
 
-learner_rf <- lrn("classif.ranger", predict_type = "prob", num.trees = 100,
-               min.node.size = 1, importance = 'impurity')
-learner_regr <- lrn("regr.xgboost")
-
-learners <- list(ml_pa = learner_rf, ml_md = learner_regr)
+learner_lm <- lrn("regr.lm")
+learner_logit <- lrn("classif.log_reg", predict_type = "prob")
+learners <- list(ml_pa = learner_logit, ml_md = learner_lm)
 
 att_22_dml <- ddd(yname = "y", tname = "time", idname = "id", gname = "state",
                   pname = "partition", xformla = ~cov1 + cov2 + cov3 + cov4,
                  data = df, control_group = "nevertreated",
-                 est_method = "dml", learners = learners, n_folds = 3)
+                 est_method = "dml", learners = learners, n_folds = 10)
 
 summary(att_22_dml)
 

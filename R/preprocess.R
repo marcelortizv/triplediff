@@ -307,6 +307,7 @@ run_preprocess_2Periods <- function(yname,
 
   # Creating a post dummy variable based on tlist[2] (second period = post treatment)
   tlist <- dta[, sort(unique(get(tname)))]
+  glist <- dta[, sort(unique(get(gname)))] # this has to be [0, G], second position in treated group.
   dta[, post := as.numeric(get(tname) == tlist[2])]
 
   # Checking if covariates are time invariant in panel data case
@@ -344,9 +345,9 @@ run_preprocess_2Periods <- function(yname,
 
   # creating subgroup variable
   # 4 if (partition ==1 & treat == 1); 3 if (partition ==0 & treat == 1); 2 if (partition ==1 & treat == 0); 1 if (partition ==0 & treat == 0)
-  cleaned_data[, subgroup := fifelse(partition == 1 & treat == 1, 4,
-                                     fifelse(partition == 0 & treat == 1, 3,
-                                             fifelse(partition == 1 & treat == 0, 2, 1)))]
+  cleaned_data[, subgroup := fifelse(partition == 1 & treat == glist[2], 4,
+                                     fifelse(partition == 0 & treat == glist[2], 3,
+                                             fifelse(partition == 1 & treat == glist[1], 2, 1)))]
 
   # Flag for not enough observations for each subgroup
   # Calculate the size of each subgroup in the 'subgroup' column
