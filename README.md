@@ -88,28 +88,28 @@ required columns for the `ddd` function with 4 covariates.
 set.seed(1234) # Set seed for reproducibility
 # Simulate data for a two-periods DDD setup
 df <- gen_dgp_2periods(
-  size = 500, # Number of units
+  size = 5000, # Number of units
   dgp_type = 1 # Type of DGP design
 )$data
 
 head(df)
 #> Key: <id>
-#>       id state partition  time        y        cov1       cov2        cov3
-#>    <int> <num>     <num> <int>    <num>       <num>      <num>       <num>
-#> 1:     1     0         0     1 216.3097 -0.97080934  1.3995704  1.48834130
-#> 2:     1     0         0     2 430.9374 -0.97080934  1.3995704  1.48834130
-#> 3:     2     1         0     1 186.5831  0.02591115 -0.9747527  0.01714001
-#> 4:     2     1         0     2 375.9393  0.02591115 -0.9747527  0.01714001
-#> 5:     3     0         1     1 425.6606  0.97147321  0.3310760 -1.51021253
-#> 6:     3     0         1     2 639.5013  0.97147321  0.3310760 -1.51021253
+#>       id state partition  time        y        cov1       cov2      cov3
+#>    <int> <num>     <num> <int>    <num>       <num>      <num>     <num>
+#> 1:     1     0         0     1 209.9152 -0.97080934 -1.1726958 2.3893945
+#> 2:     1     0         0     2 417.5260 -0.97080934 -1.1726958 2.3893945
+#> 3:     2     0         0     1 211.4919  0.02591115  0.2763066 0.1063123
+#> 4:     2     0         0     2 420.3656  0.02591115  0.2763066 0.1063123
+#> 5:     3     0         0     1 221.9431  0.97147321 -0.4292088 0.5012794
+#> 6:     3     0         0     2 440.9623  0.97147321 -0.4292088 0.5012794
 #>          cov4 cluster
 #>         <num>   <int>
-#> 1:  0.3853346      15
-#> 2:  0.3853346      15
-#> 3: -0.7822000      41
-#> 4: -0.7822000      41
-#> 5:  0.2334469       5
-#> 6:  0.2334469       5
+#> 1:  0.2174955      39
+#> 2:  0.2174955      39
+#> 3: -0.1922253      29
+#> 4: -0.1922253      29
+#> 5:  1.1027248      44
+#> 6:  1.1027248      44
 ```
 
 Now we can estimate the average treatment effect on the treated (ATT)
@@ -130,7 +130,7 @@ summary(att_22)
 #> =========================== DDD Summary ==============================
 #>  DR-DDD estimation for the ATT: 
 #>      ATT       Std. Error    Pr(>|t|)  [95% Ptwise. Conf. Band]              
-#>      0.0439       0.2626       0.8672      -0.4708       0.5586              
+#>     -0.0780       0.0828       0.3463      -0.2404       0.0843              
 #> 
 #>  Note: * indicates that the confidence interval does not contain zero.
 #>  --------------------------- Data Info   -----------------------------
@@ -138,10 +138,10 @@ summary(att_22)
 #>  Outcome variable: y
 #>  Qualification variable: partition
 #>  No. of units at each subgroup:
-#>    treated-and-eligible: 131
-#>    treated-but-ineligible: 133
-#>    eligible-but-untreated: 116
-#>    untreated-and-ineligible: 120
+#>    treated-and-eligible: 1232
+#>    treated-but-ineligible: 1285
+#>    eligible-but-untreated: 1256
+#>    untreated-and-ineligible: 1227
 #>  --------------------------- Algorithms ------------------------------
 #>  Outcome Regression estimated using: OLS
 #>  Propensity score estimated using: Maximum Likelihood
@@ -157,9 +157,14 @@ We can also leverage the fact that our estimators are doubly robust to
 rely on data-driven models for estimating the nuisance parameters. For
 example, we can use a flexible machine learning like `xgboost` to
 estimate outcome models and `ranger` (Random Forest) to estimate the
-propensity scores. The engine behind this approach is the
+propensity scores. The engine behind this implementation is the
 [mlr3](https://mlr3.mlr-org.com/index.html) package, which provides a
-unified interface for machine learning in R.
+unified interface for off-the-shelf ML algorithms in R, and the
+[DoubleML](https://docs.doubleml.org/stable/index.html) package, which
+implements the double machine learning framework. Since our DGP is
+linear, we can use `regr.lm` and `classif.log_reg` learners from
+`mlr3learners` to estimate the outcome and propensity score models,
+respectively, and compare it with the previous results.
 
 ``` r
 library(mlr3)
@@ -167,6 +172,9 @@ library(mlr3learners)
 
 # suppress messages during fitting
 lgr::get_logger("mlr3")$set_threshold("warn")
+```
+
+``` r
 
 # set learners for nuisance functions
 learner_lm <- lrn("regr.lm")
@@ -177,18 +185,18 @@ learners <- list(ml_pa = learner_logit, ml_md = learner_lm)
 att_22_dml <- ddd(yname = "y", tname = "time", idname = "id", gname = "state",
                   pname = "partition", xformla = ~cov1 + cov2 + cov3 + cov4,
                   data = df, control_group = "nevertreated",
-                  est_method = "dml", learners = learners, n_folds = 5)
+                  est_method = "dml", learners = learners, n_folds = 10)
 
 summary(att_22_dml)
 #>  Call:
 #> ddd(yname = "y", tname = "time", idname = "id", gname = "state", 
 #>     pname = "partition", xformla = ~cov1 + cov2 + cov3 + cov4, 
 #>     data = df, control_group = "nevertreated", est_method = "dml", 
-#>     learners = learners, n_folds = 5)
+#>     learners = learners, n_folds = 10)
 #> =========================== DDD Summary ==============================
 #>  DML-DDD estimation for the ATT: 
 #>      ATT       Std. Error    Pr(>|t|)  [95% Ptwise. Conf. Band]              
-#>     -0.9096       1.4701       0.5361      -3.7911       1.9718              
+#>     -0.0884       0.0461       0.0554      -0.1788       0.0021              
 #> 
 #>  Note: * indicates that the confidence interval does not contain zero.
 #>  --------------------------- Data Info   -----------------------------
@@ -196,15 +204,15 @@ summary(att_22_dml)
 #>  Outcome variable: y
 #>  Qualification variable: partition
 #>  No. of units at each subgroup:
-#>    treated-and-eligible: 131
-#>    treated-but-ineligible: 133
-#>    eligible-but-untreated: 116
-#>    untreated-and-ineligible: 120
+#>    treated-and-eligible: 1232
+#>    treated-but-ineligible: 1285
+#>    eligible-but-untreated: 1256
+#>    untreated-and-ineligible: 1227
 #>  --------------------------- Algorithms ------------------------------
 #>  Outcome Regression estimated using: Linear Model
 #>  Propensity score estimated using: Logistic Regression
 #>  -------------------------- Cross-fitting  ---------------------------
-#>  No. of folds:  5
+#>  No. of folds:  10
 #>  Apply cross-fitting: TRUE
 #>  --------------------------- Std. Errors  ----------------------------
 #>  Level of significance:  0.05
@@ -213,6 +221,11 @@ summary(att_22_dml)
 #>  =====================================================================
 #>  See Ortiz-Villavicencio and Sant'Anna (2025) for details.
 ```
+
+The results suggest close agreement between the doubly robust estimator
+and the double machine learning estimator, which is expected since the
+DGP is linear. The difference in the estimates is due to randomness in
+the cross-fitting procedure used in double machine learning.
 
 #### Case: Multiple Periods DDD with staggered treatment adoption
 
@@ -366,16 +379,12 @@ p <- ggplot(es_df, aes(period, estimate)) +
   p
 ```
 
-![](man/figures/README-unnamed-chunk-11-1.png)<!-- -->
+![](man/figures/README-unnamed-chunk-13-1.png)<!-- -->
 
 Finally, we can also estimate the group-time average treatment effect
 using a GMM-based estimator with not-yet-treated units as comparison
 group. This is done by setting the `control_group` parameter to
 `"notyettreated"` in the `ddd` function.
-
-- ⚠️ We recommend users to read our paper for more details on the
-  GMM-based procedure and its difference with other estimators relying
-  in not-yet-treated units as comparison group.
 
 ``` r
 # do the same but using GMM-based notyettreated
@@ -421,6 +430,15 @@ summary(att_gt_nyt)
 #>  See Ortiz-Villavicencio and Sant'Anna (2025) for details.
 ```
 
+From this result, we can observe the standard errors for $ATT(2,2)$ are
+lower than the ones obtained with the `control_group = "nevertreated"`
+option since we leverage the additional information from the
+not-yet-treated units in the estimation.
+
+- ⚠️ We recommend users to read our paper for further details on the
+  GMM-based procedure and its difference with other estimators relying
+  in not-yet-treated units as comparison group.
+
 ## Release Note 📢
 
 The current version is released in an **alpha** stage: the core features
@@ -447,11 +465,10 @@ to report bugs, request features or provide feedback.
 
 - 🔲 User-specified data-driven models for estimations of nuisance
   parameters.
-  - This is partially implemented via the `mlr3` package, which provides
-    a unified interface for off-the-shelf ML algorithms in R. Users can
-    specify their own models for estimating outcome models and
-    propensity scores. Currently, two-period DDD with single treatment
-    date is the only setting supported.
+  - This is partially implemented via `mlr3` and `DoubleML`
+    under-the-hood. Users can specify their own models for estimating
+    outcome models and propensity scores. Currently, two-period DDD with
+    single treatment date is the only setting supported.
 - 🔲 Built-in plotting capabilities for visualizing results.
   - This can be done easily by users. E.g., event-study type estimates
     can be plotted using `ggplot2`. See the quick start example.

@@ -36,7 +36,7 @@ att_dr <- function(did_preprocessed) {
   use_parallel <- did_preprocessed$use_parallel # to perform bootstrap
   cores <- did_preprocessed$cores # to perform bootstrap
   cband <- did_preprocessed$cband # to perform bootstrap + simult. conf. band
-  inffunc <- did_preprocessed$inffunc
+  inffunc <- did_preprocessed$inffunc # flag to return influence function
   subgroup_counts <- did_preprocessed$subgroup_counts
 
   # --------------------------------------------------------------------

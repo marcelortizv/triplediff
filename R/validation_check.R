@@ -108,16 +108,16 @@ validate_args_2Periods <- function(args, dta){
   # FLAGS FOR DML ESTIMATION
   if (est_method=="dml") {
     if (is.null(learners)) {
-      stop("learners should be provided when est_method = 'dml'")
+      stop("learners should be provided when est_method = 'dml'. Please, check documentation.")
     }
 
     if (is.null(n_folds)) {
-      stop("n_folds should be provided when est_method = 'dml'")
+      stop("n_folds should be provided when est_method = 'dml'. Please, check documentation.")
     }
 
     # check if there 2 learners provided in learners list
     if (length(learners) != 2) {
-      stop("learners must be a list of two learners: ml_pa and ml_md")
+      stop("learners must be a list of two learners: ml_pa and ml_md. Please, check documentation.")
     }
 
     # check if learner is a classifier type

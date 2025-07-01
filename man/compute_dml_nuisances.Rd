@@ -2,27 +2,30 @@
 % Please edit documentation in R/compute_dml.R
 \name{compute_dml_nuisances}
 \alias{compute_dml_nuisances}
-\title{Compute the propensity score for the given condition subgroup}
+\title{Function to compute the DML ATT + score function}
 \usage{
 compute_dml_nuisances(
   data,
-  condition_subgroup,
   xformula,
   ml_pa,
   ml_md,
+  fold_test,
+  fold_train,
   n_folds
 )
 }
 \arguments{
 \item{data}{A data.table containing the data processed}
 
-\item{condition_subgroup}{The condition subgroup for which to compute the propensity score}
-
 \item{xformula}{The formula for the propensity score model}
 
-\item{ml_pa}{The machine learning algorithm to use for the propensity score model}
+\item{ml_pa}{\code{mlr3} learner for propensity score estimation}
 
-\item{ml_md}{The machine learning algorithm to use for the regression adjustment model}
+\item{ml_md}{\code{mlr3} learner for regression adjustment estimation}
+
+\item{fold_test}{List of test indices for global folds}
+
+\item{fold_train}{List of train indices for global folds}
 
 \item{n_folds}{The number of folds for cross-fitting}
 }
@@ -30,6 +33,6 @@ compute_dml_nuisances(
 A list containing ids, estimator for each k fold, and scores
 }
 \description{
-Compute the propensity score for the given condition subgroup
+Function to compute the DML ATT + score function
 }
 \keyword{internal}

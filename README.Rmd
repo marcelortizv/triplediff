@@ -79,7 +79,7 @@ First, we simulate some data with a built-in function `gen_dgp_2periods` that ge
 set.seed(1234) # Set seed for reproducibility
 # Simulate data for a two-periods DDD setup
 df <- gen_dgp_2periods(
-  size = 500, # Number of units
+  size = 5000, # Number of units
   dgp_type = 1 # Type of DGP design
 )$data
 
@@ -99,14 +99,26 @@ summary(att_22)
 
 ```
 
-We can also leverage the fact that our estimators are doubly robust to rely on data-driven models for estimating the nuisance parameters. For example, we can use a flexible machine learning like `xgboost` to estimate outcome models and `ranger` (Random Forest) to estimate the propensity scores. The engine behind this approach is the [mlr3](https://mlr3.mlr-org.com/index.html) package, which provides a unified interface for machine learning in R.
+We can also leverage the fact that our estimators are doubly robust to rely on data-driven models for estimating the nuisance parameters. For example, we can use a flexible machine learning like `xgboost` to estimate outcome models and `ranger` (Random Forest) to estimate the propensity scores. The engine behind this implementation is the [mlr3](https://mlr3.mlr-org.com/index.html) package, which provides a unified interface for off-the-shelf ML algorithms in R, and the [DoubleML](https://docs.doubleml.org/stable/index.html) package, which implements the double machine learning framework. Since our DGP is linear, we can use `regr.lm` and `classif.log_reg` learners from `mlr3learners` to estimate the outcome and propensity score models, respectively, and compare it with the previous results.
 
-```{r}
+
+```{r, eval = FALSE}
 library(mlr3)
 library(mlr3learners)
 
 # suppress messages during fitting
 lgr::get_logger("mlr3")$set_threshold("warn")
+```
+
+```{r, echo=FALSE, results="hide", warning=FALSE, message=FALSE}
+library(mlr3)
+library(mlr3learners)
+
+# suppress messages during fitting
+lgr::get_logger("mlr3")$set_threshold("warn")
+```
+
+```{r, warning=FALSE}
 
 # set learners for nuisance functions
 learner_lm <- lrn("regr.lm")
@@ -117,10 +129,12 @@ learners <- list(ml_pa = learner_logit, ml_md = learner_lm)
 att_22_dml <- ddd(yname = "y", tname = "time", idname = "id", gname = "state",
                   pname = "partition", xformla = ~cov1 + cov2 + cov3 + cov4,
                   data = df, control_group = "nevertreated",
-                  est_method = "dml", learners = learners, n_folds = 5)
+                  est_method = "dml", learners = learners, n_folds = 10)
 
 summary(att_22_dml)
 ```
+
+The results suggest close agreement between the doubly robust estimator and the double machine learning estimator, which is expected since the DGP is linear. The difference in the estimates is due to randomness in the cross-fitting procedure used in double machine learning.
 
 #### Case: Multiple Periods DDD with staggered treatment adoption
 
@@ -196,8 +210,6 @@ p <- ggplot(es_df, aes(period, estimate)) +
 
 Finally, we can also estimate the group-time average treatment effect using a GMM-based estimator with not-yet-treated units as comparison group. This is done by setting the `control_group` parameter to `"notyettreated"` in the `ddd` function. 
 
- -  ⚠️ We recommend users to read our paper for more details on the GMM-based procedure and its difference with other estimators relying in not-yet-treated units as comparison group.
-
 ```{r}
 # do the same but using GMM-based notyettreated
 att_gt_nyt <- ddd(yname = "y", tname = "time", idname = "id", gname = "state", 
@@ -208,6 +220,10 @@ att_gt_nyt <- ddd(yname = "y", tname = "time", idname = "id", gname = "state",
 summary(att_gt_nyt)
 ```
 
+From this result, we can observe the standard errors for $ATT(2,2)$ are lower than the ones obtained with the `control_group = "nevertreated"` 
+option since we leverage the additional information from the not-yet-treated units in the estimation.
+
+ -  ⚠️ We recommend users to read our paper for further details on the GMM-based procedure and its difference with other estimators relying in not-yet-treated units as comparison group.
 
 ## Release Note 📢
 
@@ -226,7 +242,7 @@ Use [GitHub Issues](https://github.com/marcelortizv/triplediff/issues) to report
 ### ⚠️ Not Yet Supported
 
 - 🔲 User-specified data-driven models for estimations of nuisance parameters.
-  - This is partially implemented via the `mlr3` package, which provides a unified interface for off-the-shelf ML algorithms in R. Users can specify their own models for estimating outcome models and propensity scores. Currently, two-period DDD with single treatment date is the only setting supported.
+  - This is partially implemented via `mlr3` and `DoubleML` under-the-hood. Users can specify their own models for estimating outcome models and propensity scores. Currently, two-period DDD with single treatment date is the only setting supported.
 - 🔲 Built-in plotting capabilities for visualizing results.
   - This can be done easily by users. E.g., event-study type estimates can be plotted using `ggplot2`. See the quick start example.
 - 🔲 Repeated cross-sectional data.

@@ -57,14 +57,14 @@ Varying base period reports ATT(g,t) right before treatment. Universal base peri
 
 \item{est_method}{The estimation method to be used. Default is \code{"dr"} (doubly robust). It computes propensity score using logistic regression
 and outcome regression using OLS. The alternative are \code{c("reg", "ipw", "dml")}. The last option allows the user to compute propensity score using a
-machine learning algorithm and outcome regression using a different machine learning algorithm based on mlr3 library. We provide some examples for popular learners but
+machine learning algorithm and outcome regression using a different machine learning algorithm based on \code{mlr3} library. We provide some examples for popular learners but
 the user can also provide their own learner.}
 
 \item{learners}{A list of learners to be used in the estimation. It should be a list of two elements,
 the first element being the learner for the propensity score and the second element being the learner for the outcome regression.
 Default is \code{NULL}, then OLS and MLE Logit is used to estimate nuisances parameters. If \code{est_method = "dml"}, user have to specify \code{learners}.}
 
-\item{n_folds}{The number of folds to be used in the cross-fitting. Default is \code{NULL}. If \code{est_method = "dml"}, user have to specify \code{n_folds}.}
+\item{n_folds}{The number of folds to be used in the cross-fitting. Default is \code{NULL}. If \code{est_method = "dml"}, user have to specify \code{n_folds}, being at least 2.}
 
 \item{weightsname}{The name of the column containing the weights. Default is \code{NULL}. As part of data processing, weights are enforced to be normalized
 and have mean 1 across all observations.}
@@ -109,10 +109,7 @@ Furthermore, this package supports the application of machine learning methods f
 #----------------------------------------------------------
 set.seed(1234) # Set seed for reproducibility
 # Simulate data for a two-periods DDD setup
-df <- gen_dgp_2periods(
-size = 500, # Number of units
-dgp_type = 1 # Type of DGP design
-)$data
+df <- gen_dgp_2periods(size = 500, dgp_type = 1)$data
 
 head(df)
 

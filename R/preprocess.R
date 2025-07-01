@@ -37,11 +37,20 @@ run_nopreprocess_2periods <- function(yname,
     args$alpha <- alpha
   }
 
-  # For dml, we only allow analytical standard errors.
-  if (est_method == "dml" & boot == TRUE){
-    warning("Bootstrapping is not allowed for DML. Setting boot = FALSE.")
-    boot <- FALSE
-    args$boot <- boot
+  # For dml, we only allow analytical standard errors. User needs to specify the number fo folds.
+  if (est_method == "dml"){
+    # allowing bootstrap only for dr.
+    if (boot == TRUE){
+      warning("Bootstrapping is not allowed for DML. Setting boot = FALSE.")
+      boot <- FALSE
+      args$boot <- boot
+    }
+    # number of folds
+    if (n_folds < 2 || is.null(n_folds)) {
+      warning("For DML estimation, n_folds must be at least 2. Setting n_folds = 2.")
+      n_folds <- 2
+      args$n_folds <- n_folds
+    }
   }
 
   # setting default bootstrap reps
@@ -467,7 +476,7 @@ run_preprocess_multPeriods <- function(yname,
 
   # For dml, we only allow analytical standard errors.
   if (est_method == "dml" & boot == TRUE){
-    warning("Bootstrapping is not allowed for DML. Setting boot = FALSE.")
+    warning("Bootstrapping is not currently allowed for DML. Setting boot = FALSE.")
     boot <- FALSE
     args$boot <- boot
   }

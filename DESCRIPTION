@@ -24,7 +24,9 @@ Imports:
     parallel (>= 1.4.0),
     parglm (>= 0.1.7),
     Rcpp (>= 1.0.12),
-    speedglm (>= 0.3-5)
+    speedglm (>= 0.3-5),
+    DoubleML (>= 1.0.0),
+    caret (>= 7.0.1)
 LinkingTo: 
     Rcpp (>= 1.0.12)
 Suggests: 

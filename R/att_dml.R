@@ -25,49 +25,63 @@
 #' @noRd
 NULL
 # ------------------------------------------------------------------------------
-
 att_dml <- function(did_preprocessed) {
 
   # get parameters needed
-  data <- did_preprocessed$preprocessed_data
+  data <- copy(did_preprocessed$preprocessed_data)
   xformula <- did_preprocessed$xformula
   learners <- did_preprocessed$learners
   n_folds <- did_preprocessed$n_folds
   alpha <- did_preprocessed$alpha
   subgroup_counts <- did_preprocessed$subgroup_counts
+  inffunc <- did_preprocessed$inffunc # flag to return influence function
+  ## ---------- Learners ---------------------------
+  ml_pa = learners$ml_pa # classifier for propensity score
+  ml_md = learners$ml_md # regression for outcome model
+
+  ## ---------- create relevant variables -----------------
+  data <- get_wide_data(data)
+
+  # Adding treatment variable for model P(1{S=2, Q=1}|X)
+  data[, "D" := ifelse(data$subgroup == 4, 1, 0)]
+  # Adding outcome variable for model E[deltaY | X]
+  data[, deltaY:= y1 - y0]
+
+  ## ---------- Global folds adapted for DDD -----------
+  global_folds <- make_stratified_folds(data = data,
+                                        strat_col = "subgroup",
+                                        n_folds = n_folds,
+                                        seed = 1234)
+
+  fold_test <- global_folds$fold_test
+  fold_train <- global_folds$fold_train
 
   # --------------------------------------------------------------------
   # Compute ATT
   # --------------------------------------------------------------------
 
   # Compute DML Triple Difference Estimator
-  dml_att_scores_3 <- compute_dml_nuisances(data, condition_subgroup = 3,
-                                            xformula,
-                                            ml_pa = learners$ml_pa,
-                                            ml_md = learners$ml_md,
-                                            n_folds = n_folds)
-
-  dml_att_scores_2 <- compute_dml_nuisances(data, condition_subgroup = 2,
-                                            xformula,
-                                            ml_pa = learners$ml_pa,
-                                            ml_md = learners$ml_md,
-                                            n_folds = n_folds)
-
-  dml_att_scores_1 <- compute_dml_nuisances(data, condition_subgroup = 1,
-                                            xformula,
-                                            ml_pa = learners$ml_pa,
-                                            ml_md = learners$ml_md,
-                                            n_folds = n_folds)
+  dml_att_scores <- compute_dml_nuisances(data = data,
+                                          xformula = xformula,
+                                          ml_pa = ml_pa,
+                                          ml_md = ml_md,
+                                          fold_test = fold_test,
+                                          fold_train = fold_train,
+                                          n_folds = n_folds)
 
   # Compute ATT
-  att_dml = mean_ddd_k(dml_att_scores_3) + mean_ddd_k(dml_att_scores_2) - mean_ddd_k(dml_att_scores_1)
+  att_dml = dml_att_scores$att[["3"]] + dml_att_scores$att[["2"]] - dml_att_scores$att[["1"]]
 
   # Inference
-  scores_3 <- get_long_scores(dml_att_scores_3)
-  scores_2 <- get_long_scores(dml_att_scores_2)
-  scores_1 <- get_long_scores(dml_att_scores_1)
+  se_inf_dml_scores <- compute_se_dml(dml_att_scores$influence_matrix)
+  se_dml <- se_inf_dml_scores$se
+  # Return null if inffunc is FALSE
+  if (inffunc == FALSE){
+    inf_func <- NULL
+  } else {
+    inf_func <- se_inf_dml_scores$inf_func
+  }
 
-  se_dml <- compute_se_dml(scores_3, scores_2, scores_1)
 
   # estimate upper bound at 1-alpha% confidence level
   ci_upper <- att_dml + qnorm(1-alpha/2) * se_dml
@@ -82,6 +96,7 @@ att_dml <- function(did_preprocessed) {
                se = se_dml,
                uci = ci_upper,
                lci = ci_lower,
+               inf_func = inf_func,
                subgroup_counts = subgroup_counts
                ))
 
