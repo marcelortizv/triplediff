@@ -22,9 +22,7 @@
 #'
 #' @keywords internal
 #' @return A list with the estimated ATT, standard error, upper and lower confidence intervals, and n_folds.
-#' @noRd
-NULL
-# ------------------------------------------------------------------------------
+#' @export
 att_dml <- function(did_preprocessed) {
 
   # get parameters needed

@@ -736,9 +736,11 @@ run_preprocess_multPeriods <- function(yname,
   return(out)
 }
 
-# @keywords internal
-# @export
-# Process results inside att_gt_dr function
+#' Process results inside att_gt_dr and att_gt_dml function
+#' @param attgt_list A list of results from the `att_gt_dr` or `att_gt_dml` function.
+#' @return A list with three vectors: `group`, `att`, and `periods` containing the group, average treatment effect, and time periods respectively.
+#' @keywords internal
+#' @export
 process_attgt <- function(attgt_list){
   groups <- length(unique(unlist(BMisc::getListElement(attgt_list, "group"))))
   time_periods <- length(unique(unlist(BMisc::getListElement(attgt_list, "year"))))
