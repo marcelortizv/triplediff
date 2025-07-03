@@ -38,7 +38,7 @@ att_dml <- function(did_preprocessed) {
   ml_md = learners$ml_md # regression for outcome model
 
   ## ---------- create relevant variables -----------------
-  data <- get_wide_data(data)
+  data <- get_wide_data(data, xformula)
 
   # Adding treatment variable for model P(1{S=2, Q=1}|X)
   data[, "D" := ifelse(data$subgroup == 4, 1, 0)]

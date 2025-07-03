@@ -14,6 +14,35 @@ NULL
 # FUNCTIONS FOR DML
 # -------------------------------------------------
 
+# Utility function to reshape the dataset from long to wide format
+get_wide_data <- function(dt, xformula = ~ 1) {
+
+  if (!inherits(dt, "data.table"))
+    dt <- data.table::as.data.table(dt)
+
+  if ("period" %in% names(dt)) dt[, period := NULL]
+
+  x_cols <- attr(terms(xformula), "term.labels")
+  inv_cols <- setdiff(names(dt), c("id", "y", "post", x_cols))
+
+  ## wide Y
+  cast_formula <- as.formula(
+    paste("id +", paste(inv_cols, collapse = " +"), "~ post")
+  )
+  wide_y <- data.table::dcast(dt, cast_formula, value.var = "y")
+  data.table::setnames(wide_y, c("0", "1"), c("y0", "y1"))
+
+  ## covariates at post == 0
+  if (length(x_cols)) {
+    base_x <- dt[post == 0, .SD[1L], by = id, .SDcols = x_cols]
+    data.table::setkey(base_x, id)     # keyed join is fastest
+    wide_y <- base_x[wide_y]           # left join keeps order
+  }
+
+  wide_y[]
+}
+
+
 #' Stratified K-fold splits for cross-fitting
 #' Quickly builds *train* and *test* index lists that preserve the class
 #' proportions of a categorical variable in every fold

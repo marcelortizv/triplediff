@@ -28,31 +28,6 @@ get_formula_reg <- function(xformula, weights = TRUE){
   return(formula_obj)
 }
 
-# Utility function to reshape the dataset from long to wide format
-get_wide_data <- function(dt) {
-  # Ensure the input is a data.table
-  if (!inherits(dt, "data.table")) {
-    dt <- as.data.table(dt)
-  }
-
-  # drop the period column
-  dt[, period := NULL]
-
-  # Extract the names of the invariant columns
-  invariant_cols <- setdiff(names(dt), c("id", "y", "post"))
-
-  # Create a formula for dcast that includes all invariant columns
-  formula <- paste("id +", paste(invariant_cols, collapse = " +"), "~ post")
-
-  # Reshape from long to wide format using dcast
-  reshaped_dt <- dcast(dt, formula, value.var = "y")
-
-  # rename the columns for clarity
-  setnames(reshaped_dt, old = c("0", "1"), new = c("y0", "y1"))
-
-  return(reshaped_dt)
-}
-
 # Function to compute propensity scores using parglm for multiple subgroups
 compute_pscore <- function(data, condition_subgroup, xformula) {
   # get formula for pscore estimation using covariates
