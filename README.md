@@ -195,7 +195,7 @@ summary(att_22_dml)
 #> =========================== DDD Summary ==============================
 #>  DML-DDD estimation for the ATT: 
 #>      ATT       Std. Error    Pr(>|t|)  [95% Ptwise. Conf. Band]              
-#>     -0.0884       0.0461       0.0554      -0.1788       0.0021              
+#>     -0.0884       0.0924       0.3390      -0.2695       0.0928              
 #> 
 #>  Note: * indicates that the confidence interval does not contain zero.
 #>  --------------------------- Data Info   -----------------------------
