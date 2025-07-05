@@ -87,7 +87,7 @@ make_stratified_folds <- function(data,
 #' @param global_fold_train List of train indices for global folds
 #' @return A list containing train and test indices for each fold at the local level.
 #' @keywords internal
-get_local_folds <- function(units_selected,
+get_local_crossfit_indices <- function(units_selected,
                             n_folds,
                             global_fold_test,
                             global_fold_train) {
@@ -154,7 +154,7 @@ compute_dml_nuisances <- function(data,
     units_keep <- which(data[["subgroup"]] %in% c(4, comp))
 
     # build local folds
-    smpls <- get_local_folds(units_keep, n_folds, fold_test, fold_train)
+    smpls <- get_local_crossfit_indices(units_keep, n_folds, fold_test, fold_train)
 
     # prepare DoubleML data: build a *pairwise* DiD inside the subset
     dtmp  <- data[units_keep, c("deltaY", "D", x_cols), with = FALSE]
@@ -196,9 +196,16 @@ compute_dml_nuisances <- function(data,
 }
 
 # Function to compute se for DML ATT
-compute_se_dml <- function(influence_matrix) {
+compute_se_dml <- function(influence_matrix, subgroup_counts) {
   n <- nrow(influence_matrix) # data is already wide data
-  influence_matrix[, inf := psi3 + psi2 - psi1]
+  n3 <- subgroup_counts$V1[1] + subgroup_counts$V1[2]
+  n2 <- subgroup_counts$V1[1] + subgroup_counts$V1[3]
+  n1 <- subgroup_counts$V1[1] + subgroup_counts$V1[4]
+  w3 <- n/n3
+  w2 <- n/n2
+  w1 <- n/n1
+
+  influence_matrix[, inf := w3*psi3 + w2*psi2 - w1*psi1]
 
   se_dml_att <- stats::sd(influence_matrix[, inf])/sqrt(n)
   inf <- influence_matrix[, inf]

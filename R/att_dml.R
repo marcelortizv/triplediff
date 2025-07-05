@@ -71,7 +71,7 @@ att_dml <- function(did_preprocessed) {
   att_dml = dml_att_scores$att[["3"]] + dml_att_scores$att[["2"]] - dml_att_scores$att[["1"]]
 
   # Inference
-  se_inf_dml_scores <- compute_se_dml(dml_att_scores$influence_matrix)
+  se_inf_dml_scores <- compute_se_dml(dml_att_scores$influence_matrix, subgroup_counts)
   se_dml <- se_inf_dml_scores$se
   # Return null if inffunc is FALSE
   if (inffunc == FALSE){
