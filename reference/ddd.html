@@ -57,8 +57,6 @@ Furthermore, this package supports the application of machine learning methods f
 <span>  control_group <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  base_period <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  est_method <span class="op">=</span> <span class="st">"dr"</span>,</span>
-<span>  learners <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  n_folds <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  weightsname <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  boot <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  nboot <span class="op">=</span> <span class="cn">NULL</span>,</span>
@@ -121,19 +119,7 @@ Varying base period reports ATT(g,t) right before treatment. Universal base peri
 
 <dt id="arg-est-method">est_method<a class="anchor" aria-label="anchor" href="#arg-est-method"></a></dt>
 <dd><p>The estimation method to be used. Default is <code>"dr"</code> (doubly robust). It computes propensity score using logistic regression
-and outcome regression using OLS. The alternative are <code>c("reg", "ipw", "dml")</code>. The last option allows the user to compute propensity score using a
-machine learning algorithm and outcome regression using a different machine learning algorithm based on <code>mlr3</code> library. We provide some examples for popular learners but
-the user can also provide their own learner.</p></dd>
-
-
-<dt id="arg-learners">learners<a class="anchor" aria-label="anchor" href="#arg-learners"></a></dt>
-<dd><p>A list of learners to be used in the estimation. It should be a list of two elements,
-the first element being the learner for the propensity score and the second element being the learner for the outcome regression.
-Default is <code>NULL</code>, then OLS and MLE Logit is used to estimate nuisances parameters. If <code>est_method = "dml"</code>, user have to specify <code>learners</code>.</p></dd>
-
-
-<dt id="arg-n-folds">n_folds<a class="anchor" aria-label="anchor" href="#arg-n-folds"></a></dt>
-<dd><p>The number of folds to be used in the cross-fitting. Default is <code>NULL</code>. If <code>est_method = "dml"</code>, user have to specify <code>n_folds</code>, being at least 2.</p></dd>
+and outcome regression using OLS. The alternative are <code>c("reg", "ipw")</code>.</p></dd>
 
 
 <dt id="arg-weightsname">weightsname<a class="anchor" aria-label="anchor" href="#arg-weightsname"></a></dt>
@@ -262,54 +248,6 @@ with fixed probability <code>1-alpha</code>.  In order to compute uniform confid
 <span class="r-out co"><span class="r-pr">#&gt;</span>  See Ortiz-Villavicencio and Sant'Anna (2025) for details.</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co">#----------------------------------------------------------</span></span></span>
-<span class="r-in"><span><span class="co"># DML Triple Diff with covariates and 2 time periods</span></span></span>
-<span class="r-in"><span><span class="co">#----------------------------------------------------------</span></span></span>
-<span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://mlr3.mlr-org.com" class="external-link">mlr3</a></span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://mlr3learners.mlr-org.com" class="external-link">mlr3learners</a></span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">learner_lm</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://mlr3.mlr-org.com/reference/mlr_sugar.html" class="external-link">lrn</a></span><span class="op">(</span><span class="st">"regr.lm"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">learner_logit</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://mlr3.mlr-org.com/reference/mlr_sugar.html" class="external-link">lrn</a></span><span class="op">(</span><span class="st">"classif.log_reg"</span>, predict_type <span class="op">=</span> <span class="st">"prob"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">learners</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>ml_pa <span class="op">=</span> <span class="va">learner_logit</span>, ml_md <span class="op">=</span> <span class="va">learner_lm</span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">att_22_dml</span> <span class="op">&lt;-</span> <span class="fu">ddd</span><span class="op">(</span>yname <span class="op">=</span> <span class="st">"y"</span>, tname <span class="op">=</span> <span class="st">"time"</span>, idname <span class="op">=</span> <span class="st">"id"</span>, gname <span class="op">=</span> <span class="st">"state"</span>,</span></span>
-<span class="r-in"><span>                  pname <span class="op">=</span> <span class="st">"partition"</span>, xformla <span class="op">=</span> <span class="op">~</span><span class="va">cov1</span> <span class="op">+</span> <span class="va">cov2</span> <span class="op">+</span> <span class="va">cov3</span> <span class="op">+</span> <span class="va">cov4</span>,</span></span>
-<span class="r-in"><span>                 data <span class="op">=</span> <span class="va">df</span>, control_group <span class="op">=</span> <span class="st">"nevertreated"</span>,</span></span>
-<span class="r-in"><span>                 est_method <span class="op">=</span> <span class="st">"dml"</span>, learners <span class="op">=</span> <span class="va">learners</span>, n_folds <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">att_22_dml</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Call:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ddd(yname = "y", tname = "time", idname = "id", gname = "state", </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     pname = "partition", xformla = ~cov1 + cov2 + cov3 + cov4, </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     data = df, control_group = "nevertreated", est_method = "dml", </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     learners = learners, n_folds = 10)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> =========================== DDD Summary ==============================</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  DML-DDD estimation for the ATT: </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      ATT       Std. Error    Pr(&gt;|t|)  [95% Ptwise. Conf. Band]              </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     -0.0884       0.0924       0.3390      -0.2695       0.0928              </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Note: * indicates that the confidence interval does not contain zero.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  --------------------------- Data Info   -----------------------------</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Panel data</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Outcome variable: y</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Qualification variable: partition</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  No. of units at each subgroup:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    treated-and-eligible: 1232</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    treated-but-ineligible: 1285</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    eligible-but-untreated: 1256</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    untreated-and-ineligible: 1227</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  --------------------------- Algorithms ------------------------------</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Outcome Regression estimated using: Linear Model</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Propensity score estimated using: Logistic Regression</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  -------------------------- Cross-fitting  ---------------------------</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  No. of folds:  10</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Apply cross-fitting: TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  --------------------------- Std. Errors  ----------------------------</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Level of significance:  0.05</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Analytical standard errors.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Type of confidence band:  Pointwise Confidence Interval</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  =====================================================================</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  See Ortiz-Villavicencio and Sant'Anna (2025) for details.</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">#----------------------------------------------------------</span></span></span>
 <span class="r-in"><span><span class="co"># Triple Diff with multiple time periods</span></span></span>
@@ -328,10 +266,10 @@ with fixed probability <code>1-alpha</code>.  In order to compute uniform confid
 <span class="r-out co"><span class="r-pr">#&gt;</span> =========================== DDD Summary ==============================</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  DR-DDD estimation for the ATT(g,t): </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Group Time  ATT(g,t)  Std. Error [95% Pointwise  Conf. Band]  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   2    2       9.7438     0.2954       9.1647       10.3228  *</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   2    3      19.5189     0.3197      18.8924       20.1454  *</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   3    2       0.2117     0.2521      -0.2823        0.7058   </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   3    3      24.5635     0.3159      23.9443       25.1827  *</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   2    2       9.7245     0.3035       9.1297       10.3192  *</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   2    3      20.0652     0.2920      19.4930       20.6375  *</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   3    2      -0.0414     0.3073      -0.6437        0.5608   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   3    3      25.1409     0.2815      24.5893       25.6925  *</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Note: * indicates that the confidence interval does not contain zero.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  --------------------------- Data Info   -----------------------------</span>
@@ -340,9 +278,9 @@ with fixed probability <code>1-alpha</code>.  In order to compute uniform confid
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Qualification variable: partition</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Control group: Never Treated</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  No. of units per treatment group:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Units enabling treatment at period 3: 461</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Units enabling treatment at period 2: 321</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Units never enabling treatment: 218</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Units enabling treatment at period 3: 454</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Units enabling treatment at period 2: 351</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Units never enabling treatment: 195</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  --------------------------- Algorithms ------------------------------</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Outcome Regression estimated using: OLS</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Propensity score estimated using: Maximum Likelihood</span>
