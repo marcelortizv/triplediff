@@ -15,8 +15,6 @@ ddd(
   control_group = NULL,
   base_period = NULL,
   est_method = "dr",
-  learners = NULL,
-  n_folds = NULL,
   weightsname = NULL,
   boot = FALSE,
   nboot = NULL,
@@ -56,15 +54,7 @@ Universal base period: Fixes the base period to (g-1), reporting average changes
 Varying base period reports ATT(g,t) right before treatment. Universal base period normalizes the estimate before treatment to be 0, adding one extra estimate in an earlier period.}
 
 \item{est_method}{The estimation method to be used. Default is \code{"dr"} (doubly robust). It computes propensity score using logistic regression
-and outcome regression using OLS. The alternative are \code{c("reg", "ipw", "dml")}. The last option allows the user to compute propensity score using a
-machine learning algorithm and outcome regression using a different machine learning algorithm based on \code{mlr3} library. We provide some examples for popular learners but
-the user can also provide their own learner.}
-
-\item{learners}{A list of learners to be used in the estimation. It should be a list of two elements,
-the first element being the learner for the propensity score and the second element being the learner for the outcome regression.
-Default is \code{NULL}, then OLS and MLE Logit is used to estimate nuisances parameters. If \code{est_method = "dml"}, user have to specify \code{learners}.}
-
-\item{n_folds}{The number of folds to be used in the cross-fitting. Default is \code{NULL}. If \code{est_method = "dml"}, user have to specify \code{n_folds}, being at least 2.}
+and outcome regression using OLS. The alternative are \code{c("reg", "ipw")}.}
 
 \item{weightsname}{The name of the column containing the weights. Default is \code{NULL}. As part of data processing, weights are enforced to be normalized
 and have mean 1 across all observations.}
@@ -120,22 +110,6 @@ att_22 <- ddd(yname = "y", tname = "time", idname = "id", gname = "state",
 summary(att_22)
 
 
-#----------------------------------------------------------
-# DML Triple Diff with covariates and 2 time periods
-#----------------------------------------------------------
-library(mlr3)
-library(mlr3learners)
-
-learner_lm <- lrn("regr.lm")
-learner_logit <- lrn("classif.log_reg", predict_type = "prob")
-learners <- list(ml_pa = learner_logit, ml_md = learner_lm)
-
-att_22_dml <- ddd(yname = "y", tname = "time", idname = "id", gname = "state",
-                  pname = "partition", xformla = ~cov1 + cov2 + cov3 + cov4,
-                 data = df, control_group = "nevertreated",
-                 est_method = "dml", learners = learners, n_folds = 10)
-
-summary(att_22_dml)
 
 #----------------------------------------------------------
 # Triple Diff with multiple time periods

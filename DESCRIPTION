@@ -18,15 +18,10 @@ Imports:
     BMisc (>= 1.4.6),
     data.table (>= 1.15.0),
     Matrix (>= 1.6.1),
-    mlr3 (>= 0.19.0),
-    mlr3learners (>= 0.6.0),
-    mlr3tuning (>= 0.20.0),
     parallel (>= 1.4.0),
     parglm (>= 0.1.7),
     Rcpp (>= 1.0.12),
-    speedglm (>= 0.3-5),
-    DoubleML (>= 1.0.0),
-    caret (>= 7.0.1)
+    speedglm (>= 0.3-5)
 LinkingTo: 
     Rcpp (>= 1.0.12)
 Suggests: 

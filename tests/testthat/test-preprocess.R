@@ -66,14 +66,14 @@ test_that("Testing error handling in run_preprocess_2periods() function", {
   # Test 2: Warning for est_method
   expect_warning(ddd(yname = "outcome", tname = "year", idname = "id", gname = "treat",
                      pname = "partition", xformla = ~x1 + x2,
-                     data = two_periods_no_errors_df, control_group = NULL, base_period = NULL, est_method = "whatever", learners = NULL,
+                     data = two_periods_no_errors_df, control_group = NULL, base_period = NULL, est_method = "whatever",
                      weightsname = NULL, boot = FALSE, nboot = NULL,
                      inffunc = FALSE, skip_data_checks = FALSE))
 
   # Test 3: Warning for missing values in outcome variable "yname"
   expect_warning(ddd(yname = "outcome", tname = "year", idname = "id", gname = "treat",
                      pname = "partition", xformla = ~x1 + x2,
-                     data = missing_values_outcome_df, control_group = NULL, base_period = NULL, est_method = "dr", learners = NULL,
+                     data = missing_values_outcome_df, control_group = NULL, base_period = NULL, est_method = "dr",
                      weightsname = NULL, boot = FALSE, nboot = NULL,
                      inffunc = FALSE, skip_data_checks = FALSE))
 
@@ -84,112 +84,112 @@ test_that("Testing error handling in run_preprocess_2periods() function", {
   # Test 4: handling of non-numeric "yname" column
   expect_error(ddd(yname = "outcome", tname = "year", idname = "id", gname = "treat",
                    pname = "partition", xformla = ~x1 + x2,
-                   data = y_not_numeric, control_group = NULL, base_period = NULL, est_method = "dr", learners = NULL,
+                   data = y_not_numeric, control_group = NULL, base_period = NULL, est_method = "dr",
                    weightsname = NULL, boot = FALSE, nboot = NULL,
                    inffunc = FALSE, skip_data_checks = FALSE))
 
   # Test 5: error for missing values in treatment variable "gname"
   expect_error(ddd(yname = "outcome", tname = "year", idname = "id", gname = "treat",
                    pname = "partition", xformla = ~x1 + x2,
-                   data = missing_values_treat_df, control_group = "nevertreated", base_period = NULL, est_method = "dr", learners = NULL,
+                   data = missing_values_treat_df, control_group = "nevertreated", base_period = NULL, est_method = "dr",
                    weightsname = NULL, boot = FALSE, nboot = NULL,
                    inffunc = FALSE, skip_data_checks = FALSE))
 
   # Test 6: error for small groups for inference (e.g. only one treated unit)
   expect_error(ddd(yname = "outcome", tname = "year", idname = "id", gname = "treat",
                    pname = "partition", xformla = ~x1 + x2,
-                   data = one_treated_unit_df, control_group = NULL, base_period = NULL, est_method = "dr", learners = NULL,
+                   data = one_treated_unit_df, control_group = NULL, base_period = NULL, est_method = "dr",
                    weightsname = NULL, boot = FALSE,  nboot = NULL,
                    inffunc = TRUE, skip_data_checks = FALSE))
 
   # Test 7: error when "yname" is not in data
   expect_error(ddd(yname = "whatever", tname = "year", idname = "id", gname = "treat",
                    pname = "partition", xformla = ~x1 + x2,
-                   data = two_periods_no_errors_df, control_group = NULL, base_period = NULL, est_method = "dr", learners = NULL,
+                   data = two_periods_no_errors_df, control_group = NULL, base_period = NULL, est_method = "dr",
                    weightsname = NULL, boot = FALSE, nboot = NULL,
                    inffunc = FALSE, skip_data_checks = FALSE))
 
   # Test 8: error when "tname" is not in data
   expect_error(ddd(yname = "outcome", tname = "whatever", idname = "id", gname = "treat",
                    pname = "partition", xformla = ~x1 + x2,
-                   data = two_periods_no_errors_df, control_group = NULL, base_period = NULL, est_method = "dr", learners = NULL,
+                   data = two_periods_no_errors_df, control_group = NULL, base_period = NULL, est_method = "dr",
                    weightsname = NULL, boot = FALSE, nboot = NULL,
                    inffunc = FALSE, skip_data_checks = FALSE))
 
   # Test 9: error when "dname" is not in data
   expect_error(ddd(yname = "outcome", tname = "year", idname = "id", gname = "whatever",
                    pname = "partition", xformla = ~x1 + x2,
-                   data = two_periods_no_errors_df, control_group = NULL, base_period = NULL, est_method = "dr", learners = NULL,
+                   data = two_periods_no_errors_df, control_group = NULL, base_period = NULL, est_method = "dr",
                    weightsname = NULL, boot = FALSE, nboot = NULL,
                    inffunc = FALSE, skip_data_checks = FALSE))
 
   # Test 10: error when "partition" is not in data
   expect_error(ddd(yname = "outcome", tname = "year", idname = "id", gname = "treat",
                    pname = "whatever", xformla = ~x1 + x2,
-                   data = two_periods_no_errors_df, control_group = NULL, base_period = NULL, est_method = "dr", learners = NULL,
+                   data = two_periods_no_errors_df, control_group = NULL, base_period = NULL, est_method = "dr",
                    weightsname = NULL, boot = FALSE, nboot = NULL,
                    inffunc = FALSE, skip_data_checks = FALSE))
 
   # Test 11: error when "idname" is not in data
   expect_error(ddd(yname = "outcome", tname = "year", idname = "whatever", gname = "treat",
                    pname = "whatever", xformla = ~x1 + x2,
-                   data = two_periods_no_errors_df, control_group = NULL, base_period = NULL, est_method = "dr", learners = NULL,
+                   data = two_periods_no_errors_df, control_group = NULL, base_period = NULL, est_method = "dr",
                    weightsname = NULL, boot = FALSE, nboot = NULL,
                    inffunc = FALSE, skip_data_checks = FALSE))
 
   # Test 12: error when "xformla" is not a formula
   expect_error(ddd(yname = "outcome", tname = "year", idname = "id", gname = "treat",
                    pname = "partition", xformla = "x1 - x2",
-                   data = two_periods_no_errors_df, control_group = NULL, base_period = NULL, est_method = "dr", learners = NULL,
+                   data = two_periods_no_errors_df, control_group = NULL, base_period = NULL, est_method = "dr",
                    weightsname = NULL, boot = FALSE, nboot = NULL,
                    inffunc = FALSE, skip_data_checks = FALSE))
 
   # Test 13: partition variable "partition" is not unique by id
   expect_error(ddd(yname = "outcome", tname = "year", idname = "id", gname = "treat",
                    pname = "partition", xformla = ~x1 + x2,
-                   data = partition_not_unique_df, control_group = NULL, base_period = NULL, est_method = "dr", learners = NULL,
+                   data = partition_not_unique_df, control_group = NULL, base_period = NULL, est_method = "dr",
                    weightsname = NULL, boot = FALSE, nboot = NULL,
                    inffunc = FALSE, skip_data_checks = FALSE))
 
   # Test 14: treatment variable "dname" is not unique by id
   expect_error(ddd(yname = "outcome", tname = "year", idname = "id", gname = "treat",
                    pname = "partition", xformla = ~x1 + x2,
-                   data = treat_not_unique_df, control_group = NULL, base_period = NULL, est_method = "dr", learners = NULL,
+                   data = treat_not_unique_df, control_group = NULL, base_period = NULL, est_method = "dr",
                    weightsname = NULL, boot = FALSE, nboot = NULL,
                    inffunc = FALSE, skip_data_checks = FALSE))
 
   # Test 15: error when covariates are not invariant
   expect_error(ddd(yname = "outcome", tname = "year", idname = "id", gname = "treat",
                    pname = "partition", xformla = ~x1 + x2,
-                   data = covariates.not.invariant.df, control_group = NULL, base_period = NULL, est_method = "dr", learners = NULL,
+                   data = covariates.not.invariant.df, control_group = NULL, base_period = NULL, est_method = "dr",
                    weightsname = NULL, boot = FALSE, nboot = NULL,
                    inffunc = FALSE, skip_data_checks = FALSE))
 
   # Test 16: More that 2 time periods
   expect_error(ddd(yname = "outcome", tname = "year", idname = "id", gname = "treat",
                    pname = "partition", xformla = ~x1 + x2,
-                   data = more_than_two_periods_df, control_group = "nevertreated", base_period = NULL, est_method = "dr", learners = NULL,
+                   data = more_than_two_periods_df, control_group = "nevertreated", base_period = NULL, est_method = "dr",
                    weightsname = NULL, boot = FALSE, nboot = NULL,
                    inffunc = FALSE, skip_data_checks = FALSE))
 
   # Test 17: Partition is not numeric
   expect_error(ddd(yname = "outcome", tname = "year", idname = "id", gname = "treat",
                    pname = "partition", xformla = ~x1 + x2,
-                   data = partition_not_numeric_df, control_group = NULL, base_period = NULL, est_method = "dr", learners = NULL,
+                   data = partition_not_numeric_df, control_group = NULL, base_period = NULL, est_method = "dr",
                    weightsname = NULL, boot = FALSE, nboot = NULL,
                    inffunc = FALSE, skip_data_checks = FALSE))
 
   # Test 18: Partition is not numeric
   expect_error(ddd(yname = "outcome", tname = "year", idname = "id", gname = "treat",
                    pname = "partition", xformla = ~x1 + x2,
-                   data = partition_not_numeric_df, control_group = NULL, base_period = NULL, est_method = "dr", learners = NULL,
+                   data = partition_not_numeric_df, control_group = NULL, base_period = NULL, est_method = "dr",
                    weightsname = NULL, boot = FALSE, nboot = NULL,
                    inffunc = FALSE, skip_data_checks = FALSE))
 
   # Test 19: Weights columns contains Null values
   expect_error(ddd(yname = "outcome", tname = "year", idname = "id", gname = "treat",
                    pname = "partition", xformla = ~x1 + x2,
-                   data = weights_null_df, control_group = NULL, base_period = NULL, est_method = "dr", learners = NULL,
+                   data = weights_null_df, control_group = NULL, base_period = NULL, est_method = "dr",
                    weightsname = "weights", boot = FALSE, nboot = NULL,
                    inffunc = FALSE, skip_data_checks = FALSE))
 

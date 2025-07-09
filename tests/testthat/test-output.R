@@ -14,7 +14,7 @@ test_that("Testing generation of output in main function", {
 
   ddd_test <- ddd(yname = "outcome", tname = "year", idname = "id", gname = "treat",
                   pname = "partition", xformla = ~x1 + x2,
-                  data = test_panel, control_group = NULL, base_period = NULL, est_method = "dr", learners = NULL,
+                  data = test_panel, control_group = NULL, base_period = NULL, est_method = "dr",
                   weightsname = NULL, boot = FALSE, nboot = NULL,
                   inffunc = FALSE, skip_data_checks = FALSE)
 

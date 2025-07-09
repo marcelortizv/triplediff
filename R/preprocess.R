@@ -38,20 +38,20 @@ run_nopreprocess_2periods <- function(yname,
   }
 
   # For dml, we only allow analytical standard errors. User needs to specify the number fo folds.
-  if (est_method == "dml"){
-    # allowing bootstrap only for dr.
-    if (boot == TRUE){
-      warning("Bootstrapping is not allowed for DML. Setting boot = FALSE.")
-      boot <- FALSE
-      args$boot <- boot
-    }
-    # number of folds
-    if (n_folds < 2 || is.null(n_folds)) {
-      warning("For DML estimation, n_folds must be at least 2. Setting n_folds = 2.")
-      n_folds <- 2
-      args$n_folds <- n_folds
-    }
-  }
+  # if (est_method == "dml"){
+  #   # allowing bootstrap only for dr.
+  #   if (boot == TRUE){
+  #     warning("Bootstrapping is not allowed for DML. Setting boot = FALSE.")
+  #     boot <- FALSE
+  #     args$boot <- boot
+  #   }
+  #   # number of folds
+  #   if (n_folds < 2 || is.null(n_folds)) {
+  #     warning("For DML estimation, n_folds must be at least 2. Setting n_folds = 2.")
+  #     n_folds <- 2
+  #     args$n_folds <- n_folds
+  #   }
+  # }
 
   # setting default bootstrap reps
   if (boot == TRUE){
@@ -99,6 +99,7 @@ run_nopreprocess_2periods <- function(yname,
 
   # Creating a post dummy variable based on tlist[2] (second period = post treatment)
   tlist <- dta[, sort(unique(get(tname)))]
+  glist <- dta[, sort(unique(get(gname)))] # this has to be [0, G], second position in treated group.
   dta[, post := as.numeric(get(tname) == tlist[2])]
 
   # sort data based on idnam and tname and make it balanced
@@ -125,12 +126,9 @@ run_nopreprocess_2periods <- function(yname,
 
   # creating subgroup variable
   # 4 if (partition ==1 & treat == 1); 3 if (partition ==0 & treat == 1); 2 if (partition ==1 & treat == 0); 1 if (partition ==0 & treat == 0)
-  # cleaned_data$subgroup <- ifelse((cleaned_data$partition == 1) & (cleaned_data$treat == 1), 4,
-  #                                 ifelse((cleaned_data$partition == 0) & (cleaned_data$treat == 1), 3,
-  #                                        ifelse((cleaned_data$partition == 1) & (cleaned_data$treat == 0), 2, 1)))
-  cleaned_data[, subgroup := fifelse(partition == 1 & treat == 1, 4,
-                                     fifelse(partition == 0 & treat == 1, 3,
-                                             fifelse(partition == 1 & treat == 0, 2, 1)))]
+  cleaned_data[, subgroup := fifelse(partition == 1 & treat == glist[2], 4,
+                                     fifelse(partition == 0 & treat == glist[2], 3,
+                                             fifelse(partition == 1 & treat == glist[1], 2, 1)))]
 
   # Flag for not enough observations for each subgroup
   # Calculate the size of each subgroup in the 'subgroup' column
@@ -229,11 +227,11 @@ run_preprocess_2Periods <- function(yname,
   }
 
   # For dml, we only allow analytical standard errors.
-  if (est_method == "dml" & boot == TRUE){
-    warning("Bootstrapping is not allowed for DML. Setting boot = FALSE.")
-    boot <- FALSE
-    args$boot <- boot
-  }
+  # if (est_method == "dml" & boot == TRUE){
+  #   warning("Bootstrapping is not allowed for DML. Setting boot = FALSE.")
+  #   boot <- FALSE
+  #   args$boot <- boot
+  # }
 
   # setting default bootstrap reps
   if (boot == TRUE){
@@ -476,11 +474,11 @@ run_preprocess_multPeriods <- function(yname,
   }
 
   # For dml, we only allow analytical standard errors.
-  if (est_method == "dml" & boot == TRUE){
-    warning("Bootstrapping is not currently allowed for DML. Setting boot = FALSE.")
-    boot <- FALSE
-    args$boot <- boot
-  }
+  # if (est_method == "dml" & boot == TRUE){
+  #   warning("Bootstrapping is not currently allowed for DML. Setting boot = FALSE.")
+  #   boot <- FALSE
+  #   args$boot <- boot
+  # }
 
   # setting default bootstrap reps
   if (boot == TRUE){

@@ -24,13 +24,7 @@ NULL
 #' Universal base period: Fixes the base period to (g-1), reporting average changes from t to (g-1) for a group relative to its comparison group, similar to event study regressions.
 #' Varying base period reports ATT(g,t) right before treatment. Universal base period normalizes the estimate before treatment to be 0, adding one extra estimate in an earlier period.
 #' @param est_method The estimation method to be used. Default is \code{"dr"} (doubly robust). It computes propensity score using logistic regression
-#' and outcome regression using OLS. The alternative are \code{c("reg", "ipw", "dml")}. The last option allows the user to compute propensity score using a
-#' machine learning algorithm and outcome regression using a different machine learning algorithm based on `mlr3` library. We provide some examples for popular learners but
-#' the user can also provide their own learner.
-#' @param learners A list of learners to be used in the estimation. It should be a list of two elements,
-#' the first element being the learner for the propensity score and the second element being the learner for the outcome regression.
-#' Default is \code{NULL}, then OLS and MLE Logit is used to estimate nuisances parameters. If \code{est_method = "dml"}, user have to specify \code{learners}.
-#' @param n_folds The number of folds to be used in the cross-fitting. Default is \code{NULL}. If \code{est_method = "dml"}, user have to specify \code{n_folds}, being at least 2.
+#' and outcome regression using OLS. The alternative are \code{c("reg", "ipw")}.
 #' @param weightsname The name of the column containing the weights. Default is \code{NULL}. As part of data processing, weights are enforced to be normalized
 #' and have mean 1 across all observations.
 #' @param boot Logical. If \code{TRUE}, the function computes standard errors using the multiplier bootstrap. Default is \code{FALSE}.
@@ -70,22 +64,6 @@ NULL
 #' summary(att_22)
 #'
 #'
-#' #----------------------------------------------------------
-#' # DML Triple Diff with covariates and 2 time periods
-#' #----------------------------------------------------------
-#' library(mlr3)
-#' library(mlr3learners)
-#'
-#' learner_lm <- lrn("regr.lm")
-#' learner_logit <- lrn("classif.log_reg", predict_type = "prob")
-#' learners <- list(ml_pa = learner_logit, ml_md = learner_lm)
-#'
-#' att_22_dml <- ddd(yname = "y", tname = "time", idname = "id", gname = "state",
-#'                   pname = "partition", xformla = ~cov1 + cov2 + cov3 + cov4,
-#'                  data = df, control_group = "nevertreated",
-#'                  est_method = "dml", learners = learners, n_folds = 10)
-#'
-#' summary(att_22_dml)
 #'
 #' #----------------------------------------------------------
 #' # Triple Diff with multiple time periods
@@ -108,8 +86,6 @@ ddd <- function(yname,
                 control_group = NULL,
                 base_period = NULL,
                 est_method = "dr",
-                learners = NULL,
-                n_folds = NULL,
                 weightsname = NULL,
                 boot = FALSE,
                 nboot = NULL,
@@ -151,7 +127,7 @@ ddd <- function(yname,
 
 
   # Flag for est_method
-  if (!(est_method %in% c("reg", "ipw", "dr", "dml"))) {
+  if (!(est_method %in% c("reg", "ipw", "dr"))) {
     warning("est_method = ", est_method, " is invalid or not supported. Using 'dr'.")
     est_method <- "dr"
   }
@@ -189,7 +165,7 @@ ddd <- function(yname,
                                       cores = cores,
                                       inffunc = inffunc)
     } else {
-      stop("Triple Diff with multiple time periods is not yet supported")
+      stop("Triple Diff with multiple time periods is not yet supported.")
     }
 
   } else {
@@ -216,7 +192,7 @@ ddd <- function(yname,
                                        cores = cores,
                                        inffunc = inffunc)
 
-    } else if ((multiple_periods) && (est_method == "dml")) {
+    } #else if ((multiple_periods) && (est_method == "dml")) {
       # dp <- run_preprocess_multPeriods(yname = yname,
       #                                  tname = tname,
       #                                  idname = idname,
@@ -233,8 +209,8 @@ ddd <- function(yname,
       #                                  boot = boot,
       #                                  nboot = nboot,
       #                                  inffunc = inffunc)
-      stop("Triple Diff with multiple time periods and DML is not yet supported")
-    } else if ((!multiple_periods) && (est_method %in% c("dr", "reg", "ipw"))) {
+      #stop("Triple Diff with multiple time periods and DML is not yet supported")}
+    else if ((!multiple_periods) && (est_method %in% c("dr", "reg", "ipw"))) {
       dp <- run_preprocess_2Periods(yname = yname,
                                     tname = tname,
                                     idname = idname,
@@ -255,28 +231,27 @@ ddd <- function(yname,
                                     use_parallel = use_parallel,
                                     cores = cores,
                                     inffunc = inffunc)
-    } else if ((!multiple_periods) && (est_method == "dml")) {
-      dp <- run_preprocess_2Periods(yname = yname,
-                                    tname = tname,
-                                    idname = idname,
-                                    gname = gname,
-                                    pname = pname,
-                                    xformla = xformla,
-                                    dta = dta,
-                                    control_group = NULL,
-                                    est_method = "dml",
-                                    learners = learners,
-                                    n_folds = n_folds,
-                                    weightsname = weightsname,
-                                    boot = boot,
-                                    nboot = nboot,
-                                    cluster = cluster,
-                                    cband = cband,
-                                    alpha = alpha,
-                                    use_parallel = use_parallel,
-                                    cores = cores,
-                                    inffunc = inffunc)
-    }
+    } # else if ((!multiple_periods) && (est_method == "dml")) {
+      # dp <- run_preprocess_2Periods(yname = yname,
+      #                               tname = tname,
+      #                               idname = idname,
+      #                               gname = gname,
+      #                               pname = pname,
+      #                               xformla = xformla,
+      #                               dta = dta,
+      #                               control_group = NULL,
+      #                               est_method = "dml",
+      #                               learners = learners,
+      #                               n_folds = n_folds,
+      #                               weightsname = weightsname,
+      #                               boot = boot,
+      #                               nboot = nboot,
+      #                               cluster = cluster,
+      #                               cband = cband,
+      #                               alpha = alpha,
+      #                               use_parallel = use_parallel,
+      #                               cores = cores,
+      #                               inffunc = inffunc)}
   }
 
   #------------------------------------------
@@ -288,20 +263,20 @@ ddd <- function(yname,
     # RUN DR for multiple periods
     if (est_method %in% c("dr", "reg", "ipw")){
       att_gt_dr <- att_gt(dp)
-    } else {
-      # RUN DML for multiple time periods
-      stop("DML for multiple time periods is not yet supported")
-      # TODO: IMPLEMENT att_gt_dml PROCEDURE AND ADJUST PARAMETERS
-      # att_gt_dml <- att_gt_dml(dp)
-    }
+    } #else {
+      # # RUN DML for multiple time periods
+      # stop("DML for multiple time periods is not yet supported")
+      # # TODO: IMPLEMENT att_gt_dml PROCEDURE AND ADJUST PARAMETERS
+      # # att_gt_dml <- att_gt_dml(dp)
+    #}
   } else {
     if (est_method %in% c("dr", "reg", "ipw")){
       # RUN DR for 2 time periods
       att_dr <- att_dr(dp)
-    } else {
+    } # else {
       # RUN DML for 2 time periods
-      att_dml <- att_dml(dp)
-    }
+      # att_dml <- att_dml(dp)
+    #}
   }
 
   #------------------------------------------
@@ -320,8 +295,8 @@ ddd <- function(yname,
     control_group = args$control_group,
     est_method = est_method,
     multiple_periods = multiple_periods,
-    learners = args$learners,
-    n_folds = args$n_folds,
+    # learners = args$learners,
+    # n_folds = args$n_folds,
     cband = args$cband,
     cluster = args$cluster,
     boot = dp$boot, # getting from dp because it could change in the pre process
@@ -344,17 +319,17 @@ ddd <- function(yname,
           call.params = call.params,
           argu = argu
         )
-  } else {
-        ret <- list(
-          ATT = att_dml$ATT,
-          se = att_dml$se,
-          lci = att_dml$lci,
-          uci = att_dml$uci,
-          subgroup_counts = att_dml$subgroup_counts,
-          call.params = call.params,
-          argu = argu
-        )
-   }
+  } #else {
+   #      ret <- list(
+   #        ATT = att_dml$ATT,
+   #        se = att_dml$se,
+   #        lci = att_dml$lci,
+   #        uci = att_dml$uci,
+   #        subgroup_counts = att_dml$subgroup_counts,
+   #        call.params = call.params,
+   #        argu = argu
+   #      )
+   # }
   }# RETURNING LIST FOR 2 PERIODS CASE
 
   # multiple time periods case: dr or dml

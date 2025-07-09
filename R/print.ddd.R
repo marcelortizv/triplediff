@@ -37,11 +37,11 @@ print.ddd <- function(x, alpha = NULL, ...) {
       est_method1 <- "REG-DDD estimation for the ATT: \n"
       est_method2 <- "Outcome Regression estimated using: OLS"
       est_method3 <- "Propensity score estimated using: N/A"
-    } else if (x$argu$est_method[1] == 'dml') {
-      est_method1 <- "DML-DDD estimation for the ATT: \n"
-      est_method2 <- paste0("Outcome Regression estimated using: ", x$argu$learners$ml_md$label)
-      est_method3 <- paste0("Propensity score estimated using: ", x$argu$learners$ml_pa$label)
-    }
+    } #else if (x$argu$est_method[1] == 'dml') {
+    #   est_method1 <- "DML-DDD estimation for the ATT: \n"
+    #   est_method2 <- paste0("Outcome Regression estimated using: ", x$argu$learners$ml_md$label)
+    #   est_method3 <- paste0("Propensity score estimated using: ", x$argu$learners$ml_pa$label)
+    # }
 
     # Front-end Summary Table
     lev_conf <- paste0(round(100 * (1 - x$argu$alpha), digits = 2), "% ")
@@ -78,11 +78,11 @@ print.ddd <- function(x, alpha = NULL, ...) {
       est_method1 <- "REG-DDD estimation for the ATT(g,t): \n"
       est_method2 <- "Outcome Regression estimated using: OLS"
       est_method3 <- "Propensity score estimated using: N/A"
-    } else if (x$argu$est_method[1] == 'dml') {
-      est_method1 <- "DML-DDD estimation for the ATT(g,t): \n"
-      est_method2 <- paste("Outcome Regression estimated using:", x$argu$learners$ml_md$label)
-      est_method3 <- paste("Propensity score estimated using:", x$argu$learners$ml_pa$label)
-    }
+    } #else if (x$argu$est_method[1] == 'dml') {
+    #   est_method1 <- "DML-DDD estimation for the ATT(g,t): \n"
+    #   est_method2 <- paste("Outcome Regression estimated using:", x$argu$learners$ml_md$label)
+    #   est_method3 <- paste("Propensity score estimated using:", x$argu$learners$ml_pa$label)
+    # }
 
     # Front-end Summary Table
     lev_conf <- paste0(round(100 * (1 - x$argu$alpha), digits = 2), "% ")
@@ -153,11 +153,11 @@ print.ddd <- function(x, alpha = NULL, ...) {
   cat("\n", est_method2)
   cat("\n", est_method3)
 
-  if (x$argu$est_method[1] == 'dml'){
-    cat("\n -------------------------- Cross-fitting  ---------------------------")
-    cat("\n No. of folds: ", x$argu$n_folds)
-    cat("\n Apply cross-fitting: TRUE")
-  }
+  # if (x$argu$est_method[1] == 'dml'){
+  #   cat("\n -------------------------- Cross-fitting  ---------------------------")
+  #   cat("\n No. of folds: ", x$argu$n_folds)
+  #   cat("\n Apply cross-fitting: TRUE")
+  # }
   # Analytical vs bootstrapped standard errors
   cat("\n --------------------------- Std. Errors  ----------------------------")
   cat("\n", paste("Level of significance: ", x$argu$alpha))

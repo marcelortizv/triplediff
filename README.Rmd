@@ -99,46 +99,10 @@ summary(att_22)
 
 ```
 
-We can also leverage the fact that our estimators are doubly robust to rely on data-driven models for estimating the nuisance parameters. For example, we can use a flexible machine learning like `xgboost` to estimate outcome models and `ranger` (Random Forest) to estimate the propensity scores. The engine behind this implementation is the [mlr3](https://mlr3.mlr-org.com/index.html) package, which provides a unified interface for off-the-shelf ML algorithms in R, and the [DoubleML](https://docs.doubleml.org/stable/index.html) package, which implements the double machine learning framework. Since our DGP is linear, we can use `regr.lm` and `classif.log_reg` learners from `mlr3learners` to estimate the outcome and propensity score models, respectively, and compare it with the previous results.
-
-
-```{r, eval = FALSE}
-library(mlr3)
-library(mlr3learners)
-
-# suppress messages during fitting
-lgr::get_logger("mlr3")$set_threshold("warn")
-```
-
-```{r, echo=FALSE, results="hide", warning=FALSE, message=FALSE}
-library(mlr3)
-library(mlr3learners)
-
-# suppress messages during fitting
-lgr::get_logger("mlr3")$set_threshold("warn")
-```
-
-```{r, warning=FALSE}
-
-# set learners for nuisance functions
-learner_lm <- lrn("regr.lm")
-learner_logit <- lrn("classif.log_reg", predict_type = "prob")
-learners <- list(ml_pa = learner_logit, ml_md = learner_lm)
-
-# estimation
-att_22_dml <- ddd(yname = "y", tname = "time", idname = "id", gname = "state",
-                  pname = "partition", xformla = ~cov1 + cov2 + cov3 + cov4,
-                  data = df, control_group = "nevertreated",
-                  est_method = "dml", learners = learners, n_folds = 10)
-
-summary(att_22_dml)
-```
-
-The results suggest close agreement between the doubly robust estimator and the double machine learning estimator, which is expected since the DGP is linear. The difference in the estimates is due to randomness in the cross-fitting procedure used in double machine learning.
 
 #### Case: Multiple Periods DDD with staggered treatment adoption
 
-In this case, we simulate some data with a built-in function `gen_dgp_staggered` that generates a multiple-period DDD setup with staggered treatment adoption. This function receives the number of units and the type of DGP design to generate. The `gen_dgp_staggered` function returns a data frame with the required columns for the `ddd` function with 4 covariates.
+Next, we can simulate some data with a built-in function `gen_dgp_mult_periods` that generates a multiple-period DDD setup with staggered treatment adoption. This function receives the number of units and the type of DGP design to generate. The `gen_dgp_mult_periods` function returns a data frame with the required columns for the `ddd` function with 4 covariates.
 
 ```{r}
 set.seed(1234) # Set seed for reproducibility
@@ -161,7 +125,7 @@ att_gt <- ddd(yname = "y", tname = "time", idname = "id", gname = "state",
 summary(att_gt)
 ```
 
-Next, we can aggregate the group-time average treatment effect on the treated to obtain the event-study type estimates. The `agg_ddd` function allows us to aggregate the results from the `ddd` function.
+Then, we can aggregate the group-time average treatment effect on the treated to obtain the event-study type estimates. The `agg_ddd` function allows us to aggregate the results from the `ddd` function.
 ```{r}
 es_e <- agg_ddd(att_gt, type = "eventstudy")
 
@@ -241,10 +205,9 @@ Use [GitHub Issues](https://github.com/marcelortizv/triplediff/issues) to report
 
 ### ⚠️ Not Yet Supported
 
-- 🔲 User-specified data-driven models for estimations of nuisance parameters.
-  - This is partially implemented via `mlr3` and `DoubleML` under-the-hood. Users can specify their own models for estimating outcome models and propensity scores. Currently, two-period DDD with single treatment date is the only setting supported.
 - 🔲 Built-in plotting capabilities for visualizing results.
   - This can be done easily by users. E.g., event-study type estimates can be plotted using `ggplot2`. See the quick start example.
+- 🔲 User-specified data-driven models for estimations of nuisance parameters.
 - 🔲 Repeated cross-sectional data.
 - 🔲 Unbalanced panel data.
 
