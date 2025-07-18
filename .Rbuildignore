@@ -6,3 +6,5 @@
 ^pkgdown$
 ^\.github$
 ^README\.Rmd$
+^CRAN-SUBMISSION$
+^cran-comments\.md$
