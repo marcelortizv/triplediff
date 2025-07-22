@@ -4,11 +4,13 @@ Version: 0.1.0
 Authors@R: c(person("Marcelo", "Ortiz-Villavicencio", email = "marcelo.ortiz@emory.edu", role = c("aut", "cre")),
               person("Pedro H. C.", "Sant'Anna", email = "pedro.santanna@emory.edu", role = c("aut"))
             )
-Description: Implements triple-differences (DDD) estimators for both average treatment effects and event-study parameters. 
-             Methods include regression adjustment, inverse-probability weighting, 
-             and doubly-robust estimators, all of which rely on a conditional DDD parallel-trends assumption allowing for covariate
-             adjustment across multiple pre- and post-treatment periods. The methodology is detailed in 
-             Ortiz-Villavicencio and Sant’Anna (2025) <https://arxiv.org/abs/2505.09942>
+Description: Implements triple-difference (DDD) estimators for both average
+              treatment effects and event-study parameters. Methods include regression
+              adjustment, inverse-probability weighting, and doubly-robust estimators,
+              all of which rely on a conditional DDD parallel-trends assumption and
+              allow covariate adjustment across multiple pre- and post-treatment
+              periods. The methodology is detailed in Ortiz-Villavicencio and
+              Sant'Anna (2025) <doi:10.48550/arXiv.2505.09942>.
 License: MIT + file LICENSE
 Encoding: UTF-8
 Depends:

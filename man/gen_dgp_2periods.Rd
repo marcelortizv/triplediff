@@ -30,7 +30,7 @@ A list with the following elements:
 }
 }
 \item{att}{True average treatment effect on the treated (ATT), set to 0.}
-\item{att.unf}{“Oracle” ATT computed under the unfeasible specification.}
+\item{att.unf}{Oracle ATT computed under the unfeasible specification.}
 \item{eff}{Theoretical efficiency bound for the estimator.}
 }
 }
