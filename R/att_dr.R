@@ -32,7 +32,6 @@ att_dr <- function(did_preprocessed) {
   boot <- did_preprocessed$boot
   nboot <- did_preprocessed$nboot
   alpha <- did_preprocessed$alpha
-  cband <- did_preprocessed$cband
   use_parallel <- did_preprocessed$use_parallel # to perform bootstrap
   cores <- did_preprocessed$cores # to perform bootstrap
   cband <- did_preprocessed$cband # to perform bootstrap + simult. conf. band
@@ -97,7 +96,7 @@ att_dr <- function(did_preprocessed) {
       # get critical value to compute uniform confidence bands
       cv <- boot_result$unif_crit_val
       if(cv >= 7){
-        warning("Simultaneous critical value is arguably `too large' to be realible. This usually happens when number of observations per group is small and/or there is no much variation in outcomes.")
+        warning("Simultaneous critical value is arguably `too large' to be reliable. This usually happens when number of observations per group is small and/or there is no much variation in outcomes.")
       }
 
     } else {

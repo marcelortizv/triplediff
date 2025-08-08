@@ -1,7 +1,7 @@
 # Testing if agg_ddd in generating output
 test_that("Testing generation of output in aggregation function", {
 
-  data <- gen_dgp_mult_periods(size = 10000, dgp_type = 1)[["data"]]
+  data <- gen_dgp_mult_periods(size = 1000, dgp_type = 1)[["data"]]
 
   # Performing simple tests
   out <- ddd(yname = "y", tname = "time", idname = "id",
