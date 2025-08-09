@@ -277,7 +277,7 @@ run_preprocess_2Periods <- function(yname,
     # Check that cluster variables do not vary over time within each unit
     if (length(cluster) > 0) {
       # Efficiently check for time-varying cluster variables
-      clust_tv <- dta[, lapply(.SD, function(col) length(unique(col)) == 1), by = id, .SDcols = cluster]
+      clust_tv <- dta[, lapply(.SD, function(col) length(unique(col)) == 1), by = idname, .SDcols = cluster]
       # If any cluster variable varies over time within any unit, stop execution
       if (!all(unlist(clust_tv[, -1, with = FALSE]))) {
         stop("triplediff cannot handle time-varying cluster variables at the moment. Please check your cluster variable.")
@@ -494,15 +494,6 @@ run_preprocess_multPeriods <- function(yname,
   # Error checking
   #-------------------------------------
 
-  # Flag for parallel and cores
-  if (boot){
-    if ((use_parallel) && (is.null(cores))) {
-      warning("Parallel processing is enabled but the number of cores is not specified. Using 1 core.")
-      cores <- 1
-      args$cores <- cores
-    }
-  }
-
   # Flag for alpha > 0.10
   if (alpha > 0.10) {
     warning("alpha = ", alpha, " is too high. Using alpha = 0.05 as default.")
@@ -518,11 +509,17 @@ run_preprocess_multPeriods <- function(yname,
   # }
 
   # setting default bootstrap reps
-  if (boot == TRUE){
+  if (boot){
     if (is.null(nboot)){
       warning("Number of bootstrap samples not specified. Defaulting to 999 reps.")
       nboot <- 999
       args$nboot <- nboot
+    }
+
+    if(!cband){
+      warning("cband = FALSE. Setting cband=TRUE for bootstrapped standard errors.")
+      cband <- TRUE
+      args$cband <- cband
     }
   }
 
@@ -549,11 +546,36 @@ run_preprocess_multPeriods <- function(yname,
     # Check that cluster variables do not vary over time within each unit
     if (length(cluster) > 0) {
       # Efficiently check for time-varying cluster variables
-      clust_tv <- dta[, lapply(.SD, function(col) length(unique(col)) == 1), by = id, .SDcols = cluster]
+      clust_tv <- dta[, lapply(.SD, function(col) length(unique(col)) == 1), by = idname, .SDcols = cluster]
       # If any cluster variable varies over time within any unit, stop execution
       if (!all(unlist(clust_tv[, -1, with = FALSE]))) {
         stop("triplediff cannot handle time-varying cluster variables at the moment. Please check your cluster variable.")
       }
+    }
+
+    # check if bootstrap is on
+    if (!boot){
+      warning("Clustered SEs are only available when boot=TRUE. Setting boot=TRUE and cband=TRUE for bootstrapped standard errors.")
+      boot <- TRUE
+      args$boot <- boot
+      cband <- TRUE
+      args$cband <- cband
+
+      # adding boot reps too
+      if (is.null(nboot)){
+        warning("Number of bootstrap samples not specified. Defaulting to 999 reps.")
+        nboot <- 999
+        args$nboot <- nboot
+      }
+    }
+  }
+
+  # Flag for parallel and cores
+  if (boot){
+    if ((use_parallel) && (is.null(cores))) {
+      warning("Parallel processing is enabled but the number of cores is not specified. Using 1 core.")
+      cores <- 1
+      args$cores <- cores
     }
   }
 
