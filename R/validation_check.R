@@ -19,11 +19,12 @@ validate_args_2Periods <- function(args, dta){
   nboot <- args$nboot
   inffunc <- args$inffunc
   cband <- args$cband
+  cluster <- args$cluster
 
   # flag for boot and cband
-  if ((!boot) && (cband)){
-    stop("cband is only available when boot = TRUE")
-  }
+  # if ((!boot) && (cband) && (!is.null(cluster))){
+  #   stop("Clustered SEs are only available when boot=TRUE. Please, double check your arguments.")
+  # }
 
   # Flag for yname
   if (!is.element(yname, base::colnames(dta))) {

@@ -109,7 +109,14 @@ att_22 <- ddd(yname = "y", tname = "time", idname = "id", gname = "state",
 
 summary(att_22)
 
+# Performing clustered standard errors with mutiplier bootstrap
 
+att_cluster <-  ddd(yname = "y", tname = "time", idname = "id", gname = "state",
+pname = "partition", xformla = ~cov1 + cov2 + cov3 + cov4,
+data = df, control_group = "nevertreated",
+base_period = "universal", est_method = "dr", cluster = "cluster")
+
+summary(att_cluster)
 
 #----------------------------------------------------------
 # Triple Diff with multiple time periods
