@@ -5,3 +5,7 @@
 # triplediff 0.1.1
 
   * Bug fix in `cluster` parameter. When user specifies a cluster variable, the function now correctly uses it for clustering standard errors performing Multiplier Bootstrap.
+
+# triplediff 0.1.2
+
+  * Bug fix in `preprocess` when checking for small groups.
