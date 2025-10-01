@@ -745,10 +745,10 @@ run_preprocess_multPeriods <- function(yname,
   small_groups <- gsize[V1 < reqsize]
   # Warn if some groups are small
   if (nrow(small_groups) > 0) {
-    gpaste <- paste(small_groups[, treat], collapse = ",")
+    gpaste <- paste(small_groups[, first_treat], collapse = ",")
     warning(paste0("Be aware that there are some small groups in your dataset.\n  Check groups: ", gpaste, "."))
 
-    if (0 %in% small_groups[, treat] & control_group == "nevertreated") {
+    if (0 %in% small_groups[, first_treat] & control_group == "nevertreated") {
       stop("Never treated group is too small, try setting control_group = \"notyettreated\"")
     }
   }
