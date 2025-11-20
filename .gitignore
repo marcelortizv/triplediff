@@ -8,3 +8,5 @@ src/*.dll
 .DS_Store
 docs
 CLAUDE.md
+did_non_panel_instructions.md
+DRDID_RC_instructions.md
