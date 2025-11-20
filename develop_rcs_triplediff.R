@@ -1,3 +1,4 @@
+
 # Script to develop and test Repeated Cross-Section (RCS) Triple Diff
 # This script mimics the workflow for RCS data using the newly created att_dr_rc function.
 
@@ -45,7 +46,7 @@ tname <- "time"
 idname <- "id"
 treatname <- "state" # In this DGP, state indicates treatment group assignment
 partitionname <- "partition"
-xformula <- ~ x1 + x2 + x3 + x4
+xformula <- ~ cov1 + cov2 + cov3 + cov4
 
 # Create 'post' variable
 dt_rc[, post := as.numeric(time == t2)]
@@ -82,7 +83,7 @@ print(subgroup_counts)
 did_preprocessed <- list(
   preprocessed_data = dt_rc,
   est_method = "dr", # Doubly Robust
-  xformula = xformula,
+  xformula = ~ 1, #xformula,
   boot = FALSE,      # Analytical SEs (Influence Function)
   nboot = NULL,
   alpha = 0.05,
@@ -128,6 +129,7 @@ y_000 <- get_mu(0, 0, 0)
 
 simple_ddd <- ((y_111 - y_110) - (y_101 - y_100)) - ((y_011 - y_010) - (y_001 - y_000))
 message("Simple DDD (Naive): ", round(simple_ddd, 4))
+
 
 # ---------------------------------------------------------
 # 7. VALIDATION AGAINST DRDID
