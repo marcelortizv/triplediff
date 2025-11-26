@@ -8,3 +8,4 @@ src/*.dll
 .DS_Store
 docs
 CLAUDE.md
+/.quarto/
