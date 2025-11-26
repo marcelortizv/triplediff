@@ -306,12 +306,12 @@ compute_pscore_rc <- function(data, condition_subgroup, xformula) {
     }
   )
 
-  if (!model$converged) warning(paste("RC Pscore model for subgroup", condition_subgroup, "did not converge."))
-  if(anyNA(model$coefficients)) stop(paste("RC Pscore model coefficients for subgroup", condition_subgroup, "have NA components. Multicollinearity of covariates is a likely reason. "))
+  if (!model$converged) warning(paste("RC pscore model for subgroup", condition_subgroup, "did not converge."))
+  if(anyNA(model$coefficients)) stop(paste("RC pscore model coefficients for subgroup", condition_subgroup, "have NA components. Multicollinearity of covariates is a likely reason. "))
 
   propensity_scores <- predict(model, newdata = condition_data, type = "response")
   
-  if (any(propensity_scores < 5e-4)) warning(paste("Propensity scores for comparison subgroup", condition_subgroup, "have poor overlap."))
+  if (any(propensity_scores < 5e-8)) warning(paste("Propensity scores for comparison subgroup", condition_subgroup, "have poor overlap."))
   propensity_scores <- pmin(propensity_scores, 1 - 1e-16)
 
   hessian_matrix <- stats::vcov(model) * nrow(condition_data)
@@ -353,83 +353,293 @@ compute_outcome_regression_rc <- function(data, condition_subgroup, xformula){
      as.vector(tcrossprod(reg.coeff, as.matrix(cov_all)))
   }
 
-  mu_11 <- fit_predict_mu(4, 1)
-  mu_10 <- fit_predict_mu(4, 0)
-  mu_01 <- fit_predict_mu(condition_subgroup, 1)
-  mu_00 <- fit_predict_mu(condition_subgroup, 0)
+  or_trt_post <- fit_predict_mu(4, 1) # OR for: S=g, Q=1, T=post
+  or_trt_pre <- fit_predict_mu(4, 0) # OR for: S=g, Q=1, T=pre
+  or_ctrl_post <- fit_predict_mu(condition_subgroup, 1) # OR for: S=g', Q=q', T=post
+  or_ctrl_pre <- fit_predict_mu(condition_subgroup, 0) # OR for: S=g', Q=q', T=pre
 
-  return(list(mu_11=mu_11, mu_10=mu_10, mu_01=mu_01, mu_00=mu_00))
+
+  return(list(or_trt_post=or_trt_post, or_trt_pre=or_trt_pre, or_ctrl_post=or_ctrl_post, or_ctrl_pre=or_ctrl_pre))
 }
 
 compute_outcome_regression_null_rc <- function(data, condition_subgroup){
   condition_data <- data[data$subgroup %in% c(condition_subgroup, 4)]
   n <- nrow(condition_data)
-  return(list(mu_11=rep(0,n), mu_10=rep(0,n), mu_01=rep(0,n), mu_00=rep(0,n)))
+  return(list(or_trt_post=rep(0,n), or_trt_pre=rep(0,n), or_ctrl_post=rep(0,n), or_ctrl_pre=rep(0,n)))
 }
 
 compute_did_rc <- function(data, condition_subgroup, pscores, reg_adjustment, xformula, est_method){
   condition_data <- data[data$subgroup %in% c(condition_subgroup, 4)]
-  
+
   if (condition_subgroup == 3) idx <- 1 else if (condition_subgroup == 2) idx <- 2 else idx <- 3
-  
+
   pscore <- pscores[[idx]]$propensity_scores
+  hessian <- pscores[[idx]]$hessian_matrix
   mu <- reg_adjustment[[idx]]
-  
+
+  # Basic variables
+  n <- nrow(condition_data)
   post <- condition_data$post
-  D <- ifelse(condition_data$subgroup == 4, 1, 0) # Treat=1, Control=0
+  PA4 <- ifelse(condition_data$subgroup == 4, 1, 0) # PA4=1 for treated (subgroup 4), PA4=0 for control
+  PAa <- ifelse(condition_data$subgroup == condition_subgroup, 1, 0) # PAa=1 for control subgroup
   y <- condition_data$y
-  weights <- condition_data$weights
-  
-  # Simplified variables
-  mu_11 <- mu$mu_11
-  mu_10 <- mu$mu_10
-  mu_01 <- mu$mu_01
-  mu_00 <- mu$mu_00
-  
-  # DR Estimator for RC
-  # Weights
-  w_treat_post = weights * D * post
-  w_treat_pre  = weights * D * (1 - post)
-  w_cont_post  = weights * (1 - D) * post * pscore / (1 - pscore)
-  w_cont_pre   = weights * (1 - D) * (1 - post) * pscore / (1 - pscore)
-  
-  mean_w_tr_post = mean(w_treat_post)
-  mean_w_tr_pre  = mean(w_treat_pre)
-  mean_w_co_post = mean(w_cont_post)
-  mean_w_co_pre  = mean(w_cont_pre)
-  
-  if(mean_w_tr_post==0 || mean_w_tr_pre==0 || mean_w_co_post==0 || mean_w_co_pre==0) {
-     warning("Weights sum to zero in one group/period.")
-     return(list(dr_att=NA, inf_func=rep(0, nrow(data))))
+  i_weights <- condition_data$weights
+
+  # Get covariate matrix
+  covX <- stats::model.matrix(xformula, data = condition_data)
+
+  #############################################
+  # Method-specific estimation
+  #############################################
+
+  if (est_method == "ipw") {
+    #-----------------------------------------
+    # IPW Estimator
+    #-----------------------------------------
+    # Riesz representers
+    riesz_treat_pre <- i_weights * PA4 * (1 - post)
+    riesz_treat_post <- i_weights * PA4 * post
+    riesz_control_pre <- i_weights * pscore * PAa * (1 - post) / (1 - pscore)
+    riesz_control_post <- i_weights * pscore * PAa * post / (1 - pscore)
+
+    # Elements of the influence function (summands)
+    eta_treat_pre <- riesz_treat_pre * y / mean(riesz_treat_pre)
+    eta_treat_post <- riesz_treat_post * y / mean(riesz_treat_post)
+    eta_control_pre <- riesz_control_pre * y / mean(riesz_control_pre)
+    eta_control_post <- riesz_control_post * y / mean(riesz_control_post)
+
+    # Estimator of each component
+    att_treat_pre <- mean(eta_treat_pre)
+    att_treat_post <- mean(eta_treat_post)
+    att_control_pre <- mean(eta_control_pre)
+    att_control_post <- mean(eta_control_post)
+
+    # ATT estimator
+    att <- (att_treat_post - att_treat_pre) - (att_control_post - att_control_pre)
+
+    # Influence function
+    # Asymptotic linear representation of logit's beta's
+    W <- pscore * (1 - pscore) * i_weights
+    score_ps <- i_weights * (PA4 - pscore) * covX
+    asy_lin_rep_ps <- score_ps %*% hessian
+
+    # Leading term of the influence function
+    inf_treat_pre <- eta_treat_pre - riesz_treat_pre * att_treat_pre / mean(riesz_treat_pre)
+    inf_treat_post <- eta_treat_post - riesz_treat_post * att_treat_post / mean(riesz_treat_post)
+    inf_treat <- inf_treat_post - inf_treat_pre
+
+    inf_control_pre <- eta_control_pre - riesz_control_pre * att_control_pre / mean(riesz_control_pre)
+    inf_control_post <- eta_control_post - riesz_control_post * att_control_post / mean(riesz_control_post)
+    inf_control <- inf_control_post - inf_control_pre
+
+    # Estimation effect from gamma hat (pscore)
+    M2_pre <- base::colMeans(riesz_control_pre * (y - att_control_pre) * covX) / mean(riesz_control_pre)
+    M2_post <- base::colMeans(riesz_control_post * (y - att_control_post) * covX) / mean(riesz_control_post)
+    inf_control_ps <- asy_lin_rep_ps %*% (M2_post - M2_pre)
+
+    # Final influence function
+    inf_control <- inf_control + inf_control_ps
+    att_inf_func <- inf_treat - inf_control
+
+  } else if (est_method == "reg") {
+    #-----------------------------------------
+    # REG Estimator
+    #-----------------------------------------
+    or_ctrl_pre <- mu$or_ctrl_pre
+    or_ctrl_post <- mu$or_ctrl_post
+
+    # Riesz representers
+    riesz_treat_pre <- i_weights * PA4 * (1 - post)
+    riesz_treat_post <- i_weights * PA4 * post
+    riesz_control <- i_weights * PA4
+
+    reg_att_treat_pre <- riesz_treat_pre * y
+    reg_att_treat_post <- riesz_treat_post * y
+    reg_att_control <- riesz_control * (or_ctrl_post - or_ctrl_pre)
+
+    eta_treat_pre <- mean(reg_att_treat_pre) / mean(riesz_treat_pre)
+    eta_treat_post <- mean(reg_att_treat_post) / mean(riesz_treat_post)
+    eta_control <- mean(reg_att_control) / mean(riesz_control)
+
+    att <- (eta_treat_post - eta_treat_pre) - eta_control
+
+    # Influence function
+    # Asymptotic linear representation of OLS parameters
+    # Pre-period
+    weights_ols_pre <- i_weights * PAa * (1 - post)
+    wols_x_pre <- weights_ols_pre * covX
+    wols_eX_pre <- weights_ols_pre * (y - or_ctrl_pre) * covX
+    XpX_pre <- base::crossprod(wols_x_pre, covX) / n
+    XpX_inv_pre <- solve(XpX_pre)
+    asy_lin_rep_ols_pre <- wols_eX_pre %*% XpX_inv_pre
+
+    # Post-period
+    weights_ols_post <- i_weights * PAa * post
+    wols_x_post <- weights_ols_post * covX
+    wols_eX_post <- weights_ols_post * (y - or_ctrl_post) * covX
+    XpX_post <- base::crossprod(wols_x_post, covX) / n
+    XpX_inv_post <- solve(XpX_post)
+    asy_lin_rep_ols_post <- wols_eX_post %*% XpX_inv_post
+
+    # Leading term
+    inf_treat_pre <- (reg_att_treat_pre - riesz_treat_pre * eta_treat_pre) / mean(riesz_treat_pre)
+    inf_treat_post <- (reg_att_treat_post - riesz_treat_post * eta_treat_post) / mean(riesz_treat_post)
+    inf_treat <- inf_treat_post - inf_treat_pre
+
+    # Control component
+    inf_control_1 <- (reg_att_control - riesz_control * eta_control)
+    M1 <- base::colMeans(riesz_control * covX)
+    inf_control_2_post <- asy_lin_rep_ols_post %*% M1
+    inf_control_2_pre <- asy_lin_rep_ols_pre %*% M1
+    inf_control <- (inf_control_1 + inf_control_2_post - inf_control_2_pre) / mean(riesz_control)
+
+    att_inf_func <- inf_treat - inf_control
+
+  } else if (est_method == "dr") {
+    #-----------------------------------------
+    # DR Estimator
+    #-----------------------------------------
+    or_ctrl_pre <- mu$or_ctrl_pre
+    or_ctrl_post <- mu$or_ctrl_post
+    or_ctrl <- post * or_ctrl_post + (1 - post) * or_ctrl_pre
+
+    or_trt_pre <- mu$or_trt_pre
+    or_trt_post <- mu$or_trt_post
+
+    # Riesz representers
+    riesz_treat_pre <- i_weights * PA4 * (1 - post)
+    riesz_treat_post <- i_weights * PA4 * post
+    riesz_control_pre <- i_weights * pscore * PAa * (1 - post) / (1 - pscore)
+    riesz_control_post <- i_weights * pscore * PAa * post / (1 - pscore)
+
+    riesz_d <- i_weights * PA4
+    riesz_dt1 <- i_weights * PA4 * post
+    riesz_dt0 <- i_weights * PA4 * (1 - post)
+
+    # Elements of the influence function (summands)
+    eta_treat_pre <- riesz_treat_pre * (y - or_ctrl) / mean(riesz_treat_pre)
+    eta_treat_post <- riesz_treat_post * (y - or_ctrl) / mean(riesz_treat_post)
+    eta_control_pre <- riesz_control_pre * (y - or_ctrl) / mean(riesz_control_pre)
+    eta_control_post <- riesz_control_post * (y - or_ctrl) / mean(riesz_control_post)
+
+    # Extra elements for the locally efficient DRDID
+    eta_d_post <- riesz_d * (or_trt_post - or_ctrl_post) / mean(riesz_d)
+    eta_dt1_post <- riesz_dt1 * (or_trt_post - or_ctrl_post) / mean(riesz_dt1)
+    eta_d_pre <- riesz_d * (or_trt_pre - or_ctrl_pre) / mean(riesz_d)
+    eta_dt0_pre <- riesz_dt0 * (or_trt_pre - or_ctrl_pre) / mean(riesz_dt0)
+
+    # Estimator of each component
+    att_treat_pre <- mean(eta_treat_pre)
+    att_treat_post <- mean(eta_treat_post)
+    att_control_pre <- mean(eta_control_pre)
+    att_control_post <- mean(eta_control_post)
+
+    att_d_post <- mean(eta_d_post)
+    att_dt1_post <- mean(eta_dt1_post)
+    att_d_pre <- mean(eta_d_pre)
+    att_dt0_pre <- mean(eta_dt0_pre)
+
+    # ATT estimator
+    att <- (att_treat_post - att_treat_pre) - (att_control_post - att_control_pre) +
+      (att_d_post - att_dt1_post) - (att_d_pre - att_dt0_pre)
+
+    # Influence function
+    # Asymptotic linear representation of OLS parameters
+    # Control pre-period
+    weights_ols_pre <- i_weights * PAa * (1 - post)
+    wols_x_pre <- weights_ols_pre * covX
+    wols_eX_pre <- weights_ols_pre * (y - or_ctrl_pre) * covX
+    XpX_pre <- base::crossprod(wols_x_pre, covX) / n
+    XpX_inv_pre <- solve(XpX_pre)
+    asy_lin_rep_ols_pre <- wols_eX_pre %*% XpX_inv_pre
+
+    # Control post-period
+    weights_ols_post <- i_weights * PAa * post
+    wols_x_post <- weights_ols_post * covX
+    wols_eX_post <- weights_ols_post * (y - or_ctrl_post) * covX
+    XpX_post <- base::crossprod(wols_x_post, covX) / n
+    XpX_inv_post <- solve(XpX_post)
+    asy_lin_rep_ols_post <- wols_eX_post %*% XpX_inv_post
+
+    # Treated pre-period
+    weights_ols_pre_treat <- i_weights * PA4 * (1 - post)
+    wols_x_pre_treat <- weights_ols_pre_treat * covX
+    wols_eX_pre_treat <- weights_ols_pre_treat * (y - or_trt_pre) * covX
+    XpX_pre_treat <- base::crossprod(wols_x_pre_treat, covX) / n
+    XpX_inv_pre_treat <- solve(XpX_pre_treat)
+    asy_lin_rep_ols_pre_treat <- wols_eX_pre_treat %*% XpX_inv_pre_treat
+
+    # Treated post-period
+    weights_ols_post_treat <- i_weights * PA4 * post
+    wols_x_post_treat <- weights_ols_post_treat * covX
+    wols_eX_post_treat <- weights_ols_post_treat * (y - or_trt_post) * covX
+    XpX_post_treat <- base::crossprod(wols_x_post_treat, covX) / n
+    XpX_inv_post_treat <- solve(XpX_post_treat)
+    asy_lin_rep_ols_post_treat <- wols_eX_post_treat %*% XpX_inv_post_treat
+
+    # Asymptotic linear representation of logit's beta's
+    W <- pscore * (1 - pscore) * i_weights
+    score_ps <- i_weights * (PA4 - pscore) * covX
+    asy_lin_rep_ps <- score_ps %*% hessian
+
+    # Influence function of the "treat" component
+    inf_treat_pre <- eta_treat_pre - riesz_treat_pre * att_treat_pre / mean(riesz_treat_pre)
+    inf_treat_post <- eta_treat_post - riesz_treat_post * att_treat_post / mean(riesz_treat_post)
+
+    # Estimation effect from beta hat
+    M1_post <- -base::colMeans(riesz_treat_post * post * covX) / mean(riesz_treat_post)
+    M1_pre <- -base::colMeans(riesz_treat_pre * (1 - post) * covX) / mean(riesz_treat_pre)
+
+    inf_treat_or_post <- asy_lin_rep_ols_post %*% M1_post
+    inf_treat_or_pre <- asy_lin_rep_ols_pre %*% M1_pre
+
+    # Influence function of control component
+    inf_control_pre <- eta_control_pre - riesz_control_pre * att_control_pre / mean(riesz_control_pre)
+    inf_control_post <- eta_control_post - riesz_control_post * att_control_post / mean(riesz_control_post)
+
+    # Estimation effect from gamma hat (pscore)
+    M2_pre <- base::colMeans(riesz_control_pre * (y - or_ctrl - att_control_pre) * covX) / mean(riesz_control_pre)
+    M2_post <- base::colMeans(riesz_control_post * (y - or_ctrl - att_control_post) * covX) / mean(riesz_control_post)
+    inf_control_ps <- asy_lin_rep_ps %*% (M2_post - M2_pre)
+
+    # Estimation effect from beta hat
+    M3_post <- -base::colMeans(riesz_control_post * post * covX) / mean(riesz_control_post)
+    M3_pre <- -base::colMeans(riesz_control_pre * (1 - post) * covX) / mean(riesz_control_pre)
+
+    inf_control_or_post <- asy_lin_rep_ols_post %*% M3_post
+    inf_control_or_pre <- asy_lin_rep_ols_pre %*% M3_pre
+
+    # Adjustment terms
+    inf_eff1 <- eta_d_post - riesz_d * att_d_post / mean(riesz_d)
+    inf_eff2 <- eta_dt1_post - riesz_dt1 * att_dt1_post / mean(riesz_dt1)
+    inf_eff3 <- eta_d_pre - riesz_d * att_d_pre / mean(riesz_d)
+    inf_eff4 <- eta_dt0_pre - riesz_dt0 * att_dt0_pre / mean(riesz_dt0)
+    inf_eff <- (inf_eff1 - inf_eff2) - (inf_eff3 - inf_eff4)
+
+    # Estimation effect of OR coefficients
+    mom_post <- base::colMeans((riesz_d / mean(riesz_d) - riesz_dt1 / mean(riesz_dt1)) * covX)
+    mom_pre <- base::colMeans((riesz_d / mean(riesz_d) - riesz_dt0 / mean(riesz_dt0)) * covX)
+    inf_or_post <- (asy_lin_rep_ols_post_treat - asy_lin_rep_ols_post) %*% mom_post
+    inf_or_pre <- (asy_lin_rep_ols_pre_treat - asy_lin_rep_ols_pre) %*% mom_pre
+
+    # Put all pieces together
+    inf_treat_or <- inf_treat_or_post + inf_treat_or_pre
+    inf_control_or <- inf_control_or_post + inf_control_or_pre
+    inf_or <- inf_or_post - inf_or_pre
+
+    inf_treat <- inf_treat_post - inf_treat_pre + inf_treat_or
+    inf_control <- inf_control_post - inf_control_pre + inf_control_ps + inf_control_or
+
+    # Final influence function
+    att_inf_func <- inf_treat - inf_control + inf_eff + inf_or
+
+  } else {
+    stop("Invalid est_method. Must be 'ipw', 'reg', or 'dr'")
   }
 
-  # Influence Functions
-  
-  E_D = mean(weights * D)
-  E_D_Post = mean(weights * D * post)
-  E_D_Pre = mean(weights * D * (1-post))
-  E_C_Post_w = mean(w_cont_post)
-  E_C_Pre_w = mean(w_cont_pre)
-  
-  psi_11 = (weights * D * post * (y - mu_11)) / E_D_Post + (weights * D * mu_11) / E_D
-  att_11 = mean(psi_11)
-  
-  psi_10 = (weights * D * (1-post) * (y - mu_10)) / E_D_Pre + (weights * D * mu_10) / E_D
-  att_10 = mean(psi_10)
-  
-  psi_01 = (w_cont_post * (y - mu_01)) / E_C_Post_w + (weights * D * mu_01) / E_D 
-  att_01 = mean(psi_01)
-  
-  psi_00 = (w_cont_pre * (y - mu_00)) / E_C_Pre_w + (weights * D * mu_00) / E_D 
-  att_00 = mean(psi_00)
-  
-  dr_att = (att_11 - att_10) - (att_01 - att_00)
-  
-  inf_func = (psi_11 - att_11) - (psi_10 - att_10) - ((psi_01 - att_01) - (psi_00 - att_00))
-  
-  # fill zeros in influence function for observation outside the subgroup analyzed
+  # Fill zeros in influence function for observations outside the subgroup analyzed
   data[, "inf_func_result" := numeric(.N)]
-  data[data$subgroup %in% c(condition_subgroup, 4), "inf_func_result" := inf_func]
-  
-  return(list(dr_att = dr_att, inf_func = data[["inf_func_result"]]))
+  data[data$subgroup %in% c(condition_subgroup, 4), "inf_func_result" := att_inf_func]
+
+  return(list(dr_att = att, inf_func = data[["inf_func_result"]]))
 }
