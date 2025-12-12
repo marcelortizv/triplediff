@@ -130,10 +130,10 @@ print.ddd <- function(x, alpha = NULL, ...) {
   }
   if(x$argu$multiple_periods == FALSE){
     cat("\n", "No. of units at each subgroup:")
-    cat("\n", paste0("  treated-and-eligible: ", x$subgroup_counts$V1[1]))
-    cat("\n", paste0("  treated-but-ineligible: ", x$subgroup_counts$V1[2]))
-    cat("\n", paste0("  eligible-but-untreated: ", x$subgroup_counts$V1[3]))
-    cat("\n", paste0("  untreated-and-ineligible: ", x$subgroup_counts$V1[4]))
+    cat("\n", paste0("  treated-and-eligible: ", x$subgroup_counts$count[1])) # subgroup 4
+    cat("\n", paste0("  treated-but-ineligible: ", x$subgroup_counts$count[2])) # subgroup 3
+    cat("\n", paste0("  eligible-but-untreated: ", x$subgroup_counts$count[3])) # subgroup 2
+    cat("\n", paste0("  untreated-and-ineligible: ", x$subgroup_counts$count[4])) # subgroup 1
   } else {
     cat("\n", "No. of units per treatment group:")
     for (i in 1:nrow(x$cohort_size)) {

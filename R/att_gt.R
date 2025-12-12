@@ -159,7 +159,7 @@ att_gt <- function(did_preprocessed){
 
         # cohort_data[(period == tlist[max(t, pret) + tfac]), post := 1]
         # Calculate the size of each subgroup in the 'subgroup' column
-        subgroup_counts <- cohort_data[, .N/2, by = subgroup][order(-subgroup)]
+        subgroup_counts <- cohort_data[, .(count = .N/2), by = subgroup][order(-subgroup)]
 
         # Reassign dp object and run att_dr
         did_preprocessed$preprocessed_data <- cohort_data
@@ -214,7 +214,7 @@ att_gt <- function(did_preprocessed){
 
           # subset_data[(period == tlist[max(t, pret) + tfac]), post := 1]
           # Calculate the size of each subgroup in the 'subgroup' column
-          subgroup_counts <- subset_data[, .N/2, by = subgroup][order(-subgroup)]
+          subgroup_counts <- subset_data[, .(count = .N/2), by = subgroup][order(-subgroup)]
 
           # Reassign dp object and run att_dr
           did_preprocessed$preprocessed_data <- subset_data

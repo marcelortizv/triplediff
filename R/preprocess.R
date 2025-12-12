@@ -147,7 +147,7 @@ run_nopreprocess_2periods <- function(yname,
 
   # Flag for not enough observations for each subgroup
   # Calculate the size of each subgroup in the 'subgroup' column
-  subgroup_counts <- cleaned_data[, .N/2, by = subgroup][order(-subgroup)]
+  subgroup_counts <- cleaned_data[, .(count = .N/2), by = subgroup][order(-subgroup)]
 
   # adding covariates
   if (!is.null(xformla)) {
@@ -386,9 +386,9 @@ run_preprocess_2Periods <- function(yname,
 
   # Flag for not enough observations for each subgroup
   # Calculate the size of each subgroup in the 'subgroup' column
-  subgroup_counts <- cleaned_data[, .N/2, by = subgroup][order(-subgroup)]
+  subgroup_counts <- cleaned_data[, .(count = .N/2), by = subgroup][order(-subgroup)]
   # Check if each subgroup has at least 5 observations. Check this threshold if needed.
-  sufficient_obs <- all(subgroup_counts$N >= 5)
+  sufficient_obs <- all(subgroup_counts$count >= 5)
   # Stop the code if not all subgroups have at least 5 observations
   if (!sufficient_obs) {
     stop("Not enough observations in each subgroup. Please check the data.")
