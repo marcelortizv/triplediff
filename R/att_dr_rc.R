@@ -72,33 +72,13 @@ att_dr_rc <- function(did_preprocessed) {
   dr_att_inf_func_1 <- compute_did_rc(data, condition_subgroup = 1, pscores = pscores, reg_adjustment = reg_adjust, xformula = xformula, est_method = est_method) # S=g, Q=1 vs. S=\infty, Q=0
 
   dr_ddd <- dr_att_inf_func_3$dr_att + dr_att_inf_func_2$dr_att - dr_att_inf_func_1$dr_att
-  n <- data[, .N] # Total observations (not halved as in panel)
-  
-  # Counts for weights need to be handled carefully for RC. 
-  # In Panel, n/n3 is used. In RC, we might need to adjust how we combine influence functions.
-  # Assuming simple weighting by sample size relative to total?
-  # But wait, att_dr uses n = data[, .N/2] because it's panel (2 periods per unit).
-  # For RC, n is total rows.
-  # subgroup_counts$V1 is number of observations in each subgroup (aggregated).
-  # Let's verify subgroup_counts structure from preprocess.R
-  # subgroup_counts <- cleaned_data[, .N/2, by = subgroup] for panel.
-  # For RC, it should be just .N? I should check preprocess logic for RC (which I haven't written yet).
-  # But assuming did_preprocessed gives correct counts.
-  
-  # For now, I will use n as total rows.
-  # The weights w3, w2, w1 are used to combine influence functions.
-  # w3 = n / n3.
-  # If n3 is obs in sub3 + sub4.
-  
-  n3 <- subgroup_counts$V1[1] + subgroup_counts$V1[2]
-  n2 <- subgroup_counts$V1[1] + subgroup_counts$V1[3]
-  n1 <- subgroup_counts$V1[1] + subgroup_counts$V1[4]
-  
-  # In RC, if subgroup_counts are total obs, then n should be total obs.
+  n <- data[, .N]
+  n3 <- subgroup_counts$count[subgroup_counts$subgroup == 3] + subgroup_counts$count[subgroup_counts$subgroup == 4]
+  n2 <- subgroup_counts$count[subgroup_counts$subgroup == 2] + subgroup_counts$count[subgroup_counts$subgroup == 4]
+  n1 <- subgroup_counts$count[subgroup_counts$subgroup == 1] + subgroup_counts$count[subgroup_counts$subgroup == 4]
   w3 <- n/n3
   w2 <- n/n2
   w1 <- n/n1
-  
   # rescaling influence function
   inf_func = w3*dr_att_inf_func_3$inf_func + w2*dr_att_inf_func_2$inf_func - w1*dr_att_inf_func_1$inf_func
 
