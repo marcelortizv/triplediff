@@ -1,59 +1,33 @@
 #' Utility functions to compute nuisances parameters.
-#' @importFrom stats update
-#' @import parglm
-#' @import speedglm
+#' @import fastglm
 #' @import data.table
 #' @noRd
 #--------------------------------------------------
 
-# utility function to generate equation to estimate pscore
-get_formula_pscore <- function(xformula, weights = TRUE){
-  # Get a formula object for pscore estimation
-  if (weights) {
-    formula_obj <- stats::update(xformula, PA4 ~ . + weights)
-  } else {
-    formula_obj <- stats::update(xformula, PA4 ~ .)
-  }
-  return(formula_obj)
-}
-
-# utility function to generate equation to estimate outcome regression
-get_formula_reg <- function(xformula, weights = TRUE){
-  # Get a formula object for outcome regression
-  if (weights) {
-    formula_obj <- stats::update(xformula, deltaY ~ . + weights)
-  } else {
-    formula_obj <- stats::update(xformula, deltaY ~ .)
-  }
-  return(formula_obj)
-}
-
-# Function to compute propensity scores using parglm for multiple subgroups
+# Function to compute propensity scores using fastglm for multiple subgroups
 compute_pscore <- function(data, condition_subgroup, xformula) {
-  # get formula for pscore estimation using covariates
-  formula_pscore <- get_formula_pscore(xformula, weights = FALSE)
   # Subset data for condition_subgroup and subgroup == 4 or the given condition_subgroup
   condition_data <- data[data$subgroup %in% c(condition_subgroup, 4)]
   # Adding treatment variable P(1{PA4 = 4}|X)
   condition_data[, "PA4" := ifelse(condition_data$subgroup == 4, 1, 0)]
   uid_condition_data <- unique(condition_data, by = "id")
 
-  # Fit logistic regression model using parglm
-  model <- withCallingHandlers(
-    parglm::parglm(
-      formula_pscore,
-      data     = uid_condition_data,
-      family   = stats::binomial(),
-      weights  = weights,
-      control  = parglm.control(nthreads = data.table::getDTthreads()),
-      intercept = FALSE
-    ),
-    warning = function(w) {
-      msg <- conditionMessage(w)
-      if (grepl("^Too few observation compared to the number of threads", msg)) {
-        invokeRestart("muffleWarning")
-      }
-    }
+  # Get covariate matrix and treatment indicator
+  covX <- stats::model.matrix(xformula, data = uid_condition_data)
+  PA4 <- uid_condition_data$PA4
+  i_weights <- uid_condition_data$weights
+  n <- nrow(uid_condition_data)
+
+  # Fit logistic regression model using fastglm
+  model <- suppressWarnings(
+    fastglm::fastglm(
+      x         = covX,
+      y         = PA4,
+      family    = stats::binomial(),
+      weights   = i_weights,
+      intercept = FALSE,
+      method    = 3
+    )
   )
 
   # Flag for convergence of glm
@@ -68,8 +42,8 @@ compute_pscore <- function(data, condition_subgroup, xformula) {
                "have NA components. Multicollinearity of covariates is a likely reason"))
   }
 
-  # Compute propensity scores
-  propensity_scores <- predict(model, newdata = uid_condition_data, type = "response")
+  # Compute propensity scores using fitted values
+  propensity_scores <- fitted(model)
 
   # Warning for overlap condition
   if (any(propensity_scores < 5e-4)) {
@@ -80,8 +54,11 @@ compute_pscore <- function(data, condition_subgroup, xformula) {
   # Avoid divide by zero
   propensity_scores <- pmin(propensity_scores, 1 - 1e-16)
 
-  # Save Hessian matrix for influence function
-  hessian_matrix <- stats::vcov(model) * nrow(uid_condition_data)
+  # Compute Hessian matrix manually (following DRDID approach)
+  # Hessian = chol2inv(chol(t(X) %*% (W * X))) * n
+  # where W = ps * (1 - ps) * weights
+  W <- propensity_scores * (1 - propensity_scores) * i_weights
+  hessian_matrix <- chol2inv(chol(t(covX) %*% (W * covX))) * n
 
   return(list(propensity_scores = propensity_scores, hessian_matrix = hessian_matrix))
 }
@@ -113,24 +90,15 @@ compute_outcome_regression <- function(data, condition_subgroup, xformula){
   # get weights (conditioning in pre-treatment period since weights are invariant)
   i_weights = control_data[control_data$post == 0, weights]
 
-  # get coefficients of outcome regression model for the control group (subgroup != 4)
-  # Attempt to compute reg.coeff using speedglm
-  try_speedglm <- tryCatch({
-    reg.coeff <- stats::coef(speedglm::speedglm.wfit(y = deltaY_control,
-                                                     X = as.matrix(cov_control),
-                                                     intercept = FALSE,
-                                                     weights = i_weights))
-  }, error = function(e) {
-    # If error, attempt to compute reg.coeff using lm.wfit
-    reg.coeff <- tryCatch({
-      stats::coef(stats::lm.wfit(x = as.matrix(cov_control),
-                                 y = deltaY_control,
-                                 w = i_weights))
-    }, error = function(e2) {
-      # If error with lm.wfit, stop the program and send an error message
-      stop("Error in computing regression coefficients: Subgroup ", condition_subgroup, " may have insufficient data.")
-    })
-  })
+  # Fit outcome regression using fastglm
+  reg.coeff <- stats::coef(
+    fastglm::fastglm(
+      x       = cov_control,
+      y       = deltaY_control,
+      weights = i_weights,
+      family  = stats::gaussian()
+    )
+  )
 
   # Flag for NA coefficients
   if(anyNA(reg.coeff)) {
@@ -283,38 +251,42 @@ compute_did <- function(data, condition_subgroup, pscores, reg_adjustment, xform
 #--------------------------------------------------
 
 compute_pscore_rc <- function(data, condition_subgroup, xformula) {
-  # Similar to compute_pscore but no unique(by="id")
-  formula_pscore <- get_formula_pscore(xformula, weights = FALSE)
+  # Similar to compute_pscore but no unique(by="id") - uses all RCS data
   condition_data <- data[data$subgroup %in% c(condition_subgroup, 4)]
   condition_data[, "PA4" := ifelse(condition_data$subgroup == 4, 1, 0)]
-  # Use all data for RC propensity score (assumes pooling)
-  
-  model <- withCallingHandlers(
-    parglm::parglm(
-      formula_pscore,
-      data     = condition_data,
-      family   = stats::binomial(),
-      weights  = weights,
-      control  = parglm.control(nthreads = data.table::getDTthreads()),
-      intercept = FALSE
-    ),
-    warning = function(w) {
-      msg <- conditionMessage(w)
-      if (grepl("^Too few observation compared to the number of threads", msg)) {
-        invokeRestart("muffleWarning")
-      }
-    }
+
+  # Get covariate matrix and treatment indicator (all RCS observations)
+  covX <- stats::model.matrix(xformula, data = condition_data)
+  PA4 <- condition_data$PA4
+  i_weights <- condition_data$weights
+  n <- nrow(condition_data)
+
+  # Fit logistic regression model using fastglm
+  model <- suppressWarnings(
+    fastglm::fastglm(
+      x         = covX,
+      y         = PA4,
+      family    = stats::binomial(),
+      weights   = i_weights,
+      intercept = FALSE,
+      method    = 3
+    )
   )
 
   if (!model$converged) warning(paste("RC pscore model for subgroup", condition_subgroup, "did not converge."))
   if(anyNA(model$coefficients)) stop(paste("RC pscore model coefficients for subgroup", condition_subgroup, "have NA components. Multicollinearity of covariates is a likely reason. "))
 
-  propensity_scores <- predict(model, newdata = condition_data, type = "response")
-  
+  # Compute propensity scores using fitted values
+  propensity_scores <- fitted(model)
+
   if (any(propensity_scores < 5e-8)) warning(paste("Propensity scores for comparison subgroup", condition_subgroup, "have poor overlap."))
   propensity_scores <- pmin(propensity_scores, 1 - 1e-16)
 
-  hessian_matrix <- stats::vcov(model) * nrow(condition_data)
+  # Compute Hessian matrix manually (following DRDID approach)
+  # Hessian = chol2inv(chol(t(X) %*% (W * X))) * n
+  # where W = ps * (1 - ps) * weights
+  W <- propensity_scores * (1 - propensity_scores) * i_weights
+  hessian_matrix <- chol2inv(chol(t(covX) %*% (W * covX))) * n
 
   return(list(propensity_scores = propensity_scores, hessian_matrix = hessian_matrix))
 }
@@ -329,25 +301,28 @@ compute_pscore_null_rc <- function(data, condition_subgroup) {
 compute_outcome_regression_rc <- function(data, condition_subgroup, xformula){
   # Subset data for condition_subgroup and subgroup == 4 or the given condition_subgroup
   condition_data <- data[data$subgroup %in% c(condition_subgroup, 4)]
-  # compute outcome regressioin model for each of the four cells: (subgroup=4, post=1), (subgroup=4, post=0), (subgroup=condition_subgroup, post=1), (subgroup=condition_subgroup, post=0)
+  # compute outcome regression model for each of the four cells: (subgroup=4, post=1), (subgroup=4, post=0), (subgroup=condition_subgroup, post=1), (subgroup=condition_subgroup, post=0)
   fit_predict_mu <- function(subg, pst) {
      subset_data <- condition_data[condition_data$subgroup == subg & condition_data$post == pst]
      if(nrow(subset_data) == 0) return(rep(NA, nrow(condition_data)))
-     
+
      # Covariates including intercept for fitting
      cov_fit <- stats::model.matrix(as.formula(xformula), data = subset_data)
      y_fit <- subset_data$y
      w_fit <- subset_data$weights
-     
-     # Fit
-     reg.coeff <- tryCatch({
-        stats::coef(speedglm::speedglm.wfit(y = y_fit, X = as.matrix(cov_fit), intercept = FALSE, weights = w_fit))
-     }, error = function(e) {
-        stats::coef(stats::lm.wfit(x = as.matrix(cov_fit), y = y_fit, w = w_fit))
-     })
-     
+
+     # Fit using fastglm
+     reg.coeff <- stats::coef(
+       fastglm::fastglm(
+         x       = cov_fit,
+         y       = y_fit,
+         weights = w_fit,
+         family  = stats::gaussian()
+       )
+     )
+
      if(anyNA(reg.coeff)) stop(paste("Outcome regression coefficients NA for subgroup", subg, "post", pst))
-     
+
      # Predict for ALL
      cov_all <- stats::model.matrix(as.formula(xformula), data = condition_data)
      as.vector(tcrossprod(reg.coeff, as.matrix(cov_all)))

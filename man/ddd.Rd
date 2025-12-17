@@ -7,7 +7,7 @@
 ddd(
   yname,
   tname,
-  idname,
+  idname = NULL,
   gname,
   pname,
   xformla,
@@ -15,6 +15,8 @@ ddd(
   control_group = NULL,
   base_period = NULL,
   est_method = "dr",
+  panel = TRUE,
+  allow_unbalanced_panel = FALSE,
   weightsname = NULL,
   boot = FALSE,
   nboot = NULL,

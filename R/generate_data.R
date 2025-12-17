@@ -643,7 +643,7 @@ gen_dgp_mult_periods <- function(size, dgp_type = 1, include_covariates = TRUE){
     z1_tilde <- exp(x1/2)
     z2_tilde <- x2/(1 + exp(x1)) + 10
     z3_tilde <- (x1 * x3/25 + 0.6)^3
-    z4_tilde <- (x1 + x4 + 20)^21
+    z4_tilde <- (x1 + x4 + 20)^2
 
     z1 <- (z1_tilde - mean.z1) / sd.z1
     z2 <- (z2_tilde - mean.z2) / sd.z2
