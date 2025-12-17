@@ -580,11 +580,14 @@ gen_dgp_2periods <- function(size, dgp_type){
 #' Generate panel data where units adopt treatment at different times across three periods.
 #'
 #' @param size Integer. Number of units to simulate.
-#' @param dgp_type Integer in \{1,2,3,4\}.
-#'   1 = both nuisance functions correct;
+#' @param dgp_type Integer in \{1,2,3,4\}. Only used when \code{include_covariates = TRUE}.
+#'   1 = both nuisance functions correct (default);
 #'   2 = only the outcome model correct;
 #'   3 = only the propensity-score model correct;
 #'   4 = both nuisance functions misspecified.
+#' @param include_covariates Logical. If \code{TRUE} (default), generates covariates with
+#'   transformations and uses \code{dgp_type} specification. If \code{FALSE}, uses constant
+#'   covariates and fixed propensity score probabilities for a simpler DGP.
 #'
 #' @return A named list with components:
 #' \describe{
@@ -605,35 +608,53 @@ gen_dgp_2periods <- function(size, dgp_type){
 #'       \item \code{y_t0}, \code{y_t1}, \code{y_t2}: outcomes in periods 0, 1, and 2
 #'     }
 #'   }
-#'   \item{ES_0_unf}{Unfeasible (oracle) event-study parameter at time 0.}
-#'   \item{prob_g2_p1}{Proportion of units with \code{cohort == 2} and eligibility in period 1.}
-#'   \item{prob_g3_p1}{Proportion of units with \code{cohort == 3} and eligibility in period 1.}
+#'   \item{ES_0_unf}{(Only if \code{include_covariates = TRUE}) Unfeasible (oracle) event-study parameter at time 0.}
+#'   \item{prob_g2_p1}{(Only if \code{include_covariates = TRUE}) Proportion of units with \code{cohort == 2} and eligibility in period 1.}
+#'   \item{prob_g3_p1}{(Only if \code{include_covariates = TRUE}) Proportion of units with \code{cohort == 3} and eligibility in period 1.}
 #' }
 #'
 #' @export
-gen_dgp_mult_periods <- function(size, dgp_type = 1){
+gen_dgp_mult_periods <- function(size, dgp_type = 1, include_covariates = TRUE){
+
+  # Validate parameters
+  if (!include_covariates && dgp_type != 1) {
+    warning("dgp_type is ignored when include_covariates = FALSE. Using simple DGP specification.")
+  }
 
   # Generates covariates
   Xsi.ps = 0.4 # This scale things in pscore
 
-  x1 <- stats::rnorm(size, mean = 0, sd = 1)
-  x2 <- stats::rnorm(size, mean = 0, sd = 1)
-  x3 <- stats::rnorm(size, mean = 0, sd = 1)
-  x4 <- stats::rnorm(size, mean = 0, sd = 1)
-
-  z1_tilde <- exp(x1/2)
-  z2_tilde <- x2/(1 + exp(x1)) + 10
-  z3_tilde <- (x1 * x3/25 + 0.6)^3
-  z4_tilde <- (x1 + x4 + 20)^2
-
-
-  z1 <- (z1_tilde - mean.z1) / sd.z1
-  z2 <- (z2_tilde - mean.z2) / sd.z2
-  z3 <- (z3_tilde - mean.z3) / sd.z3
-  z4 <- (z4_tilde - mean.z4) / sd.z4
+  if (include_covariates) {
+    x1 <- stats::rnorm(size, mean = 0, sd = 1)
+    x2 <- stats::rnorm(size, mean = 0, sd = 1)
+    x3 <- stats::rnorm(size, mean = 0, sd = 1)
+    x4 <- stats::rnorm(size, mean = 0, sd = 1)
+  } else {
+    x1 <- rep(1, size)
+    x2 <- rep(1, size)
+    x3 <- rep(1, size)
+    x4 <- rep(1, size)
+  }
 
   x <- cbind(x1, x2, x3, x4)
-  z <- cbind(z1, z2, z3, z4)
+
+  # Transform to Z only if covariates are included
+  if (include_covariates) {
+    z1_tilde <- exp(x1/2)
+    z2_tilde <- x2/(1 + exp(x1)) + 10
+    z3_tilde <- (x1 * x3/25 + 0.6)^3
+    z4_tilde <- (x1 + x4 + 20)^21
+
+    z1 <- (z1_tilde - mean.z1) / sd.z1
+    z2 <- (z2_tilde - mean.z2) / sd.z2
+    z3 <- (z3_tilde - mean.z3) / sd.z3
+    z4 <- (z4_tilde - mean.z4) / sd.z4
+
+    z <- cbind(z1, z2, z3, z4)
+  } else {
+    # For no covariates, z = x (constants)
+    z <- x
+  }
 
   w1 <- c(-1, 0.5, -0.25, -0.1) # for (2,A), (2,B)
   w2 <- c(-0.5, 1, -0.1, -0.25) # for (3,A), (3,B)
@@ -647,7 +668,105 @@ gen_dgp_mult_periods <- function(size, dgp_type = 1){
   # and two partitions for each group, P=0,1 (P=0 is not eligible for treatment)
   # Thus, in total, we have 6 Group-Partition combinations
 
-  if(dgp_type == 1){
+  if (!include_covariates) {
+    #---------------------------------------------------------------------------
+    # SIMPLE DGP: No covariates (constants only)
+    #---------------------------------------------------------------------------
+    # Use fixed probability matrix for propensity scores
+    probs_pscore <- matrix(cbind(0.20, 0.15, 0.30, 0.20, 0.05, 0.10),
+                           nrow=size, ncol=6, byrow = TRUE)
+    colnames(probs_pscore) <- c("pi_2A", "pi_2B", "pi_3A", "pi_3B", "pi_0A", "pi_0B")
+
+    # Sample group types
+    group_types <- apply(probs_pscore, 1,
+                         function(pvec) sample(x = seq(1,6), size=1, prob=pvec))
+
+    # Translate group types into partitions and cohorts
+    partition <- ifelse(group_types %in% c(1,3,5), 1, 0)
+    cohort <- ifelse(group_types %in% c(1,2),
+                     2,
+                     ifelse(group_types %in% c(3,4),
+                            3,
+                            0))
+
+    #---------------------------------------------------------------------------
+    # Create indexes for potential outcomes (simple specification)
+    #---------------------------------------------------------------------------
+    # Index for PO (using simpler linear index without Z transformation)
+    index_lin <- 210 + 27.4*x1 + 13.7*(x2 + x3 + x4)
+    index_partition <- partition * index_lin
+    # Index for unobserved heterogeneity
+    index_unobs_het <- cohort * index_lin + index_partition
+    # Index for Conditional Parallel Trends
+    index_trend <- index_lin
+    # Generate unobserved heterogeneity
+    v <- stats::rnorm(size, mean = index_unobs_het, sd = 1)
+    # Index to violates the parallel trends assumption
+    index_pt_violation <- v/10
+
+    # Index for per-period ATT(g,t)
+    index_att_g2 <- 10
+    index_att_g3 <- 25
+
+    #---------------------------------------------------------------------------
+    # Generate the potential outcomes
+    #---------------------------------------------------------------------------
+    # Baseline index
+    baseline_t1 <- index_lin + index_partition + v
+
+    # Generate untreated outcome at time 1
+    y_t1 <- baseline_t1 + stats::rnorm(size)
+
+    # Generate potential outcomes at time 2
+    baseline_t2 <- baseline_t1 +
+      index_pt_violation + # Violate the CPT
+      index_trend # trend based on X
+
+    y_t2_never <- baseline_t2 + stats::rnorm(size)
+    y_t2_g2 <- baseline_t2 + stats::rnorm(size) +
+      index_att_g2 * partition
+
+    # Generate potential outcomes at time 3
+    baseline_t3 <- baseline_t1 +
+      2*index_trend +
+      2*index_pt_violation
+
+    y_t3_never <- baseline_t3 + stats::rnorm(size)
+    y_t3_g2 <- baseline_t3 + stats::rnorm(size) +
+      2*index_att_g2 * partition
+    y_t3_g3 <- baseline_t3 + stats::rnorm(size) +
+      index_att_g3 * partition
+
+    #---------------------------------------------------------------------------
+    # Get the realized outcomes
+    #---------------------------------------------------------------------------
+    y_t2 <- ifelse(cohort == 2 & partition==1, y_t2_g2, y_t2_never)
+    y_t3 <- ifelse(cohort == 2 & partition==1, y_t3_g2,
+                   ifelse(cohort == 3 & partition==1, y_t3_g3,
+                          y_t3_never))
+
+    #---------------------------------------------------------------------------
+    # Put all data in a data frame
+    #---------------------------------------------------------------------------
+    dta_wide <- data.frame(cbind(id = 1:size,
+                                 y_t1, y_t2 , y_t3,
+                                 cohort , partition,
+                                 x))
+    # Transform data into long format
+    dta <- get_long_data(list(as.vector(y_t1), as.vector(y_t2), as.vector(y_t3)), cohort, partition, x)
+    setorder(dta, "id", "time")
+    # generate clusters
+    unique_ids <- unique(dta$id)
+    clusters <- data.table(id = unique_ids, cluster = sample(1:50, size = length(unique_ids), replace = TRUE))
+    dta <- merge(dta, clusters, by = "id", all.x = TRUE)
+
+    #---------------------------------------------------------------------------
+    # Return the data (no unfeasible parameters for simple DGP)
+    #---------------------------------------------------------------------------
+    return(list(data = as.data.table(dta),
+                data_wide = as.data.table(dta_wide)))
+
+  } else if(dgp_type == 1){
     # both models are functions of Z
     # index for pscores
 

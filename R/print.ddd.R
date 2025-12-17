@@ -118,8 +118,9 @@ print.ddd <- function(x, alpha = NULL, ...) {
   cat(" Note: * indicates that the confidence interval does not contain zero.")
 
   cat("\n --------------------------- Data Info   -----------------------------")
-  # Panel data
-  cat("\n", "Panel data")
+  # Print type of data: if balanced panel, unbalanced panel or RCS
+  data_type <- ifelse(x$argu$panel == TRUE, "Panel Data", "Repeated Cross-Sections")
+  cat("\n", data_type)
   cat("\n", paste0("Outcome variable: ", x$argu$yname))
   # add partition variable name
   cat("\n", paste0("Qualification variable: ", x$argu$pname))

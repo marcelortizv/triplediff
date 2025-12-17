@@ -85,7 +85,7 @@ NULL
 #' @export
 ddd <- function(yname,
                 tname,
-                idname,
+                idname = NULL,
                 gname,
                 pname,
                 xformla,
@@ -93,6 +93,8 @@ ddd <- function(yname,
                 control_group = NULL,
                 base_period = NULL,
                 est_method = "dr",
+                panel = TRUE,
+                allow_unbalanced_panel = FALSE,
                 weightsname = NULL,
                 boot = FALSE,
                 nboot = NULL,
@@ -132,6 +134,27 @@ ddd <- function(yname,
     }
   }
 
+  #------------------------------------------
+  # Validate idname parameter
+  #------------------------------------------
+
+  # If idname is not provided, assume RCS data
+  if (is.null(idname)) {
+    # Check for incompatible parameter combinations
+    if (panel) {
+      stop("idname is required when panel = TRUE. For repeated cross-section data, set panel = FALSE.")
+    }
+    if (allow_unbalanced_panel) {
+      stop("idname is required when allow_unbalanced_panel = TRUE. For repeated cross-section data, set panel = FALSE and leave idname as NULL.")
+    }
+    # Set a placeholder - preprocessing will create the actual ID
+    idname <- ".rcs_id"
+  } else {
+    # User provided idname - check if column exists
+    if (!idname %in% names(dta)) {
+      stop(paste0("Column '", idname, "' not found in data."))
+    }
+  }
 
   # Flag for est_method
   if (!(est_method %in% c("reg", "ipw", "dr"))) {
@@ -160,6 +183,8 @@ ddd <- function(yname,
                                       dta = dta,
                                       control_group = NULL,
                                       est_method = est_method,
+                                      panel = panel,
+                                      allow_unbalanced_panel = allow_unbalanced_panel,
                                       learners = NULL,
                                       n_folds = NULL,
                                       weightsname = weightsname,
@@ -187,6 +212,8 @@ ddd <- function(yname,
                                        control_group = control_group,
                                        base_period = base_period,
                                        est_method = est_method,
+                                       panel = panel,
+                                       allow_unbalanced_panel = allow_unbalanced_panel,
                                        learners = NULL,
                                        n_folds = NULL,
                                        weightsname = weightsname,
@@ -227,6 +254,8 @@ ddd <- function(yname,
                                     dta = dta,
                                     control_group = NULL,
                                     est_method = est_method,
+                                    panel = panel,
+                                    allow_unbalanced_panel = allow_unbalanced_panel,
                                     learners = NULL,
                                     n_folds = NULL,
                                     weightsname = weightsname,
@@ -277,14 +306,21 @@ ddd <- function(yname,
       # # att_gt_dml <- att_gt_dml(dp)
     #}
   } else {
-    if (est_method %in% c("dr", "reg", "ipw")){
-      # RUN DR for 2 time periods
-      att_dr <- att_dr(dp)
-    } # else {
-      # RUN DML for 2 time periods
-      # att_dml <- att_dml(dp)
-    #}
+    if (est_method %in% c("dml")){
+        # RUN DML for 2 time periods
+        # att_dml <- att_dml(dp)
+      stop("DML estimation method is not yet supported.")
+    } else {
+      if (dp$panel){
+        # RUN DR for 2 time periods
+        att_dr <- att_dr(dp)
+      } else {
+        # RUN DR for RCS 2 time periods
+        att_dr <- att_dr_rc(dp)
+      }
+    }
   }
+
 
   #------------------------------------------
   # Return the results
@@ -304,6 +340,8 @@ ddd <- function(yname,
     multiple_periods = multiple_periods,
     # learners = args$learners,
     # n_folds = args$n_folds,
+    panel = args$panel, # getting from args because it could change in the pre process
+    allow_unbalanced_panel = args$allow_unbalanced_panel, # getting from args because it could change in the pre process
     cband = dp$cband, # getting from dp because it could change in the pre process
     cluster = args$cluster,
     boot = dp$boot, # getting from dp because it could change in the pre process
@@ -337,7 +375,7 @@ ddd <- function(yname,
    #        argu = argu
    #      )
    # }
-  }# RETURNING LIST FOR 2 PERIODS CASE
+  }# RETURNING LIST FOR 2 PERIODS CASE with DML
 
   # multiple time periods case: dr or dml
   if (multiple_periods){
