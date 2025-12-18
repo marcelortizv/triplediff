@@ -25,6 +25,11 @@ NULL
 #' Varying base period reports ATT(g,t) right before treatment. Universal base period normalizes the estimate before treatment to be 0, adding one extra estimate in an earlier period.
 #' @param est_method The estimation method to be used. Default is \code{"dr"} (doubly robust). It computes propensity score using logistic regression
 #' and outcome regression using OLS. The alternative are \code{c("reg", "ipw")}.
+#' @param panel Logical. If \code{TRUE} (default), the data is treated as panel data where each unit is observed in all time periods.
+#' If \code{FALSE}, the data is treated as repeated cross-sections (RCS) where each observation may represent a different unit.
+#' For RCS data, \code{idname} can be omitted or set to \code{NULL}, and the function will automatically create unique IDs for each observation.
+#' @param allow_unbalanced_panel Logical. If \code{TRUE}, allows for unbalanced panel data where units may not be observed in all time periods.
+#' Default is \code{FALSE}. Note: This parameter requires \code{panel = TRUE} and a valid \code{idname}.
 #' @param weightsname The name of the column containing the weights. Default is \code{NULL}. As part of data processing, weights are enforced to be normalized
 #' and have mean 1 across all observations.
 #' @param boot Logical. If \code{TRUE}, the function computes standard errors using the multiplier bootstrap. Default is \code{FALSE}.
@@ -37,7 +42,9 @@ NULL
 #' @param use_parallel Logical. If \code{TRUE}, the function runs in parallel processing. Valid only when \code{boot = TRUE}. Default is \code{FALSE}.
 #' @param cores The number of cores to be used in the parallel processing. Default is \code{cores = 1}.
 #' @param inffunc Logical. If \code{TRUE}, the function returns the influence function. Default is \code{FALSE}.
-#' @param skip_data_checks Logical. If \code{TRUE}, the function skips the data checks and go straight to estimation. Default is \code{FALSE}.
+#' @param skip_data_checks Logical. If \code{TRUE}, the function skips data validation checks and proceeds directly to estimation.
+#' This can improve performance when you are confident the data is correctly formatted. Default is \code{FALSE}.
+#' Use with caution as skipping checks may lead to unexpected errors if data is malformed.
 #'
 #' @return A `ddd` object with the following basic elements:
 #' \item{ATT}{The average treatment effect on the treated.}
