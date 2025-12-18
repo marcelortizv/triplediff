@@ -67,7 +67,7 @@ dt_rc[, subgroup := fifelse(partition == 1 & treat == 1, 4,
                     fifelse(partition == 1 & treat == 0, 2, 1)))]
 
 # Check subgroup counts
-subgroup_counts <- dt_rc[, .N, by = subgroup][order(-subgroup)]
+subgroup_counts <- dt_rc[, .(count = .N), by = subgroup][order(-subgroup)]
 print(subgroup_counts)
 
 # Prepare Covariates

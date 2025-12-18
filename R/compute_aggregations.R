@@ -1,7 +1,5 @@
 #' Utility functions to compute aggregation procedures.
 #' @importFrom stats update
-#' @import parglm
-#' @import speedglm
 #' @import data.table
 #' @noRd
 #--------------------------------------------------
