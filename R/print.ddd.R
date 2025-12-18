@@ -137,12 +137,38 @@ print.ddd <- function(x, alpha = NULL, ...) {
     cat("\n", paste0("  untreated-and-ineligible: ", x$subgroup_counts$count[4])) # subgroup 1
   } else {
     cat("\n", "No. of units per treatment group:")
-    for (i in 1:nrow(x$cohort_size)) {
 
-      if (x$cohort_size$first_treat[i] == 0) {
-        cat("\n", paste0("  Units never enabling treatment: ", x$cohort_size$V1[i]), sep = "")
+    n_cohorts <- nrow(x$cohort_size)
+    max_display <- 7  # Maximum cohorts to display before truncating
+
+    if (n_cohorts <= max_display) {
+      # Display all cohorts when count is manageable
+      for (i in 1:n_cohorts) {
+        if (x$cohort_size$first_treat[i] == 0) {
+          cat("\n", paste0("  Units never enabling treatment: ", x$cohort_size$N[i]), sep = "")
+        } else {
+          cat("\n", paste0("  Units enabling treatment at period ", x$cohort_size$first_treat[i], ": ", x$cohort_size$N[i]), sep = "")
+        }
+      }
+    } else {
+      # Display first 3 cohorts
+      for (i in 1:3) {
+        if (x$cohort_size$first_treat[i] == 0) {
+          cat("\n", paste0("  Units never enabling treatment: ", x$cohort_size$N[i]), sep = "")
+        } else {
+          cat("\n", paste0("  Units enabling treatment at period ", x$cohort_size$first_treat[i], ": ", x$cohort_size$N[i]), sep = "")
+        }
+      }
+
+      # Omission message
+      n_omitted <- n_cohorts - 4  # 3 shown at top + 1 shown at bottom
+      cat("\n", paste0("  ... (", n_omitted, " cohorts omitted for brevity) ..."), sep = "")
+
+      # Display last cohort (typically never-treated)
+      if (x$cohort_size$first_treat[n_cohorts] == 0) {
+        cat("\n", paste0("  Units never enabling treatment: ", x$cohort_size$N[n_cohorts]), sep = "")
       } else {
-        cat("\n", paste0("  Units enabling treatment at period ", x$cohort_size$first_treat[i], ": ", x$cohort_size$V1[i]), sep = "")
+        cat("\n", paste0("  Units enabling treatment at period ", x$cohort_size$first_treat[n_cohorts], ": ", x$cohort_size$N[n_cohorts]), sep = "")
       }
     }
   }
