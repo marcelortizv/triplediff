@@ -342,7 +342,7 @@ att_gt <- function(did_preprocessed){
           attgt_inf_func <- att_dr_rc(did_preprocessed)
 
           # Rescale influence function
-          # attgt_inf_func$inf_func <- (n_size/size_gt) * attgt_inf_func$inf_func
+          attgt_inf_func$inf_func <- (n_size/size_gt) * attgt_inf_func$inf_func
 
           # Save results
           attgt_list[[counter]] <- list(att = attgt_inf_func$ATT,
@@ -407,7 +407,7 @@ att_gt <- function(did_preprocessed){
             ddd_out <- att_dr_rc(did_preprocessed)
 
             # Rescale influence function
-            # ddd_out$inf_func <- ((size_gt/size_gt_ctrl) * ddd_out$inf_func)
+            ddd_out$inf_func <- ((size_gt/size_gt_ctrl) * ddd_out$inf_func)
 
             # Save results
             ddd_over_controls_res[[as.character(ctrl)]] <- ddd_out
