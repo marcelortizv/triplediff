@@ -724,18 +724,18 @@ gen_dgp_mult_periods <- function(size, dgp_type = 1, include_covariates = TRUE){
 
     y_t2_never <- baseline_t2 + stats::rnorm(size)
     y_t2_g2 <- baseline_t2 + stats::rnorm(size) +
-      index_att_g2 * partition
+      index_att_g2 * partition # This is the treatment effects for cohort 2
 
     # Generate potential outcomes at time 3
     baseline_t3 <- baseline_t1 +
-      2*index_trend +
-      2*index_pt_violation
+      2*index_trend + # this is for the trend based on X 
+      2*index_pt_violation # Violate the CPT
 
     y_t3_never <- baseline_t3 + stats::rnorm(size)
     y_t3_g2 <- baseline_t3 + stats::rnorm(size) +
-      2*index_att_g2 * partition
+      2*index_att_g2 * partition # This is the treatment effects for cohort 2 at time 3
     y_t3_g3 <- baseline_t3 + stats::rnorm(size) +
-      index_att_g3 * partition
+      index_att_g3 * partition # This is the treatment effects for cohort 3 at time 3
 
     #---------------------------------------------------------------------------
     # Get the realized outcomes

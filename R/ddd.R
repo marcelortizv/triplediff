@@ -175,6 +175,12 @@ ddd <- function(yname,
       control_group <- "nevertreated"
   }
 
+  # Flag for base period in multiple periods
+  if (multiple_periods && is.null(base_period)) {
+      warning("base_period should be provided for multiple time periods. Using 'varying'")
+      base_period <- "varying"
+  }
+
   #------------------------------------------
   # Run preprocess and validation checks
   #------------------------------------------
