@@ -131,7 +131,7 @@ att_gt <- function(did_preprocessed){
           # filter data for treated and control groups in each (g,t) cell. Save index
 
           # get total number of units
-          n_size = uniqueN(cohort_data[, id])
+          # n_size = uniqueN(cohort_data[, id])
 
           # index of unit in current cell (g,t) when treat = 1 and control = 1
           index_units_in_gt <- cohort_data[, treat == 1 | control == 1]
@@ -177,12 +177,12 @@ att_gt <- function(did_preprocessed){
           attgt_inf_func <- att_dr(did_preprocessed)
 
           # adjust influence function
-          attgt_inf_func$inf_func <- (n_size/size_gt) * attgt_inf_func$inf_func
+          attgt_inf_func$inf_func <- (n/size_gt) * attgt_inf_func$inf_func
           # save results in a list
           attgt_list[[counter]] <- list(att = attgt_inf_func$ATT, group = glist[g], year = tlist[t + tfac], post = post_treat)
 
           # recover influence function
-          inff <- rep(0, n_size)
+          inff <- rep(0, n)
           # avoid repetition in index
           inff[index_units_in_gt[seq(1, length(index_units_in_gt), by = 2)]] <- attgt_inf_func$inf_func
           # save in influence function matrix
@@ -240,7 +240,7 @@ att_gt <- function(did_preprocessed){
             ddd_over_controls_res[[as.character(ctrl)]] <- ddd_out
 
             # recover influence function
-            inff <- rep(0, n_size)
+            inff <- rep(0, n)
             # avoid repetition in index
             inff[index_units_in_gt_ctrl[seq(1, length(index_units_in_gt_ctrl), by = 2)]] <- ddd_out$inf_func
 
@@ -299,7 +299,7 @@ att_gt <- function(did_preprocessed){
         # ==========================================
 
         # Get total number of observations (NOT unique IDs)
-        n_size <- nrow(cohort_data)
+        # n_size = uniqueN(cohort_data[, id])
 
         # Filter for treated and control groups
         index_units_in_gt <- cohort_data[, treat == 1 | control == 1]
@@ -342,8 +342,8 @@ att_gt <- function(did_preprocessed){
           attgt_inf_func <- att_dr_rc(did_preprocessed)
 
           # Rescale influence function
-          attgt_inf_func$inf_func <- (n_size/size_gt) * attgt_inf_func$inf_func
-
+          # attgt_inf_func$inf_func <- (n_size/size_gt) * attgt_inf_func$inf_func
+          attgt_inf_func$inf_func <- (n / size_gt) * attgt_inf_func$inf_func
           # Save results
           attgt_list[[counter]] <- list(att = attgt_inf_func$ATT,
                                          group = glist[g],
@@ -407,7 +407,8 @@ att_gt <- function(did_preprocessed){
             ddd_out <- att_dr_rc(did_preprocessed)
 
             # Rescale influence function
-            ddd_out$inf_func <- ((size_gt/size_gt_ctrl) * ddd_out$inf_func)
+            # ddd_out$inf_func <- ((size_gt/size_gt_ctrl) * ddd_out$inf_func)
+            ddd_out$inf_func <- (n / size_gt) * ddd_out$inf_func
 
             # Save results
             ddd_over_controls_res[[as.character(ctrl)]] <- ddd_out

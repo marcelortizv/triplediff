@@ -19,3 +19,4 @@
 ^test_print_cohorts_direct\.R$
 ^test_rcs_all_methods\.R$
 ^.*\.claude$
+^test_inffunc\.R$
