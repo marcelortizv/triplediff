@@ -15,6 +15,7 @@ develop_rcs_triplediff.R
 test_gen_dgp_integration.R
 test_phase_a.R
 test_phase_b.R
+test_phase_b2.R
 test_print_cohorts.R
 test_print_cohorts_direct.R
 test_rcs_all_methods.R

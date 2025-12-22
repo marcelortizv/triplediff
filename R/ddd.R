@@ -324,11 +324,19 @@ ddd <- function(yname,
         # att_dml <- att_dml(dp)
       stop("DML estimation method is not yet supported.")
     } else {
-      if (dp$panel){
-        # RUN DR for 2 time periods
+      # Use true_repeated_cross_sections flag to determine estimation method
+      # Extract with fallback for backward compatibility
+      true_rcs <- if (!is.null(dp$true_repeated_cross_sections)) {
+        dp$true_repeated_cross_sections
+      } else {
+        !dp$panel  # Fallback: if flag missing, assume RCS only when panel=FALSE
+      }
+
+      if (dp$panel && !true_rcs){
+        # RUN DR for 2 time periods (balanced panel only)
         att_dr <- att_dr(dp)
       } else {
-        # RUN DR for RCS 2 time periods
+        # RUN DR for RCS 2 time periods (true RCS or unbalanced panel)
         att_dr <- att_dr_rc(dp)
       }
     }

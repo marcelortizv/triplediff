@@ -42,6 +42,12 @@ att_gt <- function(did_preprocessed){
   tlist <- did_preprocessed$tlist
   glist <- did_preprocessed$glist
   panel <- did_preprocessed$panel
+  # Extract true_repeated_cross_sections flag with fallback for backward compatibility
+  true_rcs <- if (!is.null(did_preprocessed$true_repeated_cross_sections)) {
+    did_preprocessed$true_repeated_cross_sections
+  } else {
+    !panel  # Fallback: if flag missing, assume RCS only when panel=FALSE
+  }
   base_period <- did_preprocessed$base_period
   boot <- did_preprocessed$boot
   alpha <- did_preprocessed$alpha
@@ -122,10 +128,13 @@ att_gt <- function(did_preprocessed){
       # ============================================
       # BRANCH: PANEL vs RCS/UNBALANCED
       # ============================================
+      # Use true_rcs flag to determine estimation path
+      # true_rcs = TRUE means: use RCS methods even if panel = TRUE
+      # This handles unbalanced panels by treating them as RCS
 
-      if (panel) {
+      if (panel && !true_rcs) {
           # ==========================================
-          # PANEL DATA PATH
+          # PANEL DATA PATH (balanced panels only)
           # ==========================================
 
           # filter data for treated and control groups in each (g,t) cell. Save index

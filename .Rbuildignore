@@ -20,3 +20,4 @@
 ^test_rcs_all_methods\.R$
 ^.*\.claude$
 ^test_inffunc\.R$
+^test_phase_b2\.R$
