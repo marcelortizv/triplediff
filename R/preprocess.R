@@ -127,12 +127,12 @@ run_nopreprocess_2periods <- function(yname,
   #-------------------------------------
 
   # If idname is the placeholder, create the actual ID column
-  if (idname == ".rcs_id") {
-    if (".rcs_id" %in% names(dta)) {
-      stop("Column '.rcs_id' already exists in data. Please rename it or provide a different idname.")
+  if (idname == ".row_id") {
+    if (".row_id" %in% names(dta)) {
+      stop("Column '.row_id' already exists in data. Please rename it or provide a different idname.")
     }
     # Create unique row IDs for RCS data
-    dta[, .rcs_id := .I]
+    dta[, .row_id := .I]
   }
 
   # -----------------------------------------------------------------------
@@ -184,12 +184,12 @@ run_nopreprocess_2periods <- function(yname,
   #-------------------------------------
 
   # If idname is the placeholder, create the actual ID column in dta
-  if (idname == ".rcs_id") {
-    if (".rcs_id" %in% names(dta)) {
-      stop("Column '.rcs_id' already exists in data. Please rename it or provide a different idname.")
+  if (idname == ".row_id") {
+    if (".row_id" %chin% names(dta)) {
+      stop("Column '.row_id' already exists in data. Please rename it or provide a different idname.")
     }
     # Create unique row IDs for RCS data
-    dta[, .rcs_id := .I]
+    dta[, (idname) := .I]
   }
 
   #-------------------------------------
@@ -218,11 +218,19 @@ run_nopreprocess_2periods <- function(yname,
 
   # Flag for not enough observations for each subgroup
   # Calculate the size of each subgroup in the 'subgroup' column
-  # For panel data: divide by 2 (each unit appears twice)
-  # For RCS data: do not divide (each observation is unique)
+  # For unbalanced panel: count unique IDs (each ID may appear multiple times)
+  # For true RCS: count observations (each observation is unique)
+  # For balanced panel: count observations / 2 (each unit appears twice)
   if (true_repeated_cross_sections) {
-    subgroup_counts <- cleaned_data[, .(count = .N), by = subgroup][order(-subgroup)]
+    if (panel && allow_unbalanced_panel) {
+      # Unbalanced panel: count unique IDs per subgroup
+      subgroup_counts <- cleaned_data[, .(count = uniqueN(id)), by = subgroup][order(-subgroup)]
+    } else {
+      # True RCS: count observations (each observation is unique)
+      subgroup_counts <- cleaned_data[, .(count = .N), by = subgroup][order(-subgroup)]
+    }
   } else {
+    # Balanced panel: count observations and divide by 2
     subgroup_counts <- cleaned_data[, .(count = .N/2), by = subgroup][order(-subgroup)]
   }
 
@@ -340,12 +348,12 @@ run_preprocess_2Periods <- function(yname,
   #-------------------------------------
 
   # If idname is the placeholder, create the actual ID column
-  if (idname == ".rcs_id") {
-    if (".rcs_id" %in% names(dta)) {
-      stop("Column '.rcs_id' is an internal name. Please rename it or provide a different idname.")
+  if (idname == ".row_id") {
+    if (".row_id" %in% names(dta)) {
+      stop("Column '.row_id' is an internal name. Please rename it or provide a different idname.")
     }
     # Create unique row IDs for RCS data
-    dta[, .rcs_id := .I]
+    dta[, .row_id := .I]
   }
 
   # Run argument checks
@@ -511,7 +519,7 @@ run_preprocess_2Periods <- function(yname,
                                          weights = dta$weights)
 
   # # For true RCS data with user-provided idname, replace with row IDs
-  # if (true_repeated_cross_sections && idname != ".rcs_id") {
+  # if (true_repeated_cross_sections && idname != ".row_id") {
   #   cleaned_data[, id := .I]  # Use row index as ID for RCS
   # }
 
@@ -530,11 +538,19 @@ run_preprocess_2Periods <- function(yname,
 
   # Flag for not enough observations for each subgroup
   # Calculate the size of each subgroup in the 'subgroup' column
-  # For panel data: divide by 2 (each unit appears twice)
-  # For RCS data: do not divide (each observation is unique)
+  # For unbalanced panel: count unique IDs (each ID may appear multiple times)
+  # For true RCS: count observations (each observation is unique)
+  # For balanced panel: count observations / 2 (each unit appears twice)
   if (true_repeated_cross_sections) {
-    subgroup_counts <- cleaned_data[, .(count = .N), by = subgroup][order(-subgroup)]
+    if (panel && allow_unbalanced_panel) {
+      # Unbalanced panel: count unique IDs per subgroup
+      subgroup_counts <- cleaned_data[, .(count = uniqueN(id)), by = subgroup][order(-subgroup)]
+    } else {
+      # True RCS: count observations (each observation is unique)
+      subgroup_counts <- cleaned_data[, .(count = .N), by = subgroup][order(-subgroup)]
+    }
   } else {
+    # Balanced panel: count observations and divide by 2
     subgroup_counts <- cleaned_data[, .(count = .N/2), by = subgroup][order(-subgroup)]
   }
   # Check if each subgroup has at least 5 observations. Check this threshold if needed.
@@ -651,7 +667,7 @@ run_preprocess_multPeriods <- function(yname,
   # If idname is missing and panel=FALSE, set placeholder for RCS
   if (missing(idname) || is.null(idname)) {
     if (!panel) {
-      idname <- ".rcs_id"
+      idname <- ".row_id"
       args$idname <- idname
     } else {
       stop("idname is required when panel = TRUE. For repeated cross-section data, set panel = FALSE.")
@@ -754,7 +770,7 @@ run_preprocess_multPeriods <- function(yname,
 
   # keep relevant columns in data
   # For RCS placeholder, exclude idname from initial column selection (will be created later)
-  if (idname == ".rcs_id") {
+  if (idname == ".row_id") {
     cols_to_keep <- c(tname, yname, gname, pname, weightsname, cluster)
   } else {
     cols_to_keep <- c(idname, tname, yname, gname, pname, weightsname, cluster)
@@ -836,7 +852,7 @@ run_preprocess_multPeriods <- function(yname,
 
   # count the number of units treated in the first period
   # For RCS placeholder, skip this check (will be handled after ID creation)
-  if (idname == ".rcs_id") {
+  if (idname == ".row_id") {
     nfirstperiod <- 0
   } else {
     nfirstperiod <- uniqueN(dta[treated_first_period == TRUE, get(idname)])
@@ -867,7 +883,7 @@ run_preprocess_multPeriods <- function(yname,
   # Check for complete cases
   keepers <- complete.cases(dta)
   # For RCS placeholder, skip ID-based counting (will use row counts instead)
-  if (idname == ".rcs_id") {
+  if (idname == ".row_id") {
     n <- nrow(dta)
     n_keep <- sum(keepers)
   } else {
@@ -886,7 +902,7 @@ run_preprocess_multPeriods <- function(yname,
 
   # Detect if panel is balanced
   # For RCS placeholder, skip balance checking (will be handled after ID creation)
-  if (idname == ".rcs_id") {
+  if (idname == ".row_id") {
     n_old <- nrow(dta)
     row_orig <- dta[, .N]
     is_balanced <- FALSE
@@ -936,12 +952,12 @@ run_preprocess_multPeriods <- function(yname,
   #-------------------------------------
 
   # If idname is the placeholder, create the actual ID column in dta
-  if (idname == ".rcs_id") {
-    if (".rcs_id" %in% names(dta)) {
-      stop("Column '.rcs_id' already exists in data. Please rename it or provide a different idname.")
+  if (idname == ".row_id") {
+    if (".row_id" %in% names(dta)) {
+      stop("Column '.row_id' already exists in data. Please rename it or provide a different idname.")
     }
     # Create unique row IDs for RCS data
-    dta[, .rcs_id := .I]
+    dta[, .row_id := .I]
   }
 
   #-------------------------------------
@@ -953,11 +969,6 @@ run_preprocess_multPeriods <- function(yname,
                                          period = dta[[tname]],
                                          partition = dta[[pname]],
                                          weights = dta$weights)
-
-  # For true RCS data with user-provided idname, replace with row IDs
-  if (true_repeated_cross_sections && idname != ".rcs_id") {
-    cleaned_data[, id := .I]  # Use row index as ID for RCS
-  }
 
   # Add cluster column if cluster argument is provided
   if (!is.null(cluster)) {
@@ -986,11 +997,19 @@ run_preprocess_multPeriods <- function(yname,
 
   # Check for small comparison groups
   # Calculate the size of each group in the 'treat' column
-  # For panel data: divide by number of periods (each unit appears in multiple periods)
-  # For RCS data: do not divide (each observation is unique)
+  # For unbalanced panel: count unique IDs (each ID may appear in multiple periods)
+  # For true RCS: count observations (each observation is unique)
+  # For balanced panel: count observations / number of periods (each unit appears in all periods)
   if (true_repeated_cross_sections) {
-    gsize <- cleaned_data[, .(N = .N), by = first_treat][order(-first_treat)]
+    if (panel && allow_unbalanced_panel) {
+      # Unbalanced panel: count unique IDs per treatment group
+      gsize <- cleaned_data[, .(N = uniqueN(id)), by = first_treat][order(-first_treat)]
+    } else {
+      # True RCS: count observations
+      gsize <- cleaned_data[, .(N = .N), by = first_treat][order(-first_treat)]
+    }
   } else {
+    # Balanced panel: count observations and divide by number of periods
     gsize <- cleaned_data[, .(N = .N / length(tlist)), by = first_treat][order(-first_treat)]
   }
   # Calculate the required size
@@ -1076,5 +1095,3 @@ process_attgt <- function(attgt_list){
 
   return(list(group = group, att = att, periods = periods))
 }
-
-

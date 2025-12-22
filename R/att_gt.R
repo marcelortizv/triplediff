@@ -48,6 +48,7 @@ att_gt <- function(did_preprocessed){
   } else {
     !panel  # Fallback: if flag missing, assume RCS only when panel=FALSE
   }
+  unbalanced_panel <- panel && true_rcs
   base_period <- did_preprocessed$base_period
   boot <- did_preprocessed$boot
   alpha <- did_preprocessed$alpha
@@ -57,6 +58,12 @@ att_gt <- function(did_preprocessed){
   cband <- did_preprocessed$cband # to perform bootstrap + simult. conf. band
 
   orig_data <- copy(data)
+  # For RCS/unbalanced, work with the unique ID index for consistent aggregation
+  id_index <- unique(data$id)
+  if (true_rcs) {
+    # Ensure n matches the number of unique IDs in the data used below
+    n <- length(id_index)
+  }
 
   attgt_list <- list()
 
@@ -315,7 +322,7 @@ att_gt <- function(did_preprocessed){
         cohort_data <- cohort_data[index_units_in_gt]
 
         # Save number of observations after filtering
-        size_gt <- nrow(cohort_data)
+        size_gt <- if (unbalanced_panel) uniqueN(cohort_data$id) else nrow(cohort_data)
 
         # Identify available control states
         available_controls <- sort(unique(cohort_data$first_treat[cohort_data$control == 1]))
@@ -338,8 +345,8 @@ att_gt <- function(did_preprocessed){
           pseudo_post <- ifelse(post_treat == 1, tlist[max(t, pret) + tfac], tlist[t + tfac])
           cohort_data[(period == pseudo_post), post := 1]
 
-          # Calculate subgroup counts - NO division by 2 for RCS
-          subgroup_counts <- cohort_data[, .(count = .N), by = subgroup][order(-subgroup)]
+          # Calculate subgroup counts - count unique IDs (handles both RCS and unbalanced panel)
+          subgroup_counts <- cohort_data[, .(count = uniqueN(id)), by = subgroup][order(-subgroup)]
 
           # Prepare did_preprocessed for att_dr_rc
           did_preprocessed$preprocessed_data <- cohort_data
@@ -368,8 +375,8 @@ att_gt <- function(did_preprocessed){
           aggte_inffunc <- suppressWarnings(stats::aggregate(attgt_inf_func$inf_func,
                                                               list(ids_in_cohort),
                                                               sum))
-          # Match aggregated IDs to positions in full data
-          id_positions <- match(aggte_inffunc[, 1], data$id)
+          # Match aggregated IDs to positions in unique ID index
+          id_positions <- match(aggte_inffunc[, 1], id_index)
           inff[id_positions] <- aggte_inffunc[, 2]
           inf_func_mat[, counter] <- inff
 
@@ -390,7 +397,7 @@ att_gt <- function(did_preprocessed){
             # Subset data for this control group
             index_units_in_gt_ctrl <- cohort_data[, first_treat == glist[g] | first_treat == ctrl]
             subset_data <- cohort_data[index_units_in_gt_ctrl]
-            size_gt_ctrl <- nrow(subset_data)
+            size_gt_ctrl <- if (unbalanced_panel) uniqueN(subset_data$id) else nrow(subset_data)
 
             # Create subgroup variable
             subset_data[, subgroup := NA_integer_]
@@ -404,8 +411,8 @@ att_gt <- function(did_preprocessed){
             pseudo_post <- ifelse(post_treat == 1, tlist[max(t, pret) + tfac], tlist[t + tfac])
             subset_data[(period == pseudo_post), post := 1]
 
-            # Calculate subgroup counts - NO division by 2
-            subgroup_counts <- subset_data[, .(count = .N), by = subgroup][order(-subgroup)]
+            # Calculate subgroup counts - count unique IDs (handles both RCS and unbalanced panel)
+            subgroup_counts <- subset_data[, .(count = uniqueN(id)), by = subgroup][order(-subgroup)]
 
             # Prepare and run att_dr_rc
             did_preprocessed$preprocessed_data <- subset_data
@@ -431,8 +438,8 @@ att_gt <- function(did_preprocessed){
             aggte_inffunc_ctrl <- suppressWarnings(stats::aggregate(ddd_out$inf_func,
                                                                      list(ids_in_subset),
                                                                      sum))
-            # Match aggregated IDs to positions in full data
-            id_positions_ctrl <- match(aggte_inffunc_ctrl[, 1], data$id)
+            # Match aggregated IDs to positions in unique ID index
+            id_positions_ctrl <- match(aggte_inffunc_ctrl[, 1], id_index)
             inff[id_positions_ctrl] <- aggte_inffunc_ctrl[, 2]
 
             if (is.null(inf_mat_local)) {

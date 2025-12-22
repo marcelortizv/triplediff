@@ -72,7 +72,10 @@ att_dr_rc <- function(did_preprocessed) {
   dr_att_inf_func_1 <- compute_did_rc(data, condition_subgroup = 1, pscores = pscores, reg_adjustment = reg_adjust, xformula = xformula, est_method = est_method) # S=g, Q=1 vs. S=\infty, Q=0
 
   dr_ddd <- dr_att_inf_func_3$dr_att + dr_att_inf_func_2$dr_att - dr_att_inf_func_1$dr_att
-  n <- data[, .N]
+  # Use sum of subgroup counts as n (handles both RCS and unbalanced panel)
+  # For RCS: subgroup_counts has observation counts → sum = total observations
+  # For unbalanced panel: subgroup_counts has unique ID counts → sum = total unique IDs
+  n <- sum(subgroup_counts$count)
   n3 <- subgroup_counts$count[subgroup_counts$subgroup == 3] + subgroup_counts$count[subgroup_counts$subgroup == 4]
   n2 <- subgroup_counts$count[subgroup_counts$subgroup == 2] + subgroup_counts$count[subgroup_counts$subgroup == 4]
   n1 <- subgroup_counts$count[subgroup_counts$subgroup == 1] + subgroup_counts$count[subgroup_counts$subgroup == 4]
