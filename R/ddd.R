@@ -155,7 +155,7 @@ ddd <- function(yname,
       stop("idname is required when allow_unbalanced_panel = TRUE. For repeated cross-section data, set panel = FALSE and leave idname as NULL.")
     }
     # Set a placeholder - preprocessing will create the actual ID
-    idname <- ".rcs_id"
+    idname <- ".row_id"
   } else {
     # User provided idname - check if column exists
     if (!idname %in% names(dta)) {
@@ -324,15 +324,7 @@ ddd <- function(yname,
         # att_dml <- att_dml(dp)
       stop("DML estimation method is not yet supported.")
     } else {
-      # Use true_repeated_cross_sections flag to determine estimation method
-      # Extract with fallback for backward compatibility
-      true_rcs <- if (!is.null(dp$true_repeated_cross_sections)) {
-        dp$true_repeated_cross_sections
-      } else {
-        !dp$panel  # Fallback: if flag missing, assume RCS only when panel=FALSE
-      }
-
-      if (dp$panel && !true_rcs){
+      if (panel){
         # RUN DR for 2 time periods (balanced panel only)
         att_dr <- att_dr(dp)
       } else {

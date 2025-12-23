@@ -923,9 +923,10 @@ run_preprocess_multPeriods <- function(yname,
     if (!is_balanced) {
       if (allow_unbalanced_panel) {
         # Treat unbalanced panel as repeated cross-sections
-        true_repeated_cross_sections <- TRUE
+        true_repeated_cross_sections <- FALSE
         warning("Panel is unbalanced. Proceeding as such.")
       } else {
+        warning("Panel is unbalanced but allow_unbalanced_panel = FALSE. Forcing to convert data to balanced panel.")
         # Balance the panel by dropping units
         dta <- BMisc::makeBalancedPanel(dta, idname, tname)
         n <- uniqueN(dta[[idname]])
@@ -981,14 +982,10 @@ run_preprocess_multPeriods <- function(yname,
   #   stop("All observations dropped to convert data to balanced panel. Please check your argument in 'idname'.")
   # }
 
-  # Compute sample size n
-  # For panel data: n = number of unique IDs in first period
-  # For RCS data: n = total number of unique observations (rows)
-  if (true_repeated_cross_sections) {
-    n <- uniqueN(cleaned_data$id)  # Each observation has unique ID for RCS
-  } else {
-    n <- nrow(cleaned_data[period == tlist[1], ])  # Number of units in first period for panel
-  }
+  # Compute sample size n = number of unique IDs
+  # For panel: each unit appears multiple times
+  # For RCS: each observation has unique ID after preprocessing
+  n <- uniqueN(cleaned_data$id)
 
   # Check if groups is empty
   if(length(glist)==0){
@@ -1000,18 +997,19 @@ run_preprocess_multPeriods <- function(yname,
   # For unbalanced panel: count unique IDs (each ID may appear in multiple periods)
   # For true RCS: count observations (each observation is unique)
   # For balanced panel: count observations / number of periods (each unit appears in all periods)
-  if (true_repeated_cross_sections) {
+  if (true_repeated_cross_sections){
+    # True RCS: count observations
+      gsize <- cleaned_data[, .(N = .N), by = first_treat][order(-first_treat)]
+  } else {
     if (panel && allow_unbalanced_panel) {
       # Unbalanced panel: count unique IDs per treatment group
       gsize <- cleaned_data[, .(N = uniqueN(id)), by = first_treat][order(-first_treat)]
     } else {
-      # True RCS: count observations
-      gsize <- cleaned_data[, .(N = .N), by = first_treat][order(-first_treat)]
+      # Balanced panel: count observations and divide by number of periods
+      gsize <- cleaned_data[, .(N = .N / length(tlist)), by = first_treat][order(-first_treat)]
     }
-  } else {
-    # Balanced panel: count observations and divide by number of periods
-    gsize <- cleaned_data[, .(N = .N / length(tlist)), by = first_treat][order(-first_treat)]
   }
+
   # Calculate the required size
   reqsize <- length(BMisc::rhs.vars(xformla)) + 5
   # Identify groups to warn about
@@ -1063,6 +1061,7 @@ run_preprocess_multPeriods <- function(yname,
               tlist = tlist,
               glist = glist,
               panel = panel,
+              allow_unbalanced_panel = allow_unbalanced_panel,
               true_repeated_cross_sections = true_repeated_cross_sections)
 
   return(out)

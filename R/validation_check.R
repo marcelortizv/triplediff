@@ -77,7 +77,7 @@ validate_args_2Periods <- function(args, dta){
   }
 
   # Check if idname is in the data (skip for RCS placeholder)
-  if (idname != ".rcs_id") {
+  if (idname != ".row_id") {
     if ( !is.element(idname, base::colnames(dta))) {
       stop("idname = ",idname,  " could not be found in the data provided.")
     }
@@ -214,7 +214,7 @@ validate_args_multPeriods <- function(args, dta){
   }
 
   # Check if idname is in the data (skip for RCS placeholder)
-  if (idname != ".rcs_id") {
+  if (idname != ".row_id") {
     if ( !is.element(idname, base::colnames(dta))) {
       stop("idname = ",idname,  " could not be found in the data provided.")
     }
@@ -241,7 +241,7 @@ validate_args_multPeriods <- function(args, dta){
 
   # Faster and useful checks to make sure we have a well-balanced panel.
   # Skip these checks for RCS placeholder (column doesn't exist yet)
-  if (idname != ".rcs_id") {
+  if (idname != ".row_id") {
     # Check if partition is unique by idname
     checkPartitionUniqueness(dta, idname, pname)
 

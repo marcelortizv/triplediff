@@ -42,13 +42,7 @@ att_gt <- function(did_preprocessed){
   tlist <- did_preprocessed$tlist
   glist <- did_preprocessed$glist
   panel <- did_preprocessed$panel
-  # Extract true_repeated_cross_sections flag with fallback for backward compatibility
-  true_rcs <- if (!is.null(did_preprocessed$true_repeated_cross_sections)) {
-    did_preprocessed$true_repeated_cross_sections
-  } else {
-    !panel  # Fallback: if flag missing, assume RCS only when panel=FALSE
-  }
-  unbalanced_panel <- panel && true_rcs
+  allow_unbalanced_panel <- did_preprocessed$allow_unbalanced_panel
   base_period <- did_preprocessed$base_period
   boot <- did_preprocessed$boot
   alpha <- did_preprocessed$alpha
@@ -58,13 +52,7 @@ att_gt <- function(did_preprocessed){
   cband <- did_preprocessed$cband # to perform bootstrap + simult. conf. band
 
   orig_data <- copy(data)
-  # For RCS/unbalanced, work with the unique ID index for consistent aggregation
   id_index <- unique(data$id)
-  if (true_rcs) {
-    # Ensure n matches the number of unique IDs in the data used below
-    n <- length(id_index)
-  }
-
   attgt_list <- list()
 
   counter <- 1
@@ -135,11 +123,8 @@ att_gt <- function(did_preprocessed){
       # ============================================
       # BRANCH: PANEL vs RCS/UNBALANCED
       # ============================================
-      # Use true_rcs flag to determine estimation path
-      # true_rcs = TRUE means: use RCS methods even if panel = TRUE
-      # This handles unbalanced panels by treating them as RCS
 
-      if (panel && !true_rcs) {
+      if (panel && !allow_unbalanced_panel) {
           # ==========================================
           # PANEL DATA PATH (balanced panels only)
           # ==========================================
@@ -322,7 +307,8 @@ att_gt <- function(did_preprocessed){
         cohort_data <- cohort_data[index_units_in_gt]
 
         # Save number of observations after filtering
-        size_gt <- if (unbalanced_panel) uniqueN(cohort_data$id) else nrow(cohort_data)
+        size_gt <- if (allow_unbalanced_panel) uniqueN(cohort_data$id) else nrow(cohort_data)
+        # size_gt <- nrow(cohort_data)
 
         # Identify available control states
         available_controls <- sort(unique(cohort_data$first_treat[cohort_data$control == 1]))
@@ -332,6 +318,9 @@ att_gt <- function(did_preprocessed){
         # SINGLE CONTROL GROUP CASE (RCS)
         # ----------------------------------------
         if (length(available_controls) == 1) {
+
+          # Get total sample size for influence function (number of unique IDs in original data)
+          n_total <- uniqueN(orig_data$id)
 
           # Create subgroup variable
           cohort_data[, subgroup := NA_integer_]
@@ -346,7 +335,18 @@ att_gt <- function(did_preprocessed){
           cohort_data[(period == pseudo_post), post := 1]
 
           # Calculate subgroup counts - count unique IDs (handles both RCS and unbalanced panel)
-          subgroup_counts <- cohort_data[, .(count = uniqueN(id)), by = subgroup][order(-subgroup)]
+          if (allow_unbalanced_panel) {
+            # Create subgroup variable
+            data[, subgroup := NA_integer_]
+            data[(treat == 1 & partition == 1), subgroup := 4]
+            data[(treat == 1 & partition == 0), subgroup := 3]
+            data[(treat == 0 & partition == 1), subgroup := 2]
+            data[(treat == 0 & partition == 0), subgroup := 1]
+            subgroup_counts <- data[, .(count = uniqueN(id)), by = subgroup][order(-subgroup)]
+          } else {
+            subgroup_counts <- cohort_data[, .(count = uniqueN(id)), by = subgroup][order(-subgroup)]
+          }
+          
 
           # Prepare did_preprocessed for att_dr_rc
           did_preprocessed$preprocessed_data <- cohort_data
@@ -358,8 +358,7 @@ att_gt <- function(did_preprocessed){
           attgt_inf_func <- att_dr_rc(did_preprocessed)
 
           # Rescale influence function
-          # attgt_inf_func$inf_func <- (n_size/size_gt) * attgt_inf_func$inf_func
-          attgt_inf_func$inf_func <- (n / size_gt) * attgt_inf_func$inf_func
+          attgt_inf_func$inf_func <- (n_total / size_gt) * attgt_inf_func$inf_func
           # Save results
           attgt_list[[counter]] <- list(att = attgt_inf_func$ATT,
                                          group = glist[g],
@@ -368,7 +367,7 @@ att_gt <- function(did_preprocessed){
 
           # Populate influence function - NO skip-by-2 for RCS
           # For RCS: aggregate influence function by ID (sum for repeated IDs)
-          inff <- rep(0, n)  # Use total sample size, not cohort size
+          inff <- rep(0, n_total)  # Use total sample size, not cohort size
 
           # Aggregate influence function by ID in case same ID appears multiple times
           ids_in_cohort <- cohort_data$id
@@ -387,6 +386,9 @@ att_gt <- function(did_preprocessed){
         # ----------------------------------------
         } else {
 
+          # Get total sample size for influence function (number of unique IDs in original data)
+          n_total <- uniqueN(orig_data$id)
+
           # Initialize containers
           ddd_over_controls_res <- list()
           inf_mat_local <- NULL
@@ -397,7 +399,7 @@ att_gt <- function(did_preprocessed){
             # Subset data for this control group
             index_units_in_gt_ctrl <- cohort_data[, first_treat == glist[g] | first_treat == ctrl]
             subset_data <- cohort_data[index_units_in_gt_ctrl]
-            size_gt_ctrl <- if (unbalanced_panel) uniqueN(subset_data$id) else nrow(subset_data)
+            size_gt_ctrl <- if (allow_unbalanced_panel) uniqueN(subset_data$id) else nrow(subset_data)
 
             # Create subgroup variable
             subset_data[, subgroup := NA_integer_]
@@ -423,15 +425,14 @@ att_gt <- function(did_preprocessed){
             ddd_out <- att_dr_rc(did_preprocessed)
 
             # Rescale influence function
-            # ddd_out$inf_func <- ((size_gt/size_gt_ctrl) * ddd_out$inf_func)
-            ddd_out$inf_func <- (n / size_gt_ctrl) * ddd_out$inf_func
+            ddd_out$inf_func <- (n_total / size_gt_ctrl) * ddd_out$inf_func
 
             # Save results
             ddd_over_controls_res[[as.character(ctrl)]] <- ddd_out
 
             # Populate influence function - NO skip-by-2
             # For RCS: aggregate influence function by ID (sum for repeated IDs)
-            inff <- rep(0, n)  # Use total sample size, not cohort size
+            inff <- rep(0, n_total)  # Use total sample size, not cohort size
 
             # Aggregate influence function by ID in case same ID appears multiple times
             ids_in_subset <- subset_data$id
@@ -462,7 +463,7 @@ att_gt <- function(did_preprocessed){
 
           ATT_gmm <- sum(w * att_vals) / sum(w)
           IF_gmm <- (inf_mat_local) %*% w
-          gmm_se <- sqrt(1 / (n * sum(inv_OMEGA)))
+          gmm_se <- sqrt(1 / (n_total * sum(inv_OMEGA)))
 
           # Save results
           attgt_list[[counter]] <- list(att = ATT_gmm,

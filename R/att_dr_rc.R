@@ -37,6 +37,7 @@ att_dr_rc <- function(did_preprocessed) {
   cband <- did_preprocessed$cband # to perform bootstrap + simult. conf. band
   inffunc <- did_preprocessed$inffunc # flag to return influence function
   subgroup_counts <- did_preprocessed$subgroup_counts
+  #n <- did_preprocessed$n # total number of unique IDs
 
   # --------------------------------------------------------------------
   # Compute ATT
@@ -75,7 +76,8 @@ att_dr_rc <- function(did_preprocessed) {
   # Use sum of subgroup counts as n (handles both RCS and unbalanced panel)
   # For RCS: subgroup_counts has observation counts → sum = total observations
   # For unbalanced panel: subgroup_counts has unique ID counts → sum = total unique IDs
-  n <- sum(subgroup_counts$count)
+  # n <- sum(subgroup_counts$count)
+  n <- uniqueN(data[, id])
   n3 <- subgroup_counts$count[subgroup_counts$subgroup == 3] + subgroup_counts$count[subgroup_counts$subgroup == 4]
   n2 <- subgroup_counts$count[subgroup_counts$subgroup == 2] + subgroup_counts$count[subgroup_counts$subgroup == 4]
   n1 <- subgroup_counts$count[subgroup_counts$subgroup == 1] + subgroup_counts$count[subgroup_counts$subgroup == 4]
