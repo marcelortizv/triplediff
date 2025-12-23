@@ -335,17 +335,8 @@ att_gt <- function(did_preprocessed){
           cohort_data[(period == pseudo_post), post := 1]
 
           # Calculate subgroup counts - count unique IDs (handles both RCS and unbalanced panel)
-          if (allow_unbalanced_panel) {
-            # Create subgroup variable
-            data[, subgroup := NA_integer_]
-            data[(treat == 1 & partition == 1), subgroup := 4]
-            data[(treat == 1 & partition == 0), subgroup := 3]
-            data[(treat == 0 & partition == 1), subgroup := 2]
-            data[(treat == 0 & partition == 0), subgroup := 1]
-            subgroup_counts <- data[, .(count = uniqueN(id)), by = subgroup][order(-subgroup)]
-          } else {
-            subgroup_counts <- cohort_data[, .(count = uniqueN(id)), by = subgroup][order(-subgroup)]
-          }
+          # For unbalanced panel, we need to count unique IDs in the cohort_data, not the full data
+          subgroup_counts <- cohort_data[, .(count = uniqueN(id)), by = subgroup][order(-subgroup)]
           
 
           # Prepare did_preprocessed for att_dr_rc
@@ -357,24 +348,28 @@ att_gt <- function(did_preprocessed){
           # Call att_dr_rc (RCS version)
           attgt_inf_func <- att_dr_rc(did_preprocessed)
 
-          # Rescale influence function
-          attgt_inf_func$inf_func <- (n_total / size_gt) * attgt_inf_func$inf_func
-          # Save results
+          # Save ATT results
           attgt_list[[counter]] <- list(att = attgt_inf_func$ATT,
                                          group = glist[g],
                                          year = tlist[t + tfac],
                                          post = post_treat)
 
-          # Populate influence function - NO skip-by-2 for RCS
-          # For RCS: aggregate influence function by ID (sum for repeated IDs)
-          inff <- rep(0, n_total)  # Use total sample size, not cohort size
+          # Populate influence function
+          # Following did package approach: rescale BEFORE aggregating
+          # This is important for unbalanced panels where IDs have different observation counts
+          inff <- rep(0, n_total)  # Use total sample size
 
-          # Aggregate influence function by ID in case same ID appears multiple times
+          # Step 1: Rescale influence function (still at observation level)
+          # Use nrow(cohort_data) for size_gt when rescaling IFs
+          attgt_inf_func$inf_func <- (n_total / nrow(cohort_data)) * attgt_inf_func$inf_func
+
+          # Step 2: Aggregate influence function by ID (sum for repeated IDs)
           ids_in_cohort <- cohort_data$id
           aggte_inffunc <- suppressWarnings(stats::aggregate(attgt_inf_func$inf_func,
                                                               list(ids_in_cohort),
                                                               sum))
-          # Match aggregated IDs to positions in unique ID index
+
+          # Step 3: Match aggregated IDs to positions in unique ID index
           id_positions <- match(aggte_inffunc[, 1], id_index)
           inff[id_positions] <- aggte_inffunc[, 2]
           inf_func_mat[, counter] <- inff
@@ -424,22 +419,24 @@ att_gt <- function(did_preprocessed){
 
             ddd_out <- att_dr_rc(did_preprocessed)
 
-            # Rescale influence function
-            ddd_out$inf_func <- (n_total / size_gt_ctrl) * ddd_out$inf_func
-
             # Save results
             ddd_over_controls_res[[as.character(ctrl)]] <- ddd_out
 
-            # Populate influence function - NO skip-by-2
-            # For RCS: aggregate influence function by ID (sum for repeated IDs)
-            inff <- rep(0, n_total)  # Use total sample size, not cohort size
+            # Populate influence function
+            # Following did package approach: rescale BEFORE aggregating
+            inff <- rep(0, n_total)  # Use total sample size
 
-            # Aggregate influence function by ID in case same ID appears multiple times
+            # Step 1: Rescale influence function (still at observation level)
+            # Use nrow(subset_data) for the rescaling
+            ddd_out$inf_func <- (n_total / nrow(subset_data)) * ddd_out$inf_func
+
+            # Step 2: Aggregate influence function by ID (sum for repeated IDs)
             ids_in_subset <- subset_data$id
             aggte_inffunc_ctrl <- suppressWarnings(stats::aggregate(ddd_out$inf_func,
                                                                      list(ids_in_subset),
                                                                      sum))
-            # Match aggregated IDs to positions in unique ID index
+
+            # Step 3: Match aggregated IDs to positions in unique ID index
             id_positions_ctrl <- match(aggte_inffunc_ctrl[, 1], id_index)
             inff[id_positions_ctrl] <- aggte_inffunc_ctrl[, 2]
 
