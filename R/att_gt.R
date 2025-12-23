@@ -128,11 +128,11 @@ att_gt <- function(did_preprocessed){
           # ==========================================
           # PANEL DATA PATH (balanced panels only)
           # ==========================================
-
-          # filter data for treated and control groups in each (g,t) cell. Save index
-
+        
           # get total number of units
           # n_size = uniqueN(cohort_data[, id])
+        
+          # filter data for treated and control groups in each (g,t) cell. Save index
 
           # index of unit in current cell (g,t) when treat = 1 and control = 1
           index_units_in_gt <- cohort_data[, treat == 1 | control == 1]
@@ -359,17 +359,16 @@ att_gt <- function(did_preprocessed){
           # This is important for unbalanced panels where IDs have different observation counts
           inff <- rep(0, n_total)  # Use total sample size
 
-          # Step 1: Rescale influence function (still at observation level)
-          # Use nrow(cohort_data) for size_gt when rescaling IFs
+          # Rescale influence function (still at observation level)
           attgt_inf_func$inf_func <- (n_total / nrow(cohort_data)) * attgt_inf_func$inf_func
 
-          # Step 2: Aggregate influence function by ID (sum for repeated IDs)
+          # Aggregate influence function by ID (sum for repeated IDs)
           ids_in_cohort <- cohort_data$id
           aggte_inffunc <- suppressWarnings(stats::aggregate(attgt_inf_func$inf_func,
                                                               list(ids_in_cohort),
                                                               sum))
 
-          # Step 3: Match aggregated IDs to positions in unique ID index
+          # Match aggregated IDs to positions in unique ID index
           id_positions <- match(aggte_inffunc[, 1], id_index)
           inff[id_positions] <- aggte_inffunc[, 2]
           inf_func_mat[, counter] <- inff
@@ -423,20 +422,18 @@ att_gt <- function(did_preprocessed){
             ddd_over_controls_res[[as.character(ctrl)]] <- ddd_out
 
             # Populate influence function
-            # Following did package approach: rescale BEFORE aggregating
             inff <- rep(0, n_total)  # Use total sample size
 
-            # Step 1: Rescale influence function (still at observation level)
-            # Use nrow(subset_data) for the rescaling
+            # Rescale influence function (still at observation level)
             ddd_out$inf_func <- (n_total / nrow(subset_data)) * ddd_out$inf_func
 
-            # Step 2: Aggregate influence function by ID (sum for repeated IDs)
+            # Aggregate influence function by ID (sum for repeated IDs)
             ids_in_subset <- subset_data$id
             aggte_inffunc_ctrl <- suppressWarnings(stats::aggregate(ddd_out$inf_func,
                                                                      list(ids_in_subset),
                                                                      sum))
 
-            # Step 3: Match aggregated IDs to positions in unique ID index
+            # Match aggregated IDs to positions in unique ID index
             id_positions_ctrl <- match(aggte_inffunc_ctrl[, 1], id_index)
             inff[id_positions_ctrl] <- aggte_inffunc_ctrl[, 2]
 
@@ -488,8 +485,7 @@ att_gt <- function(did_preprocessed){
   groups <- attgt_res$group
   periods <- attgt_res$periods
   att_gt_ddd <- attgt_res$att
-  # NEW PROCEDURE
-
+  
   # Get analytical errors: This is analogous to cluster robust standard errors at the unit level
   n <- did_preprocessed$n
   V <- Matrix::t(inf_func_mat)%*%inf_func_mat/n
@@ -551,13 +547,14 @@ att_gt <- function(did_preprocessed){
   # ------------------------------------------------------------------------------
 
   # we need this for aggregation
-  # For panel: use first period data (all IDs are present in first period)
-  # For RCS: aggregate by ID to get one observation per unique ID
-  if (panel) {
+  # For balanced panel: use first period data (all IDs are present in first period)
+  # For unbalanced panel or RCS: aggregate by ID to get one observation per unique ID
+  if (panel && !allow_unbalanced_panel) {
+    # Balanced panel: all IDs present in first period
     first_period_dta <- orig_data[period == tlist[1]]
   } else {
-    # For RCS: take one observation per unique ID (equivalent to did package's aggregate approach)
-    # Since each ID appears once in RCS, .SD[1] gives the unique observation for that ID
+    # Unbalanced panel or RCS: take one observation per unique ID
+    # This ensures we have one row per ID for aggregation weights
     first_period_dta <- orig_data[, .SD[1], by = id]
   }
   ret <- (list(ATT = att_gt_ddd,
