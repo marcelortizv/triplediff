@@ -20,15 +20,24 @@
 mboot <- function(inf_func, did_preprocessed, use_parallel = FALSE, cores = 1) {
 
   # setup needed variables
-  data <- did_preprocessed$preprocessed_data # we only need data for first period
+  data <- did_preprocessed$preprocessed_data
   cluster <- did_preprocessed$cluster
   biters <- did_preprocessed$nboot
   alpha <- did_preprocessed$alpha
+  panel <- did_preprocessed$panel
+  allow_unbalanced_panel <- did_preprocessed$allow_unbalanced_panel
   tlist <- sort(unique(data$period))
 
-
-  # just get n observations. Only for panel data
-  dta <- data[period == tlist[1]]
+  # Get data for cluster extraction
+  # For balanced panels: use first period (all IDs present)
+  # For unbalanced panels: get one row per unique ID (not all IDs in first period)
+  if (panel && !allow_unbalanced_panel) {
+    # Balanced panel: filter to first period works since all IDs are present
+    dta <- data[period == tlist[1]]
+  } else {
+    # Unbalanced panel: need one row per unique ID to match influence function dimensions
+    dta <- data[, .SD[1], by = id]
+  }
 
   # Make sure inf_func is matrix because we need this for computing n below
   inf_func <- as.matrix(inf_func)
@@ -43,14 +52,16 @@ mboot <- function(inf_func, did_preprocessed, use_parallel = FALSE, cores = 1) {
   } else {
     # Compute multiplier bootstrap for clustered standard errors
 
-    # Extract the unique clusters along with their IDs
-    unique_clusters <- dta[, c("id", "cluster")]
+    # Extract the unique id-cluster pairs (following did package pattern)
+    unique_clusters_df <- unique(dta[, c("id", "cluster")])
+    cluster_vec <- unique_clusters_df$cluster
+
     # Count the number of unique clusters
-    n_clusters <- length(unique(unique_clusters$cluster))
+    n_clusters <- length(unique(cluster_vec))
     # Count the number of observations in each cluster
-    cluster_counts <- as.vector(table(unique_clusters$cluster))
+    cluster_counts <- as.vector(table(cluster_vec))
     # Compute the mean influence function per cluster
-    cluster_mean_if <- rowsum(inf_func, unique_clusters$cluster, reorder = TRUE) / cluster_counts
+    cluster_mean_if <- rowsum(inf_func, cluster_vec, reorder = TRUE) / cluster_counts
 
     # Run the bootstrap procedure
     bres <- sqrt(n_clusters) * run_multiplier_bootstrap(cluster_mean_if, biters, use_parallel, cores)
