@@ -2,7 +2,7 @@
 # Triple Differences Estimators <img src="man/figures/triplediff-logo.png" align="right" alt="" width="155" />
 
 ![](https://img.shields.io/badge/release%20lifecycle-alpha-orange.svg)
-[![](https://img.shields.io/badge/devel%20version-0.1.1-blue.svg)](https://github.com/marcelortizv/triplediff)
+[![](https://img.shields.io/badge/devel%20version-0.2.0-blue.svg)](https://github.com/marcelortizv/triplediff)
 [![](https://img.shields.io/badge/doi-10.48550/arXiv.2505.09942-yellow.svg)](https://doi.org/10.48550/arXiv.2505.09942)
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
@@ -133,7 +133,7 @@ summary(att_22)
 #> 
 #>  Note: * indicates that the confidence interval does not contain zero.
 #>  --------------------------- Data Info   -----------------------------
-#>  Panel data
+#>  Panel Data
 #>  Outcome variable: y
 #>  Qualification variable: partition
 #>  No. of units at each subgroup:
@@ -215,7 +215,7 @@ summary(att_gt)
 #> 
 #>  Note: * indicates that the confidence interval does not contain zero.
 #>  --------------------------- Data Info   -----------------------------
-#>  Panel data
+#>  Panel Data
 #>  Outcome variable: y
 #>  Qualification variable: partition
 #>  Control group: Never Treated
@@ -336,7 +336,7 @@ summary(att_gt_nyt)
 #> 
 #>  Note: * indicates that the confidence interval does not contain zero.
 #>  --------------------------- Data Info   -----------------------------
-#>  Panel data
+#>  Panel Data
 #>  Outcome variable: y
 #>  Qualification variable: partition
 #>  Control group: Not yet Treated (GMM-based)
