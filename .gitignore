@@ -20,3 +20,4 @@ test_print_cohorts.R
 test_print_cohorts_direct.R
 test_rcs_all_methods.R
 test_inffunc.R
+/.quarto/
