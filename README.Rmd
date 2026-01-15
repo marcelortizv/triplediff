@@ -202,14 +202,14 @@ Use [GitHub Issues](https://github.com/marcelortizv/triplediff/issues) to report
 - ️✅ DDD with staggered treatment adoption (i.e., more than two periods and variation in treatment timing).
 - ️✅ Aggregations procedures (e.g., event-study type estimates).
 - ️✅ GMM-based estimations with not-yet-treated units as comparison group.
+- ✅ Repeated cross-sectional data.
+- ✅ Unbalanced panel data.
 
 ### ⚠️ Not Yet Supported
 
 - 🔲 Built-in plotting capabilities for visualizing results.
   - This can be done easily by users. E.g., event-study type estimates can be plotted using `ggplot2`. See the quick start example.
 - 🔲 User-specified data-driven models for estimations of nuisance parameters.
-- 🔲 Repeated cross-sectional data.
-- 🔲 Unbalanced panel data.
 
 
 
