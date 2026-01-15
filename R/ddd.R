@@ -73,9 +73,10 @@ NULL
 #' # Performing clustered standard errors with mutiplier bootstrap
 #'
 #' att_cluster <-  ddd(yname = "y", tname = "time", idname = "id", gname = "state",
-#' pname = "partition", xformla = ~cov1 + cov2 + cov3 + cov4,
-#' data = df, control_group = "nevertreated",
-#' base_period = "universal", est_method = "dr", cluster = "cluster")
+#'                     pname = "partition", xformla = ~cov1 + cov2 + cov3 + cov4,
+#'                     data = df, control_group = "nevertreated",
+#'                     base_period = "universal", est_method = "dr", 
+#'                     boot = TRUE, nboot = 500, cband = TRUE, cluster = "cluster")
 #'
 #' summary(att_cluster)
 #'

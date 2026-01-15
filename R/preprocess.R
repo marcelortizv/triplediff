@@ -275,6 +275,7 @@ run_nopreprocess_2periods <- function(yname,
               inffunc = inffunc,
               subgroup_counts = subgroup_counts,
               panel = panel,
+              allow_unbalanced_panel = allow_unbalanced_panel,
               true_repeated_cross_sections = true_repeated_cross_sections)
 
   return(out)
@@ -624,6 +625,7 @@ run_preprocess_2Periods <- function(yname,
               inffunc = inffunc,
               subgroup_counts = subgroup_counts,
               panel = panel,
+              allow_unbalanced_panel = allow_unbalanced_panel,
               true_repeated_cross_sections = true_repeated_cross_sections)
 
   return(out)
