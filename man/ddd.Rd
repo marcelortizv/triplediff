@@ -7,7 +7,7 @@
 ddd(
   yname,
   tname,
-  idname,
+  idname = NULL,
   gname,
   pname,
   xformla,
@@ -15,6 +15,8 @@ ddd(
   control_group = NULL,
   base_period = NULL,
   est_method = "dr",
+  panel = TRUE,
+  allow_unbalanced_panel = FALSE,
   weightsname = NULL,
   boot = FALSE,
   nboot = NULL,
@@ -56,6 +58,13 @@ Varying base period reports ATT(g,t) right before treatment. Universal base peri
 \item{est_method}{The estimation method to be used. Default is \code{"dr"} (doubly robust). It computes propensity score using logistic regression
 and outcome regression using OLS. The alternative are \code{c("reg", "ipw")}.}
 
+\item{panel}{Logical. If \code{TRUE} (default), the data is treated as panel data where each unit is observed in all time periods.
+If \code{FALSE}, the data is treated as repeated cross-sections (RCS) where each observation may represent a different unit.
+For RCS data, \code{idname} can be omitted or set to \code{NULL}, and the function will automatically create unique IDs for each observation.}
+
+\item{allow_unbalanced_panel}{Logical. If \code{TRUE}, allows for unbalanced panel data where units may not be observed in all time periods.
+Default is \code{FALSE}. Note: This parameter requires \code{panel = TRUE} and a valid \code{idname}.}
+
 \item{weightsname}{The name of the column containing the weights. Default is \code{NULL}. As part of data processing, weights are enforced to be normalized
 and have mean 1 across all observations.}
 
@@ -77,7 +86,9 @@ with fixed probability \code{1-alpha}.  In order to compute uniform confidence b
 
 \item{inffunc}{Logical. If \code{TRUE}, the function returns the influence function. Default is \code{FALSE}.}
 
-\item{skip_data_checks}{Logical. If \code{TRUE}, the function skips the data checks and go straight to estimation. Default is \code{FALSE}.}
+\item{skip_data_checks}{Logical. If \code{TRUE}, the function skips data validation checks and proceeds directly to estimation.
+This can improve performance when you are confident the data is correctly formatted. Default is \code{FALSE}.
+Use with caution as skipping checks may lead to unexpected errors if data is malformed.}
 }
 \value{
 A \code{ddd} object with the following basic elements:
@@ -112,9 +123,10 @@ summary(att_22)
 # Performing clustered standard errors with mutiplier bootstrap
 
 att_cluster <-  ddd(yname = "y", tname = "time", idname = "id", gname = "state",
-pname = "partition", xformla = ~cov1 + cov2 + cov3 + cov4,
-data = df, control_group = "nevertreated",
-base_period = "universal", est_method = "dr", cluster = "cluster")
+                    pname = "partition", xformla = ~cov1 + cov2 + cov3 + cov4,
+                    data = df, control_group = "nevertreated",
+                    base_period = "universal", est_method = "dr", 
+                    boot = TRUE, nboot = 500, cband = TRUE, cluster = "cluster")
 
 summary(att_cluster)
 

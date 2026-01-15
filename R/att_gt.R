@@ -41,6 +41,8 @@ att_gt <- function(did_preprocessed){
   time_periods <- did_preprocessed$time_periods
   tlist <- did_preprocessed$tlist
   glist <- did_preprocessed$glist
+  panel <- did_preprocessed$panel
+  allow_unbalanced_panel <- did_preprocessed$allow_unbalanced_panel
   base_period <- did_preprocessed$base_period
   boot <- did_preprocessed$boot
   alpha <- did_preprocessed$alpha
@@ -50,7 +52,7 @@ att_gt <- function(did_preprocessed){
   cband <- did_preprocessed$cband # to perform bootstrap + simult. conf. band
 
   orig_data <- copy(data)
-
+  id_index <- unique(data$id)
   attgt_list <- list()
 
   counter <- 1
@@ -118,173 +120,358 @@ att_gt <- function(did_preprocessed){
       # filter data with only 2 periods
       cohort_data <- data[period %in% c(tlist[t + tfac], tlist[pret])]
 
-      # -------------------------------------
-      # PANEL DATA ONLY
-      # -------------------------------------
+      # ============================================
+      # BRANCH: PANEL vs RCS/UNBALANCED
+      # ============================================
 
-      # filter data for treated and control groups in each (g,t) cell. Save index
+      if (panel && !allow_unbalanced_panel) {
+          # ==========================================
+          # PANEL DATA PATH (balanced panels only)
+          # ==========================================
+        
+          # get total number of units
+          # n_size = uniqueN(cohort_data[, id])
+        
+          # filter data for treated and control groups in each (g,t) cell. Save index
 
-      # get total number of units
-      n_size = uniqueN(cohort_data[, id])
+          # index of unit in current cell (g,t) when treat = 1 and control = 1
+          index_units_in_gt <- cohort_data[, treat == 1 | control == 1]
 
-      # index of unit in current cell (g,t) when treat = 1 and control = 1
-      index_units_in_gt <- cohort_data[, treat == 1 | control == 1]
+          # filter by units selected in current cell (g,t)
+          cohort_data <- cohort_data[index_units_in_gt]
 
-      # filter by units selected in current cell (g,t)
-      cohort_data <- cohort_data[index_units_in_gt]
+          # save number of units after filtering
+          size_gt = uniqueN(cohort_data[, id])
 
-      # save number of units after filtering
-      size_gt = uniqueN(cohort_data[, id])
+          # Identify all available control states in this cohort.
+          available_controls <- sort(unique(cohort_data$first_treat[cohort_data$control == 1 ]))
+          available_controls <- available_controls[available_controls != glist[g]]
 
-      # Identify all available control states in this cohort.
-      available_controls <- sort(unique(cohort_data$first_treat[cohort_data$control == 1 ]))
-      available_controls <- available_controls[available_controls != glist[g]]
-
-      if (length(available_controls) == 1) {
-        # creating subgroup variable
-        # 4 if (eligible ==1 & enabled == 1); 3 if (eligible ==0 & enabled == 1); 2 if (eligible ==1 & enabled == 0); 1 if (eligible ==0 & enabled == 0)
-        # Create subgroup variable based on the control_group option
-        cohort_data[, subgroup := NA_integer_]
-        cohort_data[(treat == 1 & partition == 1), subgroup := 4]
-        cohort_data[(treat == 1 & partition == 0), subgroup := 3]
-        cohort_data[(treat == 0 & partition == 1), subgroup := 2]
-        cohort_data[(treat == 0 & partition == 0), subgroup := 1]
-
-        # add post treatment dummy variable if period is equal to t + tfac
-        cohort_data[, post := 0]
-
-        # Ypre is always the baseline, even in pre-treatment periods were baseline could be in later periods with respect to t.
-        pseudo_post = ifelse(post_treat == 1, tlist[max(t, pret) + tfac], tlist[t + tfac])
-        cohort_data[(period == pseudo_post), post := 1]
-
-        # cohort_data[(period == tlist[max(t, pret) + tfac]), post := 1]
-        # Calculate the size of each subgroup in the 'subgroup' column
-        subgroup_counts <- cohort_data[, .N/2, by = subgroup][order(-subgroup)]
-
-        # Reassign dp object and run att_dr
-        did_preprocessed$preprocessed_data <- cohort_data
-        did_preprocessed$subgroup_counts <- subgroup_counts
-        did_preprocessed$boot <- FALSE # forcing false to avoid bootstrap inside att_dr() function.
-        did_preprocessed$inffunc <- TRUE # forcing true to recover influence function
-
-        # run att_dr based on 2 time periods subdata
-        attgt_inf_func <- att_dr(did_preprocessed)
-
-        # adjust influence function
-        attgt_inf_func$inf_func <- (n_size/size_gt) * attgt_inf_func$inf_func
-        # save results in a list
-        attgt_list[[counter]] <- list(att = attgt_inf_func$ATT, group = glist[g], year = tlist[t + tfac], post = post_treat)
-
-        # recover influence function
-        inff <- rep(0, n_size)
-        # avoid repetition in index
-        inff[index_units_in_gt[seq(1, length(index_units_in_gt), by = 2)]] <- attgt_inf_func$inf_func
-        # save in influence function matrix
-        inf_func_mat[, counter] <- inff
-        # update counter
-        counter  <- counter + 1
-      } else {
-        # Here we have more than one control group available -> notyettreated
-
-        # Initialize local containers.
-        ddd_over_controls_res <- list()
-        inf_mat_local <- NULL
-
-        # Loop over each available control state.
-        for (ctrl in available_controls) {
-          # Subset data: keep treated units (first_treat == glist[g]) and control units (first_treat == ctrl)
-
-          index_units_in_gt_ctrl <- cohort_data[, first_treat == glist[g] | first_treat == ctrl]
-          subset_data <- cohort_data[index_units_in_gt_ctrl]
-          size_gt_ctrl <- uniqueN(subset_data[, id])
-
+        if (length(available_controls) == 1) {
+          # creating subgroup variable
+          # 4 if (eligible ==1 & enabled == 1); 3 if (eligible ==0 & enabled == 1); 2 if (eligible ==1 & enabled == 0); 1 if (eligible ==0 & enabled == 0)
           # Create subgroup variable based on the control_group option
-          subset_data[, subgroup := NA_integer_]
-          subset_data[(treat == 1 & partition == 1), subgroup := 4]
-          subset_data[(treat == 1 & partition == 0), subgroup := 3]
-          subset_data[(treat == 0 & partition == 1), subgroup := 2]
-          subset_data[(treat == 0 & partition == 0), subgroup := 1]
+          cohort_data[, subgroup := NA_integer_]
+          cohort_data[(treat == 1 & partition == 1), subgroup := 4]
+          cohort_data[(treat == 1 & partition == 0), subgroup := 3]
+          cohort_data[(treat == 0 & partition == 1), subgroup := 2]
+          cohort_data[(treat == 0 & partition == 0), subgroup := 1]
 
           # add post treatment dummy variable if period is equal to t + tfac
-          subset_data[, post := 0]
+          cohort_data[, post := 0]
 
           # Ypre is always the baseline, even in pre-treatment periods were baseline could be in later periods with respect to t.
           pseudo_post = ifelse(post_treat == 1, tlist[max(t, pret) + tfac], tlist[t + tfac])
-          subset_data[(period == pseudo_post), post := 1]
+          cohort_data[(period == pseudo_post), post := 1]
 
-          # subset_data[(period == tlist[max(t, pret) + tfac]), post := 1]
+          # cohort_data[(period == tlist[max(t, pret) + tfac]), post := 1]
           # Calculate the size of each subgroup in the 'subgroup' column
-          subgroup_counts <- subset_data[, .N/2, by = subgroup][order(-subgroup)]
+          subgroup_counts <- cohort_data[, .(count = .N/2), by = subgroup][order(-subgroup)]
 
           # Reassign dp object and run att_dr
-          did_preprocessed$preprocessed_data <- subset_data
+          did_preprocessed$preprocessed_data <- cohort_data
           did_preprocessed$subgroup_counts <- subgroup_counts
           did_preprocessed$boot <- FALSE # forcing false to avoid bootstrap inside att_dr() function.
           did_preprocessed$inffunc <- TRUE # forcing true to recover influence function
 
-
           # run att_dr based on 2 time periods subdata
-          ddd_out <- triplediff::att_dr(did_preprocessed)
+          attgt_inf_func <- att_dr(did_preprocessed)
 
-          # computing the aggregate influence function for every g'>t: RIF_{g,g',t}
-          # adjust influence function (rescale + recentered)
-          ddd_out$inf_func <- ((size_gt/size_gt_ctrl)*ddd_out$inf_func) #+ 1*ddd_out$ATT
-
-          # Save the ddd output in the local list using the control state as name.
-          ddd_over_controls_res[[as.character(ctrl)]] <- ddd_out
+          # adjust influence function
+          attgt_inf_func$inf_func <- (n/size_gt) * attgt_inf_func$inf_func
+          # save results in a list
+          attgt_list[[counter]] <- list(att = attgt_inf_func$ATT, group = glist[g], year = tlist[t + tfac], post = post_treat)
 
           # recover influence function
-          inff <- rep(0, n_size)
+          inff <- rep(0, n)
           # avoid repetition in index
-          inff[index_units_in_gt_ctrl[seq(1, length(index_units_in_gt_ctrl), by = 2)]] <- ddd_out$inf_func
+          inff[index_units_in_gt[seq(1, length(index_units_in_gt), by = 2)]] <- attgt_inf_func$inf_func
+          # save in influence function matrix
+          inf_func_mat[, counter] <- inff
+          # update counter
+          counter  <- counter + 1
+        } else {
+          # Here we have more than one control group available -> notyettreated
 
-          # Append this vector as a new column in the local matrix.
-          if (is.null(inf_mat_local)) {
-            inf_mat_local <- matrix(inff, ncol = 1)
-            colnames(inf_mat_local) <- as.character(ctrl)
-          } else {
-            inf_mat_local <- cbind(inf_mat_local, inff)
-            colnames(inf_mat_local)[ncol(inf_mat_local)] <- as.character(ctrl)
-          }
-        } # end loop over available_controls
+          # Initialize local containers.
+          ddd_over_controls_res <- list()
+          inf_mat_local <- NULL
 
-        # If no ddd estimations were obtained, skip this (g,t) cell.
-        if (length(ddd_over_controls_res) == 0) next
+          # Loop over each available control state.
+          for (ctrl in available_controls) {
+            # Subset data: keep treated units (first_treat == glist[g]) and control units (first_treat == ctrl)
 
-        # Compute the naive ATT as the average of all ddd ATT estimates.
-        att_vals <- sapply(ddd_over_controls_res, function(res) res$ATT)
+            index_units_in_gt_ctrl <- cohort_data[, first_treat == glist[g] | first_treat == ctrl]
+            subset_data <- cohort_data[index_units_in_gt_ctrl]
+            size_gt_ctrl <- uniqueN(subset_data[, id])
 
-        # -----------------------------------------
-        # Compute the GMM-based estimator for ATT(g,t)
-        # -----------------------------------------
+            # Create subgroup variable based on the control_group option
+            subset_data[, subgroup := NA_integer_]
+            subset_data[(treat == 1 & partition == 1), subgroup := 4]
+            subset_data[(treat == 1 & partition == 0), subgroup := 3]
+            subset_data[(treat == 0 & partition == 1), subgroup := 2]
+            subset_data[(treat == 0 & partition == 0), subgroup := 1]
 
-        # computing the aggregate influence function for every g'>t: RIF_{g,g',t}
-        OMEGA <- cov(inf_mat_local, use = "complete.obs")
+            # add post treatment dummy variable if period is equal to t + tfac
+            subset_data[, post := 0]
 
-        ones <- rep(1, length(ddd_over_controls_res))
-        inv_OMEGA <- solve(OMEGA)
-        w <- colSums(inv_OMEGA) / sum(inv_OMEGA)
+            # Ypre is always the baseline, even in pre-treatment periods were baseline could be in later periods with respect to t.
+            pseudo_post = ifelse(post_treat == 1, tlist[max(t, pret) + tfac], tlist[t + tfac])
+            subset_data[(period == pseudo_post), post := 1]
 
-        # Compute the GMM estimator for ATT(g,t)
-        ATT_gmm <- sum(w * att_vals) / sum(w)
-        # IF_gmm
-        IF_gmm <- (inf_mat_local) %*% w
-        # gmm_se
-        gmm_se <- sqrt(1/ (n * sum(inv_OMEGA)))
+            # subset_data[(period == tlist[max(t, pret) + tfac]), post := 1]
+            # Calculate the size of each subgroup in the 'subgroup' column
+            subgroup_counts <- subset_data[, .(count = .N/2), by = subgroup][order(-subgroup)]
 
-        # save the results for this (g,t) cell
-        attgt_list[[counter]] <- list(att = ATT_gmm, group = glist[g], year = tlist[t + tfac], post = post_treat)
+            # Reassign dp object and run att_dr
+            did_preprocessed$preprocessed_data <- subset_data
+            did_preprocessed$subgroup_counts <- subgroup_counts
+            did_preprocessed$boot <- FALSE # forcing false to avoid bootstrap inside att_dr() function.
+            did_preprocessed$inffunc <- TRUE # forcing true to recover influence function
 
-        # save in influence function matrix
-        inf_func_mat[, counter] <- IF_gmm
 
-        # save the standard errors from GMM
-        se_gt_ddd_nyt[counter] <- gmm_se
+            # run att_dr based on 2 time periods subdata
+            ddd_out <- triplediff::att_dr(did_preprocessed)
 
-        # update counter
-        counter  <- counter + 1
+            # computing the aggregate influence function for every g'>t: RIF_{g,g',t}
+            # adjust influence function (rescale + recentered)
+            ddd_out$inf_func <- ((size_gt/size_gt_ctrl)*ddd_out$inf_func) #+ 1*ddd_out$ATT
 
-      } # end of GMM-based procedure
+            # Save the ddd output in the local list using the control state as name.
+            ddd_over_controls_res[[as.character(ctrl)]] <- ddd_out
+
+            # recover influence function
+            inff <- rep(0, n)
+            # avoid repetition in index
+            inff[index_units_in_gt_ctrl[seq(1, length(index_units_in_gt_ctrl), by = 2)]] <- ddd_out$inf_func
+
+            # Append this vector as a new column in the local matrix.
+            if (is.null(inf_mat_local)) {
+              inf_mat_local <- matrix(inff, ncol = 1)
+              colnames(inf_mat_local) <- as.character(ctrl)
+            } else {
+              inf_mat_local <- cbind(inf_mat_local, inff)
+              colnames(inf_mat_local)[ncol(inf_mat_local)] <- as.character(ctrl)
+            }
+          } # end loop over available_controls
+
+          # If no ddd estimations were obtained, skip this (g,t) cell.
+          if (length(ddd_over_controls_res) == 0) next
+
+          # Compute the naive ATT as the average of all ddd ATT estimates.
+          att_vals <- sapply(ddd_over_controls_res, function(res) res$ATT)
+
+          # -----------------------------------------
+          # Compute the GMM-based estimator for ATT(g,t)
+          # -----------------------------------------
+
+          # computing the aggregate influence function for every g'>t: RIF_{g,g',t}
+          OMEGA <- cov(inf_mat_local, use = "complete.obs")
+
+          ones <- rep(1, length(ddd_over_controls_res))
+          inv_OMEGA <- solve(OMEGA)
+          w <- colSums(inv_OMEGA) / sum(inv_OMEGA)
+
+          # Compute the GMM estimator for ATT(g,t)
+          ATT_gmm <- sum(w * att_vals) / sum(w)
+          # IF_gmm
+          IF_gmm <- (inf_mat_local) %*% w
+          # gmm_se
+          gmm_se <- sqrt(1/ (n * sum(inv_OMEGA)))
+
+          # save the results for this (g,t) cell
+          attgt_list[[counter]] <- list(att = ATT_gmm, group = glist[g], year = tlist[t + tfac], post = post_treat)
+
+          # save in influence function matrix
+          inf_func_mat[, counter] <- IF_gmm
+
+          # save the standard errors from GMM
+          se_gt_ddd_nyt[counter] <- gmm_se
+
+          # update counter
+          counter  <- counter + 1
+
+        } # end of GMM-based procedure
+
+      } else { # else of if (panel)
+
+        # ==========================================
+        # RCS/UNBALANCED PANEL PATH
+        # ==========================================
+
+        # Get total number of observations (NOT unique IDs)
+        # n_size = uniqueN(cohort_data[, id])
+
+        # Filter for treated and control groups
+        index_units_in_gt <- cohort_data[, treat == 1 | control == 1]
+        cohort_data <- cohort_data[index_units_in_gt]
+
+        # Save number of observations after filtering
+        size_gt <- if (allow_unbalanced_panel) uniqueN(cohort_data$id) else nrow(cohort_data)
+        # size_gt <- nrow(cohort_data)
+
+        # Identify available control states
+        available_controls <- sort(unique(cohort_data$first_treat[cohort_data$control == 1]))
+        available_controls <- available_controls[available_controls != glist[g]]
+
+        # ----------------------------------------
+        # SINGLE CONTROL GROUP CASE (RCS)
+        # ----------------------------------------
+        if (length(available_controls) == 1) {
+
+          # Get total sample size for influence function (number of unique IDs in original data)
+          n_total <- uniqueN(orig_data$id)
+
+          # Create subgroup variable
+          cohort_data[, subgroup := NA_integer_]
+          cohort_data[(treat == 1 & partition == 1), subgroup := 4]
+          cohort_data[(treat == 1 & partition == 0), subgroup := 3]
+          cohort_data[(treat == 0 & partition == 1), subgroup := 2]
+          cohort_data[(treat == 0 & partition == 0), subgroup := 1]
+
+          # Add post treatment dummy
+          cohort_data[, post := 0]
+          pseudo_post <- ifelse(post_treat == 1, tlist[max(t, pret) + tfac], tlist[t + tfac])
+          cohort_data[(period == pseudo_post), post := 1]
+
+          # Calculate subgroup counts - count unique IDs (handles both RCS and unbalanced panel)
+          # For unbalanced panel, we need to count unique IDs in the cohort_data, not the full data
+          subgroup_counts <- cohort_data[, .(count = uniqueN(id)), by = subgroup][order(-subgroup)]
+          
+
+          # Prepare did_preprocessed for att_dr_rc
+          did_preprocessed$preprocessed_data <- cohort_data
+          did_preprocessed$subgroup_counts <- subgroup_counts
+          did_preprocessed$boot <- FALSE
+          did_preprocessed$inffunc <- TRUE
+
+          # Call att_dr_rc (RCS version)
+          attgt_inf_func <- att_dr_rc(did_preprocessed)
+
+          # Save ATT results
+          attgt_list[[counter]] <- list(att = attgt_inf_func$ATT,
+                                         group = glist[g],
+                                         year = tlist[t + tfac],
+                                         post = post_treat)
+
+          # Populate influence function
+          # Following did package approach: rescale BEFORE aggregating
+          # This is important for unbalanced panels where IDs have different observation counts
+          inff <- rep(0, n_total)  # Use total sample size
+
+          # Rescale influence function (still at observation level)
+          attgt_inf_func$inf_func <- (n_total / nrow(cohort_data)) * attgt_inf_func$inf_func
+
+          # Aggregate influence function by ID (sum for repeated IDs)
+          ids_in_cohort <- cohort_data$id
+          aggte_inffunc <- suppressWarnings(stats::aggregate(attgt_inf_func$inf_func,
+                                                              list(ids_in_cohort),
+                                                              sum))
+
+          # Match aggregated IDs to positions in unique ID index
+          id_positions <- match(aggte_inffunc[, 1], id_index)
+          inff[id_positions] <- aggte_inffunc[, 2]
+          inf_func_mat[, counter] <- inff
+
+          counter <- counter + 1
+
+        # ----------------------------------------
+        # MULTIPLE CONTROL GROUPS (GMM) CASE (RCS)
+        # ----------------------------------------
+        } else {
+
+          # Get total sample size for influence function (number of unique IDs in original data)
+          n_total <- uniqueN(orig_data$id)
+
+          # Initialize containers
+          ddd_over_controls_res <- list()
+          inf_mat_local <- NULL
+
+          # Loop over each available control state
+          for (ctrl in available_controls) {
+
+            # Subset data for this control group
+            index_units_in_gt_ctrl <- cohort_data[, first_treat == glist[g] | first_treat == ctrl]
+            subset_data <- cohort_data[index_units_in_gt_ctrl]
+            size_gt_ctrl <- if (allow_unbalanced_panel) uniqueN(subset_data$id) else nrow(subset_data)
+
+            # Create subgroup variable
+            subset_data[, subgroup := NA_integer_]
+            subset_data[(treat == 1 & partition == 1), subgroup := 4]
+            subset_data[(treat == 1 & partition == 0), subgroup := 3]
+            subset_data[(treat == 0 & partition == 1), subgroup := 2]
+            subset_data[(treat == 0 & partition == 0), subgroup := 1]
+
+            # Add post indicator
+            subset_data[, post := 0]
+            pseudo_post <- ifelse(post_treat == 1, tlist[max(t, pret) + tfac], tlist[t + tfac])
+            subset_data[(period == pseudo_post), post := 1]
+
+            # Calculate subgroup counts - count unique IDs (handles both RCS and unbalanced panel)
+            subgroup_counts <- subset_data[, .(count = uniqueN(id)), by = subgroup][order(-subgroup)]
+
+            # Prepare and run att_dr_rc
+            did_preprocessed$preprocessed_data <- subset_data
+            did_preprocessed$subgroup_counts <- subgroup_counts
+            did_preprocessed$boot <- FALSE
+            did_preprocessed$inffunc <- TRUE
+
+            ddd_out <- att_dr_rc(did_preprocessed)
+
+            # Save results
+            ddd_over_controls_res[[as.character(ctrl)]] <- ddd_out
+
+            # Populate influence function
+            inff <- rep(0, n_total)  # Use total sample size
+
+            # Rescale influence function (still at observation level)
+            ddd_out$inf_func <- (n_total / nrow(subset_data)) * ddd_out$inf_func
+
+            # Aggregate influence function by ID (sum for repeated IDs)
+            ids_in_subset <- subset_data$id
+            aggte_inffunc_ctrl <- suppressWarnings(stats::aggregate(ddd_out$inf_func,
+                                                                     list(ids_in_subset),
+                                                                     sum))
+
+            # Match aggregated IDs to positions in unique ID index
+            id_positions_ctrl <- match(aggte_inffunc_ctrl[, 1], id_index)
+            inff[id_positions_ctrl] <- aggte_inffunc_ctrl[, 2]
+
+            if (is.null(inf_mat_local)) {
+              inf_mat_local <- matrix(inff, ncol = 1)
+              colnames(inf_mat_local) <- as.character(ctrl)
+            } else {
+              inf_mat_local <- cbind(inf_mat_local, inff)
+              colnames(inf_mat_local)[ncol(inf_mat_local)] <- as.character(ctrl)
+            }
+          } # end loop over available_controls
+
+          # Skip if no estimations obtained
+          if (length(ddd_over_controls_res) == 0) next
+
+          # Compute GMM estimator
+          att_vals <- sapply(ddd_over_controls_res, function(res) res$ATT)
+          OMEGA <- cov(inf_mat_local, use = "complete.obs")
+          inv_OMEGA <- solve(OMEGA)
+          w <- colSums(inv_OMEGA) / sum(inv_OMEGA)
+
+          ATT_gmm <- sum(w * att_vals) / sum(w)
+          IF_gmm <- (inf_mat_local) %*% w
+          gmm_se <- sqrt(1 / (n_total * sum(inv_OMEGA)))
+
+          # Save results
+          attgt_list[[counter]] <- list(att = ATT_gmm,
+                                         group = glist[g],
+                                         year = tlist[t + tfac],
+                                         post = post_treat)
+          inf_func_mat[, counter] <- IF_gmm
+          se_gt_ddd_nyt[counter] <- gmm_se
+
+          counter <- counter + 1
+
+        } # end of GMM-based procedure (RCS)
+
+      } # end of RCS/unbalanced path
 
     } # end of tlist loop
   } # end of glist loop
@@ -298,8 +485,7 @@ att_gt <- function(did_preprocessed){
   groups <- attgt_res$group
   periods <- attgt_res$periods
   att_gt_ddd <- attgt_res$att
-  # NEW PROCEDURE
-
+  
   # Get analytical errors: This is analogous to cluster robust standard errors at the unit level
   n <- did_preprocessed$n
   V <- Matrix::t(inf_func_mat)%*%inf_func_mat/n
@@ -361,7 +547,16 @@ att_gt <- function(did_preprocessed){
   # ------------------------------------------------------------------------------
 
   # we need this for aggregation
-  first_period_dta <- orig_data[period == tlist[1]]
+  # For balanced panel: use first period data (all IDs are present in first period)
+  # For unbalanced panel or RCS: aggregate by ID to get one observation per unique ID
+  if (panel && !allow_unbalanced_panel) {
+    # Balanced panel: all IDs present in first period
+    first_period_dta <- orig_data[period == tlist[1]]
+  } else {
+    # Unbalanced panel or RCS: take one observation per unique ID
+    # This ensures we have one row per ID for aggregation weights
+    first_period_dta <- orig_data[, .SD[1], by = id]
+  }
   ret <- (list(ATT = att_gt_ddd,
                se = se_gt_ddd,
                uci = ci_upper,

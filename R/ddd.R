@@ -25,6 +25,11 @@ NULL
 #' Varying base period reports ATT(g,t) right before treatment. Universal base period normalizes the estimate before treatment to be 0, adding one extra estimate in an earlier period.
 #' @param est_method The estimation method to be used. Default is \code{"dr"} (doubly robust). It computes propensity score using logistic regression
 #' and outcome regression using OLS. The alternative are \code{c("reg", "ipw")}.
+#' @param panel Logical. If \code{TRUE} (default), the data is treated as panel data where each unit is observed in all time periods.
+#' If \code{FALSE}, the data is treated as repeated cross-sections (RCS) where each observation may represent a different unit.
+#' For RCS data, \code{idname} can be omitted or set to \code{NULL}, and the function will automatically create unique IDs for each observation.
+#' @param allow_unbalanced_panel Logical. If \code{TRUE}, allows for unbalanced panel data where units may not be observed in all time periods.
+#' Default is \code{FALSE}. Note: This parameter requires \code{panel = TRUE} and a valid \code{idname}.
 #' @param weightsname The name of the column containing the weights. Default is \code{NULL}. As part of data processing, weights are enforced to be normalized
 #' and have mean 1 across all observations.
 #' @param boot Logical. If \code{TRUE}, the function computes standard errors using the multiplier bootstrap. Default is \code{FALSE}.
@@ -37,7 +42,9 @@ NULL
 #' @param use_parallel Logical. If \code{TRUE}, the function runs in parallel processing. Valid only when \code{boot = TRUE}. Default is \code{FALSE}.
 #' @param cores The number of cores to be used in the parallel processing. Default is \code{cores = 1}.
 #' @param inffunc Logical. If \code{TRUE}, the function returns the influence function. Default is \code{FALSE}.
-#' @param skip_data_checks Logical. If \code{TRUE}, the function skips the data checks and go straight to estimation. Default is \code{FALSE}.
+#' @param skip_data_checks Logical. If \code{TRUE}, the function skips data validation checks and proceeds directly to estimation.
+#' This can improve performance when you are confident the data is correctly formatted. Default is \code{FALSE}.
+#' Use with caution as skipping checks may lead to unexpected errors if data is malformed.
 #'
 #' @return A `ddd` object with the following basic elements:
 #' \item{ATT}{The average treatment effect on the treated.}
@@ -66,9 +73,10 @@ NULL
 #' # Performing clustered standard errors with mutiplier bootstrap
 #'
 #' att_cluster <-  ddd(yname = "y", tname = "time", idname = "id", gname = "state",
-#' pname = "partition", xformla = ~cov1 + cov2 + cov3 + cov4,
-#' data = df, control_group = "nevertreated",
-#' base_period = "universal", est_method = "dr", cluster = "cluster")
+#'                     pname = "partition", xformla = ~cov1 + cov2 + cov3 + cov4,
+#'                     data = df, control_group = "nevertreated",
+#'                     base_period = "universal", est_method = "dr", 
+#'                     boot = TRUE, nboot = 500, cband = TRUE, cluster = "cluster")
 #'
 #' summary(att_cluster)
 #'
@@ -85,7 +93,7 @@ NULL
 #' @export
 ddd <- function(yname,
                 tname,
-                idname,
+                idname = NULL,
                 gname,
                 pname,
                 xformla,
@@ -93,6 +101,8 @@ ddd <- function(yname,
                 control_group = NULL,
                 base_period = NULL,
                 est_method = "dr",
+                panel = TRUE,
+                allow_unbalanced_panel = FALSE,
                 weightsname = NULL,
                 boot = FALSE,
                 nboot = NULL,
@@ -132,6 +142,27 @@ ddd <- function(yname,
     }
   }
 
+  #------------------------------------------
+  # Validate idname parameter
+  #------------------------------------------
+
+  # If idname is not provided, assume RCS data
+  if (is.null(idname)) {
+    # Check for incompatible parameter combinations
+    if (panel) {
+      stop("idname is required when panel = TRUE. For repeated cross-section data, set panel = FALSE.")
+    }
+    if (allow_unbalanced_panel) {
+      stop("idname is required when allow_unbalanced_panel = TRUE. For repeated cross-section data, set panel = FALSE and leave idname as NULL.")
+    }
+    # Set a placeholder - preprocessing will create the actual ID
+    idname <- ".row_id"
+  } else {
+    # User provided idname - check if column exists
+    if (!idname %in% names(dta)) {
+      stop(paste0("Column '", idname, "' not found in data."))
+    }
+  }
 
   # Flag for est_method
   if (!(est_method %in% c("reg", "ipw", "dr"))) {
@@ -143,6 +174,12 @@ ddd <- function(yname,
   if (multiple_periods && is.null(control_group)) {
       warning("control_group should be provided for multiple time periods. Using 'nevertreated'")
       control_group <- "nevertreated"
+  }
+
+  # Flag for base period in multiple periods
+  if (multiple_periods && is.null(base_period)) {
+      warning("base_period should be provided for multiple time periods. Using 'varying'")
+      base_period <- "varying"
   }
 
   #------------------------------------------
@@ -160,6 +197,8 @@ ddd <- function(yname,
                                       dta = dta,
                                       control_group = NULL,
                                       est_method = est_method,
+                                      panel = panel,
+                                      allow_unbalanced_panel = allow_unbalanced_panel,
                                       learners = NULL,
                                       n_folds = NULL,
                                       weightsname = weightsname,
@@ -187,6 +226,8 @@ ddd <- function(yname,
                                        control_group = control_group,
                                        base_period = base_period,
                                        est_method = est_method,
+                                       panel = panel,
+                                       allow_unbalanced_panel = allow_unbalanced_panel,
                                        learners = NULL,
                                        n_folds = NULL,
                                        weightsname = weightsname,
@@ -227,6 +268,8 @@ ddd <- function(yname,
                                     dta = dta,
                                     control_group = NULL,
                                     est_method = est_method,
+                                    panel = panel,
+                                    allow_unbalanced_panel = allow_unbalanced_panel,
                                     learners = NULL,
                                     n_folds = NULL,
                                     weightsname = weightsname,
@@ -277,14 +320,21 @@ ddd <- function(yname,
       # # att_gt_dml <- att_gt_dml(dp)
     #}
   } else {
-    if (est_method %in% c("dr", "reg", "ipw")){
-      # RUN DR for 2 time periods
-      att_dr <- att_dr(dp)
-    } # else {
-      # RUN DML for 2 time periods
-      # att_dml <- att_dml(dp)
-    #}
+    if (est_method %in% c("dml")){
+        # RUN DML for 2 time periods
+        # att_dml <- att_dml(dp)
+      stop("DML estimation method is not yet supported.")
+    } else {
+      if (panel){
+        # RUN DR for 2 time periods (balanced panel only)
+        att_dr <- att_dr(dp)
+      } else {
+        # RUN DR for RCS 2 time periods (true RCS or unbalanced panel)
+        att_dr <- att_dr_rc(dp)
+      }
+    }
   }
+
 
   #------------------------------------------
   # Return the results
@@ -304,6 +354,8 @@ ddd <- function(yname,
     multiple_periods = multiple_periods,
     # learners = args$learners,
     # n_folds = args$n_folds,
+    panel = args$panel, # getting from args because it could change in the pre process
+    allow_unbalanced_panel = args$allow_unbalanced_panel, # getting from args because it could change in the pre process
     cband = dp$cband, # getting from dp because it could change in the pre process
     cluster = args$cluster,
     boot = dp$boot, # getting from dp because it could change in the pre process
@@ -337,7 +389,7 @@ ddd <- function(yname,
    #        argu = argu
    #      )
    # }
-  }# RETURNING LIST FOR 2 PERIODS CASE
+  }# RETURNING LIST FOR 2 PERIODS CASE with DML
 
   # multiple time periods case: dr or dml
   if (multiple_periods){

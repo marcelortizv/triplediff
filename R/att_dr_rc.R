@@ -1,8 +1,8 @@
-#' Doubly robust DDD estimator for ATT, with panel data and 2 periods
+#' Doubly robust DDD estimator for ATT, with repeated cross-section data and 2 periods
 #'
 #' This function implements a doubly robust estimator for assessing the average
 #' treatment effect on the treated (ATT) using a triple differences (DDD) approach
-#' in panel data settings across two time periods. The function takes preprocessed
+#' in repeated cross-section data settings across two time periods. The function takes preprocessed
 #' data structured specifically for this analysis.
 #'
 #' @import stats
@@ -24,7 +24,7 @@
 #' @keywords internal
 #' @return A list with the estimated ATT, standard error, upper and lower confidence intervals, and influence function.
 #' @export
-att_dr <- function(did_preprocessed) {
+att_dr_rc <- function(did_preprocessed) {
 
   data <- did_preprocessed$preprocessed_data
   est_method <- did_preprocessed$est_method
@@ -37,6 +37,7 @@ att_dr <- function(did_preprocessed) {
   cband <- did_preprocessed$cband # to perform bootstrap + simult. conf. band
   inffunc <- did_preprocessed$inffunc # flag to return influence function
   subgroup_counts <- did_preprocessed$subgroup_counts
+  #n <- did_preprocessed$n # total number of unique IDs
 
   # --------------------------------------------------------------------
   # Compute ATT
@@ -46,40 +47,50 @@ att_dr <- function(did_preprocessed) {
   if (est_method == "reg"){
     # set pscores properly such that weights for control are zero
     pscores <- lapply(c(3, 2, 1), function(condition_subgroup) {
-      compute_pscore_null(data, condition_subgroup)
+      compute_pscore_null_rc(data, condition_subgroup)
     })
   } else {
     pscores <- lapply(c(3, 2, 1), function(condition_subgroup) {
-      compute_pscore(data, condition_subgroup, xformula)
+      compute_pscore_rc(data, condition_subgroup, xformula)
     })
   }
 
   if (est_method == "ipw"){
     # set or_delta equal to zero
     reg_adjust <- lapply(c(3, 2, 1), function(condition_subgroup) {
-      compute_outcome_regression_null(data, condition_subgroup)
+      compute_outcome_regression_null_rc(data, condition_subgroup)
     })
   } else {
     # Pre-compute the regression adjustment for each subgroup
     reg_adjust <- lapply(c(3, 2, 1), function(condition_subgroup) {
-      compute_outcome_regression(data, condition_subgroup, xformula)
+      compute_outcome_regression_rc(data, condition_subgroup, xformula)
     })
   }
 
   # Compute Doubly Robust Triple Difference Estimator
-  dr_att_inf_func_3 <- compute_did(data, condition_subgroup = 3, pscores = pscores, reg_adjustment = reg_adjust, xformula = xformula, est_method = est_method) # S=g, Q=1 vs. S=g, Q=0
-  dr_att_inf_func_2 <- compute_did(data, condition_subgroup = 2, pscores = pscores, reg_adjustment = reg_adjust, xformula = xformula, est_method = est_method) # S=g, Q=1 vs. S=\infty, Q=1
-  dr_att_inf_func_1 <- compute_did(data, condition_subgroup = 1, pscores = pscores, reg_adjustment = reg_adjust, xformula = xformula, est_method = est_method) # S=g, Q=1 vs. S=\infty, Q=0
+  dr_att_inf_func_3 <- compute_did_rc(data, condition_subgroup = 3, pscores = pscores, reg_adjustment = reg_adjust, xformula = xformula, est_method = est_method) # S=g, Q=1 vs. S=g, Q=0
+  dr_att_inf_func_2 <- compute_did_rc(data, condition_subgroup = 2, pscores = pscores, reg_adjustment = reg_adjust, xformula = xformula, est_method = est_method) # S=g, Q=1 vs. S=\infty, Q=1
+  dr_att_inf_func_1 <- compute_did_rc(data, condition_subgroup = 1, pscores = pscores, reg_adjustment = reg_adjust, xformula = xformula, est_method = est_method) # S=g, Q=1 vs. S=\infty, Q=0
 
   dr_ddd <- dr_att_inf_func_3$dr_att + dr_att_inf_func_2$dr_att - dr_att_inf_func_1$dr_att
-  n <- data[, .N/2]
-  n3 <- subgroup_counts$count[subgroup_counts$subgroup == 3] + subgroup_counts$count[subgroup_counts$subgroup == 4]
-  n2 <- subgroup_counts$count[subgroup_counts$subgroup == 2] + subgroup_counts$count[subgroup_counts$subgroup == 4]
-  n1 <- subgroup_counts$count[subgroup_counts$subgroup == 1] + subgroup_counts$count[subgroup_counts$subgroup == 4]
+
+  # For influence function weighting, we need to use the appropriate counts depending on data structure
+  # For RCS: use observation counts (each observation is independent)
+  # For unbalanced panel: use observation counts too (IFs are at observation level, aggregation by ID happens later)
+  # Note: subgroup_counts contains either observation counts (RCS) or unique ID counts (unbalanced panel)
+  # depending on how it was constructed in preprocessing
+
+  # Get the appropriate sample sizes for weighting
+  # These are used to weight the influence functions from the three DiD components
+  n <- nrow(data)  # Total observations in this (g,t) cell
+  n3 <- data[subgroup %in% c(3, 4), .N]  # Observations in DiD3 comparison
+  n2 <- data[subgroup %in% c(2, 4), .N]  # Observations in DiD2 comparison
+  n1 <- data[subgroup %in% c(1, 4), .N]  # Observations in DiD1 comparison
+
   w3 <- n/n3
   w2 <- n/n2
   w1 <- n/n1
-  # rescaling influence function
+  # rescaling influence function (still at observation level)
   inf_func = w3*dr_att_inf_func_3$inf_func + w2*dr_att_inf_func_2$inf_func - w1*dr_att_inf_func_1$inf_func
 
   #-----------------------------------------------------------------------------
@@ -142,3 +153,4 @@ att_dr <- function(did_preprocessed) {
   return(ret)
 
 }
+

@@ -76,14 +76,16 @@ validate_args_2Periods <- function(args, dta){
     stop("pname =", pname, " must have only two values (0 and 1). Please check pname")
   }
 
-  # Check if idname is in the data
-  if ( !is.element(idname, base::colnames(dta))) {
-    stop("idname = ",idname,  " could not be found in the data provided.")
-  }
+  # Check if idname is in the data (skip for RCS placeholder)
+  if (idname != ".row_id") {
+    if ( !is.element(idname, base::colnames(dta))) {
+      stop("idname = ",idname,  " could not be found in the data provided.")
+    }
 
-  #  check if idname is numeric
-  if (!all(sapply(dta[, ..idname], is.numeric))) {
-    stop("data[, idname] must be numeric. Please convert it.")
+    #  check if idname is numeric
+    if (!all(sapply(dta[, ..idname], is.numeric))) {
+      stop("data[, idname] must be numeric. Please convert it.")
+    }
   }
 
   # Check if any combination of idname and tname is duplicated
@@ -152,6 +154,13 @@ validate_args_multPeriods <- function(args, dta){
   boot <- args$boot
   nboot <- args$nboot
   base_period <- args$base_period
+  panel <- args$panel
+
+  # For RCS data (panel=FALSE), idname is not required
+  if (is.null(panel)) panel <- TRUE  # Default value
+  if (!panel && is.null(idname)) {
+    return(invisible(NULL))  # Skip validation for RCS without idname
+  }
 
   # Flag for based period: not in c("universal", "varying"), stop
   if (!base_period %in% c("universal", "varying")) {
@@ -204,14 +213,16 @@ validate_args_multPeriods <- function(args, dta){
     stop("pname =", pname, " must have only two values (0 and 1). Please check pname")
   }
 
-  # Check if idname is in the data
-  if ( !is.element(idname, base::colnames(dta))) {
-    stop("idname = ",idname,  " could not be found in the data provided.")
-  }
+  # Check if idname is in the data (skip for RCS placeholder)
+  if (idname != ".row_id") {
+    if ( !is.element(idname, base::colnames(dta))) {
+      stop("idname = ",idname,  " could not be found in the data provided.")
+    }
 
-  #  check if idname is numeric
-  if (!all(sapply(dta[, ..idname], is.numeric))) {
-    stop("data[, idname] must be numeric. Please convert it.")
+    #  check if idname is numeric
+    if (!all(sapply(dta[, ..idname], is.numeric))) {
+      stop("data[, idname] must be numeric. Please convert it.")
+    }
   }
 
   # Check if any combination of idname and tname is duplicated
@@ -228,13 +239,15 @@ validate_args_multPeriods <- function(args, dta){
     }
   }
 
-  # Faster and useful checks to make sere we have a well-balanced panel.
+  # Faster and useful checks to make sure we have a well-balanced panel.
+  # Skip these checks for RCS placeholder (column doesn't exist yet)
+  if (idname != ".row_id") {
+    # Check if partition is unique by idname
+    checkPartitionUniqueness(dta, idname, pname)
 
-  # Check if partition is unique by idname
-  checkPartitionUniqueness(dta, idname, pname)
-
-  # Check if gname is unique by idname
-  checkTreatmentUniqueness(dta, idname, gname)
+    # Check if gname is unique by idname
+    checkTreatmentUniqueness(dta, idname, gname)
+  }
 
   #TODO: ADD MORE CHECKS IF NEEDED FOR DML
 

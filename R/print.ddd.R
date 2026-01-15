@@ -118,8 +118,9 @@ print.ddd <- function(x, alpha = NULL, ...) {
   cat(" Note: * indicates that the confidence interval does not contain zero.")
 
   cat("\n --------------------------- Data Info   -----------------------------")
-  # Panel data
-  cat("\n", "Panel data")
+  # Print type of data: if balanced panel, unbalanced panel or RCS
+  data_type <- ifelse(x$argu$panel == TRUE, "Panel Data", "Repeated Cross-Sections")
+  cat("\n", data_type)
   cat("\n", paste0("Outcome variable: ", x$argu$yname))
   # add partition variable name
   cat("\n", paste0("Qualification variable: ", x$argu$pname))
@@ -130,18 +131,44 @@ print.ddd <- function(x, alpha = NULL, ...) {
   }
   if(x$argu$multiple_periods == FALSE){
     cat("\n", "No. of units at each subgroup:")
-    cat("\n", paste0("  treated-and-eligible: ", x$subgroup_counts$V1[1]))
-    cat("\n", paste0("  treated-but-ineligible: ", x$subgroup_counts$V1[2]))
-    cat("\n", paste0("  eligible-but-untreated: ", x$subgroup_counts$V1[3]))
-    cat("\n", paste0("  untreated-and-ineligible: ", x$subgroup_counts$V1[4]))
+    cat("\n", paste0("  treated-and-eligible: ", x$subgroup_counts$count[1])) # subgroup 4
+    cat("\n", paste0("  treated-but-ineligible: ", x$subgroup_counts$count[2])) # subgroup 3
+    cat("\n", paste0("  eligible-but-untreated: ", x$subgroup_counts$count[3])) # subgroup 2
+    cat("\n", paste0("  untreated-and-ineligible: ", x$subgroup_counts$count[4])) # subgroup 1
   } else {
     cat("\n", "No. of units per treatment group:")
-    for (i in 1:nrow(x$cohort_size)) {
 
-      if (x$cohort_size$first_treat[i] == 0) {
-        cat("\n", paste0("  Units never enabling treatment: ", x$cohort_size$V1[i]), sep = "")
+    n_cohorts <- nrow(x$cohort_size)
+    max_display <- 7  # Maximum cohorts to display before truncating
+
+    if (n_cohorts <= max_display) {
+      # Display all cohorts when count is manageable
+      for (i in 1:n_cohorts) {
+        if (x$cohort_size$first_treat[i] == 0) {
+          cat("\n", paste0("  Units never enabling treatment: ", x$cohort_size$N[i]), sep = "")
+        } else {
+          cat("\n", paste0("  Units enabling treatment at period ", x$cohort_size$first_treat[i], ": ", x$cohort_size$N[i]), sep = "")
+        }
+      }
+    } else {
+      # Display first 3 cohorts
+      for (i in 1:3) {
+        if (x$cohort_size$first_treat[i] == 0) {
+          cat("\n", paste0("  Units never enabling treatment: ", x$cohort_size$N[i]), sep = "")
+        } else {
+          cat("\n", paste0("  Units enabling treatment at period ", x$cohort_size$first_treat[i], ": ", x$cohort_size$N[i]), sep = "")
+        }
+      }
+
+      # Omission message
+      n_omitted <- n_cohorts - 4  # 3 shown at top + 1 shown at bottom
+      cat("\n", paste0("  ... (", n_omitted, " cohorts omitted for brevity) ..."), sep = "")
+
+      # Display last cohort (typically never-treated)
+      if (x$cohort_size$first_treat[n_cohorts] == 0) {
+        cat("\n", paste0("  Units never enabling treatment: ", x$cohort_size$N[n_cohorts]), sep = "")
       } else {
-        cat("\n", paste0("  Units enabling treatment at period ", x$cohort_size$first_treat[i], ": ", x$cohort_size$V1[i]), sep = "")
+        cat("\n", paste0("  Units enabling treatment at period ", x$cohort_size$first_treat[n_cohorts], ": ", x$cohort_size$N[n_cohorts]), sep = "")
       }
     }
   }

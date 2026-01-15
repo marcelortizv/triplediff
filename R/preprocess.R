@@ -15,6 +15,8 @@ run_nopreprocess_2periods <- function(yname,
                                       dta,
                                       control_group = NULL,
                                       est_method = "dr",
+                                      panel = TRUE,
+                                      allow_unbalanced_panel = FALSE,
                                       learners = NULL,
                                       n_folds = NULL,
                                       weightsname = NULL,
@@ -117,9 +119,78 @@ run_nopreprocess_2periods <- function(yname,
   glist <- dta[, sort(unique(get(gname)))] # this has to be [0, G], second position in treated group.
   dta[, post := as.numeric(get(tname) == tlist[2])]
 
-  # sort data based on idnam and tname and make it balanced
+  # sort data based on idnam and tname
   data.table::setorderv(dta, c(idname, tname), c(1,1))
-  dta <- BMisc::makeBalancedPanel(dta, idname, tname)
+
+  #-------------------------------------
+  # Handle RCS ID creation
+  #-------------------------------------
+
+  # If idname is the placeholder, create the actual ID column
+  if (idname == ".row_id") {
+    if (".row_id" %in% names(dta)) {
+      stop("Column '.row_id' already exists in data. Please rename it or provide a different idname.")
+    }
+    # Create unique row IDs for RCS data
+    dta[, .row_id := .I]
+  }
+
+  # -----------------------------------------------------------------------
+  # Panel balance detection and handling
+  # -----------------------------------------------------------------------
+
+  # Detect if panel is balanced
+  n_old <- uniqueN(dta[[idname]])
+  row_orig <- dta[, .N]
+
+  # Check if panel is balanced (all units observed in all periods)
+  obs_per_unit <- dta[, .N, by = idname]
+  n_periods <- uniqueN(dta[[tname]])
+  is_balanced <- all(obs_per_unit$N == n_periods)
+
+  # Initialize flag for true repeated cross-sections
+  true_repeated_cross_sections <- FALSE
+
+  if (panel) {
+    if (!is_balanced) {
+      if (allow_unbalanced_panel) {
+        # Treat unbalanced panel as repeated cross-sections
+        true_repeated_cross_sections <- TRUE
+        warning("Panel is unbalanced. Treating as repeated cross-sections (allow_unbalanced_panel = TRUE).")
+      } else {
+        # Balance the panel by dropping units
+        dta <- BMisc::makeBalancedPanel(dta, idname, tname)
+        n <- uniqueN(dta[[idname]])
+        row_new <- dta[, .N]
+        row_diff <- row_orig - row_new
+
+        if (n < n_old) {
+          warning(paste0("Dropped observations from ", n_old - n, " units ", "(", row_diff ," rows)" ," while converting to balanced panel."))
+        }
+
+        # Check if all data was dropped
+        if (nrow(dta) == 0) {
+          stop("All observations dropped to convert data to balanced panel. Please check your argument in 'idname' or set panel=FALSE for repeated cross-sections.")
+        }
+      }
+    }
+  } else {
+    # panel = FALSE: treat as repeated cross-sections
+    true_repeated_cross_sections <- TRUE
+  }
+
+  #-------------------------------------
+  # Handle RCS ID creation
+  #-------------------------------------
+
+  # If idname is the placeholder, create the actual ID column in dta
+  if (idname == ".row_id") {
+    if (".row_id" %chin% names(dta)) {
+      stop("Column '.row_id' already exists in data. Please rename it or provide a different idname.")
+    }
+    # Create unique row IDs for RCS data
+    dta[, (idname) := .I]
+  }
 
   #-------------------------------------
   # Generate the output for estimation
@@ -147,7 +218,21 @@ run_nopreprocess_2periods <- function(yname,
 
   # Flag for not enough observations for each subgroup
   # Calculate the size of each subgroup in the 'subgroup' column
-  subgroup_counts <- cleaned_data[, .N/2, by = subgroup][order(-subgroup)]
+  # For unbalanced panel: count unique IDs (each ID may appear multiple times)
+  # For true RCS: count observations (each observation is unique)
+  # For balanced panel: count observations / 2 (each unit appears twice)
+  if (true_repeated_cross_sections) {
+    if (panel && allow_unbalanced_panel) {
+      # Unbalanced panel: count unique IDs per subgroup
+      subgroup_counts <- cleaned_data[, .(count = uniqueN(id)), by = subgroup][order(-subgroup)]
+    } else {
+      # True RCS: count observations (each observation is unique)
+      subgroup_counts <- cleaned_data[, .(count = .N), by = subgroup][order(-subgroup)]
+    }
+  } else {
+    # Balanced panel: count observations and divide by 2
+    subgroup_counts <- cleaned_data[, .(count = .N/2), by = subgroup][order(-subgroup)]
+  }
 
   # adding covariates
   if (!is.null(xformla)) {
@@ -188,7 +273,10 @@ run_nopreprocess_2periods <- function(yname,
               use_parallel = use_parallel,
               cores = cores,
               inffunc = inffunc,
-              subgroup_counts = subgroup_counts)
+              subgroup_counts = subgroup_counts,
+              panel = panel,
+              allow_unbalanced_panel = allow_unbalanced_panel,
+              true_repeated_cross_sections = true_repeated_cross_sections)
 
   return(out)
 
@@ -205,6 +293,8 @@ run_preprocess_2Periods <- function(yname,
                                    dta,
                                    control_group = NULL,
                                    est_method = "dr",
+                                   panel = TRUE,
+                                   allow_unbalanced_panel = FALSE,
                                    learners = NULL,
                                    n_folds = NULL,
                                    weightsname = NULL,
@@ -252,6 +342,19 @@ run_preprocess_2Periods <- function(yname,
       cband <- TRUE
       args$cband <- cband
     }
+  }
+
+  #-------------------------------------
+  # Handle RCS ID creation
+  #-------------------------------------
+
+  # If idname is the placeholder, create the actual ID column
+  if (idname == ".row_id") {
+    if (".row_id" %in% names(dta)) {
+      stop("Column '.row_id' is an internal name. Please rename it or provide a different idname.")
+    }
+    # Create unique row IDs for RCS data
+    dta[, .row_id := .I]
   }
 
   # Run argument checks
@@ -346,18 +449,63 @@ run_preprocess_2Periods <- function(yname,
   dta[, post := as.numeric(get(tname) == tlist[2])]
 
   # Checking if covariates are time invariant in panel data case
-  # Create the model matrix
-  cov_pre <- model.matrix(as.formula(xformla), data = dta[dta[["post"]] == 0])
-  cov_post <- model.matrix(as.formula(xformla), data = dta[dta[["post"]] == 1])
-  # Check if covariates are time invariant
-  if (!all(cov_pre == cov_post)) {
-    stop("Covariates are not time invariant. Please check xformla")
+  # Only check for panel data (not RCS)
+  if (panel) {
+    # Create the model matrix
+    cov_pre <- model.matrix(as.formula(xformla), data = dta[dta[["post"]] == 0])
+    cov_post <- model.matrix(as.formula(xformla), data = dta[dta[["post"]] == 1])
+    # Check if covariates are time invariant
+    if (!all(cov_pre == cov_post)) {
+      stop("Covariates are not time invariant. Please check xformla")
+    }
   }
 
-  # sort data based on idnam and tname and make it balanced
+  # sort data based on idnam and tname
   data.table::setorderv(dta, c(idname, tname), c(1,1))
-  dta <- BMisc::makeBalancedPanel(dta, idname, tname)
 
+  # -----------------------------------------------------------------------
+  # Panel balance detection and handling
+  # -----------------------------------------------------------------------
+
+  # Detect if panel is balanced
+  n_old <- uniqueN(dta[[idname]])
+  row_orig <- dta[, .N]
+
+  # Check if panel is balanced (all units observed in all periods)
+  obs_per_unit <- dta[, .N, by = idname]
+  n_periods <- uniqueN(dta[[tname]])
+  is_balanced <- all(obs_per_unit$N == n_periods)
+
+  # Initialize flag for true repeated cross-sections
+  true_repeated_cross_sections <- FALSE
+
+  if (panel) {
+    if (!is_balanced) {
+      if (allow_unbalanced_panel) {
+        # Treat unbalanced panel as repeated cross-sections
+        true_repeated_cross_sections <- TRUE
+        warning("Panel is unbalanced. Proceeding as such.")
+      } else {
+        # Balance the panel by dropping units
+        dta <- BMisc::makeBalancedPanel(dta, idname, tname)
+        n <- uniqueN(dta[[idname]])
+        row_new <- dta[, .N]
+        row_diff <- row_orig - row_new
+
+        # Check if all data was dropped
+        if (nrow(dta) == 0) {
+          stop("All observations dropped to convert data to balanced panel. Please check your argument in 'idname' or set panel=FALSE for repeated cross-sections.")
+        }
+
+        if (n < n_old) {
+          warning(paste0("Dropped observations from ", n_old - n, " units ", "(", row_diff ," rows)" ," while converting to balanced panel."))
+        }
+      }
+    }
+  } else {
+    # panel = FALSE: treat as repeated cross-sections
+    true_repeated_cross_sections <- TRUE
+  }
 
   #-------------------------------------
   # Generate the output for estimation
@@ -370,6 +518,11 @@ run_preprocess_2Periods <- function(yname,
                                          period = dta[[tname]],
                                          partition = dta[[pname]],
                                          weights = dta$weights)
+
+  # # For true RCS data with user-provided idname, replace with row IDs
+  # if (true_repeated_cross_sections && idname != ".row_id") {
+  #   cleaned_data[, id := .I]  # Use row index as ID for RCS
+  # }
 
   idx_static_vars <- 8 # useful to perform the elimination of collinear variables
   # Add cluster column if cluster argument is provided
@@ -386,12 +539,26 @@ run_preprocess_2Periods <- function(yname,
 
   # Flag for not enough observations for each subgroup
   # Calculate the size of each subgroup in the 'subgroup' column
-  subgroup_counts <- cleaned_data[, .N/2, by = subgroup][order(-subgroup)]
+  # For unbalanced panel: count unique IDs (each ID may appear multiple times)
+  # For true RCS: count observations (each observation is unique)
+  # For balanced panel: count observations / 2 (each unit appears twice)
+  if (true_repeated_cross_sections) {
+    if (panel && allow_unbalanced_panel) {
+      # Unbalanced panel: count unique IDs per subgroup
+      subgroup_counts <- cleaned_data[, .(count = uniqueN(id)), by = subgroup][order(-subgroup)]
+    } else {
+      # True RCS: count observations (each observation is unique)
+      subgroup_counts <- cleaned_data[, .(count = .N), by = subgroup][order(-subgroup)]
+    }
+  } else {
+    # Balanced panel: count observations and divide by 2
+    subgroup_counts <- cleaned_data[, .(count = .N/2), by = subgroup][order(-subgroup)]
+  }
   # Check if each subgroup has at least 5 observations. Check this threshold if needed.
-  sufficient_obs <- all(subgroup_counts$N >= 5)
+  sufficient_obs <- all(subgroup_counts$count >= 5)
   # Stop the code if not all subgroups have at least 5 observations
   if (!sufficient_obs) {
-    stop("Not enough observations in each subgroup. Please check the data.")
+    stop("Not enough observations in each subgroup to perform inference. Please check the distribution of 'gname' and 'pname' in the data.")
   }
 
   # Flag for small groups for inference
@@ -456,7 +623,10 @@ run_preprocess_2Periods <- function(yname,
               use_parallel = use_parallel,
               cores = cores,
               inffunc = inffunc,
-              subgroup_counts = subgroup_counts)
+              subgroup_counts = subgroup_counts,
+              panel = panel,
+              allow_unbalanced_panel = allow_unbalanced_panel,
+              true_repeated_cross_sections = true_repeated_cross_sections)
 
   return(out)
 }
@@ -474,6 +644,8 @@ run_preprocess_multPeriods <- function(yname,
                                        control_group,
                                        base_period,
                                        est_method = "dr",
+                                       panel = TRUE,
+                                       allow_unbalanced_panel = FALSE,
                                        learners = NULL,
                                        n_folds = NULL,
                                        weightsname = NULL,
@@ -489,6 +661,20 @@ run_preprocess_multPeriods <- function(yname,
   # Capture all arguments except 'data'
   arg_names <- setdiff(names(formals()), "dta")
   args <- mget(arg_names, sys.frame(sys.nframe()))
+
+  #-------------------------------------
+  # Handle missing idname for RCS data
+  #-------------------------------------
+
+  # If idname is missing and panel=FALSE, set placeholder for RCS
+  if (missing(idname) || is.null(idname)) {
+    if (!panel) {
+      idname <- ".row_id"
+      args$idname <- idname
+    } else {
+      stop("idname is required when panel = TRUE. For repeated cross-section data, set panel = FALSE.")
+    }
+  }
 
   #-------------------------------------
   # Error checking
@@ -585,7 +771,12 @@ run_preprocess_multPeriods <- function(yname,
   }
 
   # keep relevant columns in data
-  cols_to_keep <- c(idname, tname, yname, gname, pname, weightsname, cluster)
+  # For RCS placeholder, exclude idname from initial column selection (will be created later)
+  if (idname == ".row_id") {
+    cols_to_keep <- c(tname, yname, gname, pname, weightsname, cluster)
+  } else {
+    cols_to_keep <- c(idname, tname, yname, gname, pname, weightsname, cluster)
+  }
 
   model_frame <- model.frame(xformla, data = dta, na.action = na.pass)
   # Subset the data.table to keep only relevant columns
@@ -662,7 +853,12 @@ run_preprocess_multPeriods <- function(yname,
   dta[is.na(treated_first_period), treated_first_period := FALSE]
 
   # count the number of units treated in the first period
-  nfirstperiod <- uniqueN(dta[treated_first_period == TRUE, get(idname)])
+  # For RCS placeholder, skip this check (will be handled after ID creation)
+  if (idname == ".row_id") {
+    nfirstperiod <- 0
+  } else {
+    nfirstperiod <- uniqueN(dta[treated_first_period == TRUE, get(idname)])
+  }
 
   # handle units treated in the first period
   if (nfirstperiod > 0) {
@@ -683,30 +879,88 @@ run_preprocess_multPeriods <- function(yname,
   dta[, treated_first_period := NULL]
 
   # ----------------------------------------------------------------
-  # panel data only
+  # do we have missing data?
   # ----------------------------------------------------------------
 
   # Check for complete cases
   keepers <- complete.cases(dta)
-  n <- uniqueN(dta[[idname]])
-  n_keep <- uniqueN(dta[keepers, get(idname)])
+  # For RCS placeholder, skip ID-based counting (will use row counts instead)
+  if (idname == ".row_id") {
+    n <- nrow(dta)
+    n_keep <- sum(keepers)
+  } else {
+    n <- uniqueN(dta[[idname]])
+    n_keep <- uniqueN(dta[keepers, get(idname)])
+  }
 
   if (nrow(dta[keepers, ]) < nrow(dta)) {
     warning(paste0("Dropped ", (n - n_keep), " observations that had missing data."))
     dta <- dta[keepers, ]
   }
 
-  # Make it a balanced data set
-  n_old <- uniqueN(dta[[idname]])
-  row_orig <- dta[, .N]
-  dta <- BMisc::makeBalancedPanel(dta, idname, tname)
-  n <- uniqueN(dta[[idname]])
-  row_new <- dta[, .N]
-  row_diff <- row_orig - row_new
+  # -----------------------------------------------------------------------
+  # Panel balance detection and handling
+  # -----------------------------------------------------------------------
 
+  # Detect if panel is balanced
+  # For RCS placeholder, skip balance checking (will be handled after ID creation)
+  if (idname == ".row_id") {
+    n_old <- nrow(dta)
+    row_orig <- dta[, .N]
+    is_balanced <- FALSE
+  } else {
+    n_old <- uniqueN(dta[[idname]])
+    row_orig <- dta[, .N]
 
-  if (n < n_old) {
-    warning(paste0("Dropped observations from ", n_old - n, " units ", "(", row_diff ," rows)" ," while converting to balanced panel."))
+    # Check if panel is balanced (all units observed in all periods)
+    obs_per_unit <- dta[, .N, by = idname]
+    n_periods <- uniqueN(dta[[tname]])
+    is_balanced <- all(obs_per_unit$N == n_periods)
+  }
+
+  # Initialize flag for true repeated cross-sections
+  true_repeated_cross_sections <- FALSE
+
+  if (panel) {
+    if (!is_balanced) {
+      if (allow_unbalanced_panel) {
+        # Treat unbalanced panel as repeated cross-sections
+        true_repeated_cross_sections <- FALSE
+        warning("Panel is unbalanced. Proceeding as such.")
+      } else {
+        warning("Panel is unbalanced but allow_unbalanced_panel = FALSE. Forcing to convert data to balanced panel.")
+        # Balance the panel by dropping units
+        dta <- BMisc::makeBalancedPanel(dta, idname, tname)
+        n <- uniqueN(dta[[idname]])
+        row_new <- dta[, .N]
+        row_diff <- row_orig - row_new
+
+        # Check if all data was dropped
+        if (nrow(dta) == 0) {
+          stop("All observations dropped to convert data to balanced panel. Please check your argument in 'idname' or set panel=FALSE for repeated cross-sections.")
+        }
+
+        if (n < n_old) {
+          warning(paste0("Dropped observations from ", n_old - n, " units ", "(", row_diff ," rows)" ," while converting to balanced panel."))
+        }
+      }
+    }
+  } else {
+    # panel = FALSE: treat as repeated cross-sections
+    true_repeated_cross_sections <- TRUE
+  }
+
+  #-------------------------------------
+  # Handle RCS ID creation
+  #-------------------------------------
+
+  # If idname is the placeholder, create the actual ID column in dta
+  if (idname == ".row_id") {
+    if (".row_id" %in% names(dta)) {
+      stop("Column '.row_id' already exists in data. Please rename it or provide a different idname.")
+    }
+    # Create unique row IDs for RCS data
+    dta[, .row_id := .I]
   }
 
   #-------------------------------------
@@ -724,12 +978,16 @@ run_preprocess_multPeriods <- function(yname,
     cleaned_data[, cluster := dta[[cluster]]]
   }
 
-  # If drop all data, you do not have a panel.
-  if (nrow(cleaned_data) == 0) {
-    stop("All observations dropped to convert data to balanced panel. Please check your argument in 'idname'.")
-  }
+  # TODO: we may not need this as we already handled this above
+  # # If drop all data, you do not have a panel.
+  # if (nrow(cleaned_data) == 0) {
+  #   stop("All observations dropped to convert data to balanced panel. Please check your argument in 'idname'.")
+  # }
 
-  n <- nrow(cleaned_data[period == tlist[1], ])
+  # Compute sample size n = number of unique IDs
+  # For panel: each unit appears multiple times
+  # For RCS: each observation has unique ID after preprocessing
+  n <- uniqueN(cleaned_data$id)
 
   # Check if groups is empty
   if(length(glist)==0){
@@ -738,11 +996,26 @@ run_preprocess_multPeriods <- function(yname,
 
   # Check for small comparison groups
   # Calculate the size of each group in the 'treat' column
-  gsize <- cleaned_data[, .N / length(tlist), by = first_treat][order(-first_treat)]
+  # For unbalanced panel: count unique IDs (each ID may appear in multiple periods)
+  # For true RCS: count observations (each observation is unique)
+  # For balanced panel: count observations / number of periods (each unit appears in all periods)
+  if (true_repeated_cross_sections){
+    # True RCS: count observations
+      gsize <- cleaned_data[, .(N = .N), by = first_treat][order(-first_treat)]
+  } else {
+    if (panel && allow_unbalanced_panel) {
+      # Unbalanced panel: count unique IDs per treatment group
+      gsize <- cleaned_data[, .(N = uniqueN(id)), by = first_treat][order(-first_treat)]
+    } else {
+      # Balanced panel: count observations and divide by number of periods
+      gsize <- cleaned_data[, .(N = .N / length(tlist)), by = first_treat][order(-first_treat)]
+    }
+  }
+
   # Calculate the required size
   reqsize <- length(BMisc::rhs.vars(xformla)) + 5
   # Identify groups to warn about
-  small_groups <- gsize[V1 < reqsize]
+  small_groups <- gsize[N < reqsize]
   # Warn if some groups are small
   if (nrow(small_groups) > 0) {
     gpaste <- paste(small_groups[, first_treat], collapse = ",")
@@ -788,7 +1061,10 @@ run_preprocess_multPeriods <- function(yname,
               time_periods = nT,
               cohort_size = gsize,
               tlist = tlist,
-              glist = glist)
+              glist = glist,
+              panel = panel,
+              allow_unbalanced_panel = allow_unbalanced_panel,
+              true_repeated_cross_sections = true_repeated_cross_sections)
 
   return(out)
 }
@@ -820,5 +1096,3 @@ process_attgt <- function(attgt_list){
 
   return(list(group = group, att = att, periods = periods))
 }
-
-

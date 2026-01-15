@@ -4,16 +4,20 @@
 \alias{gen_dgp_mult_periods}
 \title{Generate panel data with staggered treatment adoption (three periods)}
 \usage{
-gen_dgp_mult_periods(size, dgp_type = 1)
+gen_dgp_mult_periods(size, dgp_type = 1, include_covariates = TRUE)
 }
 \arguments{
 \item{size}{Integer. Number of units to simulate.}
 
-\item{dgp_type}{Integer in \{1,2,3,4\}.
-1 = both nuisance functions correct;
+\item{dgp_type}{Integer in \{1,2,3,4\}. Only used when \code{include_covariates = TRUE}.
+1 = both nuisance functions correct (default);
 2 = only the outcome model correct;
 3 = only the propensity-score model correct;
 4 = both nuisance functions misspecified.}
+
+\item{include_covariates}{Logical. If \code{TRUE} (default), generates covariates with
+transformations and uses \code{dgp_type} specification. If \code{FALSE}, uses constant
+covariates and fixed propensity score probabilities for a simpler DGP.}
 }
 \value{
 A named list with components:
@@ -35,9 +39,9 @@ A named list with components:
 \item \code{y_t0}, \code{y_t1}, \code{y_t2}: outcomes in periods 0, 1, and 2
 }
 }
-\item{ES_0_unf}{Unfeasible (oracle) event-study parameter at time 0.}
-\item{prob_g2_p1}{Proportion of units with \code{cohort == 2} and eligibility in period 1.}
-\item{prob_g3_p1}{Proportion of units with \code{cohort == 3} and eligibility in period 1.}
+\item{ES_0_unf}{(Only if \code{include_covariates = TRUE}) Unfeasible (oracle) event-study parameter at time 0.}
+\item{prob_g2_p1}{(Only if \code{include_covariates = TRUE}) Proportion of units with \code{cohort == 2} and eligibility in period 1.}
+\item{prob_g3_p1}{(Only if \code{include_covariates = TRUE}) Proportion of units with \code{cohort == 3} and eligibility in period 1.}
 }
 }
 \description{

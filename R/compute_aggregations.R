@@ -1,7 +1,5 @@
 #' Utility functions to compute aggregation procedures.
 #' @importFrom stats update
-#' @import parglm
-#' @import speedglm
 #' @import data.table
 #' @noRd
 #--------------------------------------------------
@@ -241,6 +239,8 @@ compute_aggregation <- function(ddd_obj,
   did_preprocessed$cluster <- cluster # cluster variable
   did_preprocessed$nboot <- nboot # number of bootstrap iterations
   did_preprocessed$alpha <- alpha # level of significance
+  did_preprocessed$panel <- ddd_obj$argu$panel # panel indicator
+  did_preprocessed$allow_unbalanced_panel <- ddd_obj$argu$allow_unbalanced_panel # unbalanced panel indicator
 
 
   if((na.rm == FALSE) && base::anyNA(ATT)) stop("Missing values at att_gt found. If you want to remove these, set `na.rm = TRUE'.")
