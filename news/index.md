@@ -17,3 +17,11 @@ CRAN release: 2025-07-23
 ## triplediff 0.1.2
 
 - Bug fix in `preprocess` when checking for small groups.
+
+## triplediff 0.2.0
+
+- Replaced `parglm` with `fastglm` to avoid issues related to parglm’s
+  scheduled archival on 2026-01-29.
+- Added support for unbalanced panel data and repeated cross-sectional
+  data by properly implementing the `allow_unbalanced_panel` parameter
+  across all functions.

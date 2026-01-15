@@ -381,6 +381,8 @@ to report bugs, request features or provide feedback.
 - ️✅ Aggregations procedures (e.g., event-study type estimates).
 - ️✅ GMM-based estimations with not-yet-treated units as comparison
   group.
+- ✅ Repeated cross-sectional data.
+- ✅ Unbalanced panel data.
 
 ### ⚠️ Not Yet Supported
 
@@ -389,5 +391,3 @@ to report bugs, request features or provide feedback.
     can be plotted using `ggplot2`. See the quick start example.
 - 🔲 User-specified data-driven models for estimations of nuisance
   parameters.
-- 🔲 Repeated cross-sectional data.
-- 🔲 Unbalanced panel data.
