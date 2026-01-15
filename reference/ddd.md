@@ -14,7 +14,7 @@ methods for the estimation of the nuisance parameters.
 ddd(
   yname,
   tname,
-  idname,
+  idname = NULL,
   gname,
   pname,
   xformla,
@@ -22,6 +22,8 @@ ddd(
   control_group = NULL,
   base_period = NULL,
   est_method = "dr",
+  panel = TRUE,
+  allow_unbalanced_panel = FALSE,
   weightsname = NULL,
   boot = FALSE,
   nboot = NULL,
@@ -99,6 +101,21 @@ ddd(
   It computes propensity score using logistic regression and outcome
   regression using OLS. The alternative are `c("reg", "ipw")`.
 
+- panel:
+
+  Logical. If `TRUE` (default), the data is treated as panel data where
+  each unit is observed in all time periods. If `FALSE`, the data is
+  treated as repeated cross-sections (RCS) where each observation may
+  represent a different unit. For RCS data, `idname` can be omitted or
+  set to `NULL`, and the function will automatically create unique IDs
+  for each observation.
+
+- allow_unbalanced_panel:
+
+  Logical. If `TRUE`, allows for unbalanced panel data where units may
+  not be observed in all time periods. Default is `FALSE`. Note: This
+  parameter requires `panel = TRUE` and a valid `idname`.
+
 - weightsname:
 
   The name of the column containing the weights. Default is `NULL`. As
@@ -151,8 +168,11 @@ ddd(
 
 - skip_data_checks:
 
-  Logical. If `TRUE`, the function skips the data checks and go straight
-  to estimation. Default is `FALSE`.
+  Logical. If `TRUE`, the function skips data validation checks and
+  proceeds directly to estimation. This can improve performance when you
+  are confident the data is correctly formatted. Default is `FALSE`. Use
+  with caution as skipping checks may lead to unexpected errors if data
+  is malformed.
 
 ## Value
 
@@ -223,7 +243,7 @@ summary(att_22)
 #> 
 #>  Note: * indicates that the confidence interval does not contain zero.
 #>  --------------------------- Data Info   -----------------------------
-#>  Panel data
+#>  Panel Data
 #>  Outcome variable: y
 #>  Qualification variable: partition
 #>  No. of units at each subgroup:
@@ -244,26 +264,26 @@ summary(att_22)
 # Performing clustered standard errors with mutiplier bootstrap
 
 att_cluster <-  ddd(yname = "y", tname = "time", idname = "id", gname = "state",
-pname = "partition", xformla = ~cov1 + cov2 + cov3 + cov4,
-data = df, control_group = "nevertreated",
-base_period = "universal", est_method = "dr", cluster = "cluster")
-#> Warning: Clustered SEs are only available when boot=TRUE. Setting boot=TRUE and cband=TRUE for bootstrapped standard errors.
-#> Warning: Number of bootstrap samples not specified. Defaulting to 999 reps.
+                    pname = "partition", xformla = ~cov1 + cov2 + cov3 + cov4,
+                    data = df, control_group = "nevertreated",
+                    base_period = "universal", est_method = "dr", 
+                    boot = TRUE, nboot = 500, cband = TRUE, cluster = "cluster")
 
 summary(att_cluster)
 #>  Call:
 #> ddd(yname = "y", tname = "time", idname = "id", gname = "state", 
 #>     pname = "partition", xformla = ~cov1 + cov2 + cov3 + cov4, 
 #>     data = df, control_group = "nevertreated", base_period = "universal", 
-#>     est_method = "dr", cluster = "cluster")
+#>     est_method = "dr", boot = TRUE, nboot = 500, cluster = "cluster", 
+#>     cband = TRUE)
 #> =========================== DDD Summary ==============================
 #>  DR-DDD estimation for the ATT: 
 #>      ATT       Std. Error    Pr(>|t|)  [95% Simult. Conf. Band]              
-#>     -0.0780       0.0976       0.4239      -0.2618       0.1058              
+#>     -0.0780       0.0944       0.4088      -0.2647       0.1087              
 #> 
 #>  Note: * indicates that the confidence interval does not contain zero.
 #>  --------------------------- Data Info   -----------------------------
-#>  Panel data
+#>  Panel Data
 #>  Outcome variable: y
 #>  Qualification variable: partition
 #>  No. of units at each subgroup:
@@ -276,7 +296,7 @@ summary(att_cluster)
 #>  Propensity score estimated using: Maximum Likelihood
 #>  --------------------------- Std. Errors  ----------------------------
 #>  Level of significance:  0.05
-#>  Boostrapped standard error based on 999 reps. 
+#>  Boostrapped standard error based on 500 reps. 
 #>  Method: Multiplier Bootstrap.
 #>  Type of confidence band:  Uniform Confidence Band 
 #>  Clustering Std. Errors by: cluster
@@ -300,21 +320,21 @@ ddd(yname = "y", tname = "time", idname = "id",
 #> =========================== DDD Summary ==============================
 #>  DR-DDD estimation for the ATT(g,t): 
 #> Group Time  ATT(g,t)  Std. Error [95% Pointwise  Conf. Band]  
-#>   2    2       9.7891     0.2668       9.2662       10.3120  *
-#>   2    3      19.6286     0.3004      19.0398       20.2174  *
-#>   3    2      -0.1926     0.2590      -0.7003        0.3151   
-#>   3    3      24.7106     0.2546      24.2115       25.2096  *
+#>   2    2      10.1689     0.2879       9.6047       10.7331  *
+#>   2    3      20.0451     0.2776      19.5010       20.5893  *
+#>   3    2      -0.1446     0.2736      -0.6808        0.3916   
+#>   3    3      25.2267     0.3106      24.6178       25.8355  *
 #> 
 #>  Note: * indicates that the confidence interval does not contain zero.
 #>  --------------------------- Data Info   -----------------------------
-#>  Panel data
+#>  Panel Data
 #>  Outcome variable: y
 #>  Qualification variable: partition
 #>  Control group: Never Treated
 #>  No. of units per treatment group:
-#>   Units enabling treatment at period 3: 465
-#>   Units enabling treatment at period 2: 338
-#>   Units never enabling treatment: 197
+#>   Units enabling treatment at period 3: 443
+#>   Units enabling treatment at period 2: 356
+#>   Units never enabling treatment: 201
 #>  --------------------------- Algorithms ------------------------------
 #>  Outcome Regression estimated using: OLS
 #>  Propensity score estimated using: Maximum Likelihood

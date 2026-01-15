@@ -6,7 +6,7 @@ across three periods.
 ## Usage
 
 ``` r
-gen_dgp_mult_periods(size, dgp_type = 1)
+gen_dgp_mult_periods(size, dgp_type = 1, include_covariates = TRUE)
 ```
 
 ## Arguments
@@ -17,9 +17,17 @@ gen_dgp_mult_periods(size, dgp_type = 1)
 
 - dgp_type:
 
-  Integer in {1,2,3,4}. 1 = both nuisance functions correct; 2 = only
-  the outcome model correct; 3 = only the propensity-score model
-  correct; 4 = both nuisance functions misspecified.
+  Integer in {1,2,3,4}. Only used when `include_covariates = TRUE`. 1 =
+  both nuisance functions correct (default); 2 = only the outcome model
+  correct; 3 = only the propensity-score model correct; 4 = both
+  nuisance functions misspecified.
+
+- include_covariates:
+
+  Logical. If `TRUE` (default), generates covariates with
+  transformations and uses `dgp_type` specification. If `FALSE`, uses
+  constant covariates and fixed propensity score probabilities for a
+  simpler DGP.
 
 ## Value
 
@@ -53,12 +61,15 @@ A named list with components:
 
 - ES_0_unf:
 
-  Unfeasible (oracle) event-study parameter at time 0.
+  (Only if `include_covariates = TRUE`) Unfeasible (oracle) event-study
+  parameter at time 0.
 
 - prob_g2_p1:
 
-  Proportion of units with `cohort == 2` and eligibility in period 1.
+  (Only if `include_covariates = TRUE`) Proportion of units with
+  `cohort == 2` and eligibility in period 1.
 
 - prob_g3_p1:
 
-  Proportion of units with `cohort == 3` and eligibility in period 1.
+  (Only if `include_covariates = TRUE`) Proportion of units with
+  `cohort == 3` and eligibility in period 1.
