@@ -4,6 +4,60 @@
 #' @export
 NULL
 #--------------------------------------------------
+# Helper function to check partition-specific collinearity
+# Returns a list with:
+#   - collinear_vars: named list mapping dropped variables to the partition(s) where they're collinear
+#   - all_collinear: vector of all variables that should be dropped globally
+check_partition_collinearity <- function(data, subgroup_col, cov_cols, tol = 1e-6) {
+  # Get unique subgroups (should be 1, 2, 3, 4)
+  subgroups <- sort(unique(data[[subgroup_col]]))
+
+  # We check comparisons: 4 vs 3, 4 vs 2, 4 vs 1
+  # These are the partitions used in the DDD estimation
+  comparison_groups <- subgroups[subgroups < 4]
+
+  # Track which variables are collinear in which partition
+  partition_collinear <- list()
+
+  for (comp_group in comparison_groups) {
+    # Subset data to subgroup 4 and the comparison group
+    subset_data <- data[data[[subgroup_col]] %in% c(4, comp_group), ]
+
+    # Get covariate matrix for this subset
+    cov_subset <- as.matrix(subset_data[, cov_cols, with = FALSE])
+
+    # Skip if no observations (shouldn't happen, but be safe)
+    if (nrow(cov_subset) == 0) next
+
+    # Use QR decomposition to detect collinearity
+    qr_subset <- qr(cov_subset, tol = tol)
+    rank_subset <- qr_subset$rank
+
+    # Get indices of linearly independent columns
+    non_collinear_indices <- qr_subset$pivot[seq_len(rank_subset)]
+
+    # Find collinear variables in this subset
+    collinear_in_subset <- setdiff(cov_cols, cov_cols[non_collinear_indices])
+
+    if (length(collinear_in_subset) > 0) {
+      partition_name <- paste0("subgroup 4 vs ", comp_group)
+      for (var in collinear_in_subset) {
+        if (is.null(partition_collinear[[var]])) {
+          partition_collinear[[var]] <- partition_name
+        } else {
+          partition_collinear[[var]] <- c(partition_collinear[[var]], partition_name)
+        }
+      }
+    }
+  }
+
+  return(list(
+    collinear_vars = partition_collinear,
+    all_collinear = names(partition_collinear)
+  ))
+}
+
+#--------------------------------------------------
 # Function to pre-process the data to use on ddd estimator
 
 run_nopreprocess_2periods <- function(yname,
@@ -253,12 +307,38 @@ run_nopreprocess_2periods <- function(yname,
   rank_m <- qr_m$rank
   # Get the indices of the non-collinear columns
   non_collinear_indices <- qr_m$pivot[seq_len(rank_m)]
+  # Check if any covariates were dropped due to global collinearity (following DRDID approach)
+  dropped_covariates_global <- setdiff(colnames(cov_m), colnames(cov_m)[non_collinear_indices])
+  if (length(dropped_covariates_global) > 0) {
+    warning("The following covariates were dropped due to global collinearity: ", paste(dropped_covariates_global, collapse = ", "))
+  }
   # Drop the collinear columns from the data.table
   cleaned_data <- cleaned_data[, c(seq(1,idx_static_vars,1), non_collinear_indices + idx_static_vars), with = FALSE]
 
   # drop the intercept
   #cleaned_data[, (idx_static_vars+1) := NULL]
   cleaned_data[, "(Intercept)" := NULL]
+
+  # Check for partition-specific collinearity (after global check)
+  # Get remaining covariate column names (excluding static vars)
+  cov_cols_remaining <- setdiff(names(cleaned_data), c("id", "y", "post", "treat", "period", "partition", "weights", "cluster", "subgroup"))
+  if (length(cov_cols_remaining) > 0) {
+    partition_check <- check_partition_collinearity(cleaned_data, "subgroup", cov_cols_remaining)
+
+    if (length(partition_check$all_collinear) > 0) {
+      # Build informative warning message
+      partition_warnings <- sapply(names(partition_check$collinear_vars), function(var) {
+        partitions <- paste(partition_check$collinear_vars[[var]], collapse = ", ")
+        paste0("  - ", var, " (collinear in: ", partitions, ")")
+      })
+      warning("The following covariates were dropped due to partition-specific collinearity:\n",
+              paste(partition_warnings, collapse = "\n"))
+
+      # Drop these covariates globally
+      cols_to_keep <- setdiff(names(cleaned_data), partition_check$all_collinear)
+      cleaned_data <- cleaned_data[, ..cols_to_keep]
+    }
+  }
 
   out <- list(preprocessed_data = cleaned_data,
               xformula = xformla,
@@ -603,11 +683,37 @@ run_preprocess_2Periods <- function(yname,
   rank_m <- qr_m$rank
   # Get the indices of the non-collinear columns
   non_collinear_indices <- qr_m$pivot[seq_len(rank_m)]
+  # Check if any covariates were dropped due to global collinearity (following DRDID approach)
+  dropped_covariates_global <- setdiff(colnames(cov_m), colnames(cov_m)[non_collinear_indices])
+  if (length(dropped_covariates_global) > 0) {
+    warning("The following covariates were dropped due to global collinearity: ", paste(dropped_covariates_global, collapse = ", "))
+  }
   # Drop the collinear columns from the data.table
   cleaned_data <- cleaned_data[, c(seq(1,idx_static_vars,1), non_collinear_indices + idx_static_vars), with = FALSE]
 
   # drop the intercept
   cleaned_data[, "(Intercept)" := NULL]
+
+  # Check for partition-specific collinearity (after global check)
+  # Get remaining covariate column names (excluding static vars)
+  cov_cols_remaining <- setdiff(names(cleaned_data), c("id", "y", "post", "treat", "period", "partition", "weights", "cluster", "subgroup"))
+  if (length(cov_cols_remaining) > 0) {
+    partition_check <- check_partition_collinearity(cleaned_data, "subgroup", cov_cols_remaining)
+
+    if (length(partition_check$all_collinear) > 0) {
+      # Build informative warning message
+      partition_warnings <- sapply(names(partition_check$collinear_vars), function(var) {
+        partitions <- paste(partition_check$collinear_vars[[var]], collapse = ", ")
+        paste0("  - ", var, " (collinear in: ", partitions, ")")
+      })
+      warning("The following covariates were dropped due to partition-specific collinearity:\n",
+              paste(partition_warnings, collapse = "\n"))
+
+      # Drop these covariates globally
+      cols_to_keep <- setdiff(names(cleaned_data), partition_check$all_collinear)
+      cleaned_data <- cleaned_data[, ..cols_to_keep]
+    }
+  }
 
   out <- list(preprocessed_data = cleaned_data,
               xformula = xformla,
