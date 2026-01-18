@@ -234,6 +234,11 @@ compute_did <- function(data, condition_subgroup, pscores, reg_adjustment, xform
     or_ex <- i_weights * PAa * (deltaY - or_delta) * covX
     XpX <- crossprod(or_x, covX)/nrow(condition_data)
 
+    # Check if design matrix is singular (following DRDID approach)
+    if (base::rcond(XpX) < .Machine$double.eps) {
+      stop("The regression design matrix is singular. Consider removing some covariates.")
+    }
+
     #asymptotic linear representation of the beta
     asy_linear_or <- t(solve(XpX, t(or_ex)))
 
@@ -472,6 +477,9 @@ compute_did_rc <- function(data, condition_subgroup, pscores, reg_adjustment, xf
     wols_x_pre <- weights_ols_pre * covX
     wols_eX_pre <- weights_ols_pre * (y - or_ctrl_pre) * covX
     XpX_pre <- base::crossprod(wols_x_pre, covX) / n
+    if (base::rcond(XpX_pre) < .Machine$double.eps) {
+      stop("The regression design matrix for pre-treatment is singular. Consider removing some covariates.")
+    }
     XpX_inv_pre <- solve(XpX_pre)
     asy_lin_rep_ols_pre <- wols_eX_pre %*% XpX_inv_pre
 
@@ -480,6 +488,9 @@ compute_did_rc <- function(data, condition_subgroup, pscores, reg_adjustment, xf
     wols_x_post <- weights_ols_post * covX
     wols_eX_post <- weights_ols_post * (y - or_ctrl_post) * covX
     XpX_post <- base::crossprod(wols_x_post, covX) / n
+    if (base::rcond(XpX_post) < .Machine$double.eps) {
+      stop("The regression design matrix for post-treatment is singular. Consider removing some covariates.")
+    }
     XpX_inv_post <- solve(XpX_post)
     asy_lin_rep_ols_post <- wols_eX_post %*% XpX_inv_post
 
@@ -552,6 +563,9 @@ compute_did_rc <- function(data, condition_subgroup, pscores, reg_adjustment, xf
     wols_x_pre <- weights_ols_pre * covX
     wols_eX_pre <- weights_ols_pre * (y - or_ctrl_pre) * covX
     XpX_pre <- base::crossprod(wols_x_pre, covX) / n
+    if (base::rcond(XpX_pre) < .Machine$double.eps) {
+      stop("The regression design matrix for control pre-treatment is singular. Consider removing some covariates.")
+    }
     XpX_inv_pre <- solve(XpX_pre)
     asy_lin_rep_ols_pre <- wols_eX_pre %*% XpX_inv_pre
 
@@ -560,6 +574,9 @@ compute_did_rc <- function(data, condition_subgroup, pscores, reg_adjustment, xf
     wols_x_post <- weights_ols_post * covX
     wols_eX_post <- weights_ols_post * (y - or_ctrl_post) * covX
     XpX_post <- base::crossprod(wols_x_post, covX) / n
+    if (base::rcond(XpX_post) < .Machine$double.eps) {
+      stop("The regression design matrix for control post-treatment is singular. Consider removing some covariates.")
+    }
     XpX_inv_post <- solve(XpX_post)
     asy_lin_rep_ols_post <- wols_eX_post %*% XpX_inv_post
 
@@ -568,6 +585,9 @@ compute_did_rc <- function(data, condition_subgroup, pscores, reg_adjustment, xf
     wols_x_pre_treat <- weights_ols_pre_treat * covX
     wols_eX_pre_treat <- weights_ols_pre_treat * (y - or_trt_pre) * covX
     XpX_pre_treat <- base::crossprod(wols_x_pre_treat, covX) / n
+    if (base::rcond(XpX_pre_treat) < .Machine$double.eps) {
+      stop("The regression design matrix for treated pre-treatment is singular. Consider removing some covariates.")
+    }
     XpX_inv_pre_treat <- solve(XpX_pre_treat)
     asy_lin_rep_ols_pre_treat <- wols_eX_pre_treat %*% XpX_inv_pre_treat
 
@@ -576,6 +596,9 @@ compute_did_rc <- function(data, condition_subgroup, pscores, reg_adjustment, xf
     wols_x_post_treat <- weights_ols_post_treat * covX
     wols_eX_post_treat <- weights_ols_post_treat * (y - or_trt_post) * covX
     XpX_post_treat <- base::crossprod(wols_x_post_treat, covX) / n
+    if (base::rcond(XpX_post_treat) < .Machine$double.eps) {
+      stop("The regression design matrix for treated post-treatment is singular. Consider removing some covariates.")
+    }
     XpX_inv_post_treat <- solve(XpX_post_treat)
     asy_lin_rep_ols_post_treat <- wols_eX_post_treat %*% XpX_inv_post_treat
 
