@@ -14,3 +14,10 @@
 
   * Replaced `parglm` with `fastglm` to avoid issues related to parglm's scheduled archival on 2026-01-29.
   * Added support for unbalanced panel data and repeated cross-sectional data by properly implementing the `allow_unbalanced_panel` parameter across all functions.
+
+# triplediff 0.2.1
+  * Add asymmetric propensity score trimming for control units with pscore >= 0.995. 
+  * Add partition-specific collinearity detection with two-stage checking.
+  * Add comprehensive test suite including Monte Carlo coverage test when trimming. 
+
+
