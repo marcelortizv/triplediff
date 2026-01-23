@@ -4,8 +4,50 @@
 #' @noRd
 #--------------------------------------------------
 
+# Helper function to get descriptive comparison name for a subgroup
+# Subgroup encoding:
+#   4 = Treated + Eligible (focal group)
+#   3 = Treated + Ineligible
+#   2 = Eligible + Untreated
+#   1 = Untreated + Ineligible
+get_comparison_description <- function(condition_subgroup) {
+  switch(as.character(condition_subgroup),
+    "3" = "Treated-Eligible vs Treated-Ineligible",
+    "2" = "Treated-Eligible vs Eligible-Untreated",
+    "1" = "Treated-Eligible vs Untreated-Ineligible"
+  )
+}
+
+# Helper function to check overlap and generate descriptive warning messages
+# Returns NULL if overlap is acceptable, otherwise returns warning message
+check_overlap_and_get_warning <- function(propensity_scores, condition_subgroup,
+                                          threshold = 1e-3, max_proportion = 0.05) {
+  # Calculate overlap diagnostics
+  n_total <- length(propensity_scores)
+  n_below_threshold <- sum(propensity_scores < threshold)
+  prop_below <- n_below_threshold / n_total
+
+  # Warn if more than max_proportion of units have ps below threshold
+  if (prop_below <= max_proportion) {
+    return(NULL)
+  }
+
+  # Build comparison description
+  comparison_desc <- get_comparison_description(condition_subgroup)
+
+  # Build informative warning message
+ msg <- paste0(
+    "Poor propensity score overlap detected.\n",
+    "  Comparison: ", comparison_desc, " units.\n",
+    "  Diagnostics: ", round(prop_below * 100, 1), "% of units have propensity score < ", threshold, ".\n",
+    "  Consider checking covariate balance or using fewer/different covariates."
+  )
+
+  return(msg)
+}
+
 # Function to compute propensity scores using fastglm for multiple subgroups
-compute_pscore <- function(data, condition_subgroup, xformula) {
+compute_pscore <- function(data, condition_subgroup, xformula, trim_level = 0.995) {
   # Subset data for condition_subgroup and subgroup == 4 or the given condition_subgroup
   condition_data <- data[data$subgroup %in% c(condition_subgroup, 4)]
   # Adding treatment variable P(1{PA4 = 4}|X)
@@ -32,27 +74,39 @@ compute_pscore <- function(data, condition_subgroup, xformula) {
 
   # Flag for convergence of glm
   if (!model$converged) {
-    warning(paste("Logistic regression model for subgroup", condition_subgroup,
-                  "did not converge."))
+    warning(paste0(
+      "Propensity score model did not converge.\n",
+      "  Comparison: ", get_comparison_description(condition_subgroup), " units.\n",
+      "  Consider using fewer covariates or checking for separation issues."
+    ))
   }
 
   # Flag for weird coefficients
   if(anyNA(model$coefficients)) {
-    stop(paste("Pscore model coefficients for subgroup", condition_subgroup,
-               "have NA components. Multicollinearity of covariates is a likely reason"))
+    stop(paste0(
+      "Propensity score model has NA coefficients.\n",
+      "  Comparison: ", get_comparison_description(condition_subgroup), " units.\n",
+      "  This is likely due to multicollinearity among covariates."
+    ))
   }
 
   # Compute propensity scores using fitted values
   propensity_scores <- fitted(model)
 
-  # Warning for overlap condition
-  if (any(propensity_scores < 5e-4)) {
-    warning(paste("Propensity scores for comparison subgroup", condition_subgroup,
-                  "have poor overlap."))
+  # Warning for overlap condition (proportion-based check)
+  overlap_warning <- check_overlap_and_get_warning(propensity_scores, condition_subgroup)
+  if (!is.null(overlap_warning)) {
+    warning(overlap_warning)
   }
 
-  # Avoid divide by zero
-  propensity_scores <- pmin(propensity_scores, 1 - 1e-16)
+  # Avoid divide by zero (following DRDID approach)
+  propensity_scores <- pmin(propensity_scores, 1 - 1e-6)
+
+  # Trimming indicator (following DRDID approach)
+  # - Treated units (PA4=1): always included (trim.ps = TRUE)
+  # - Control units (PA4=0): excluded if pscore >= trim_level
+  keep_ps <- (propensity_scores < 1.01)  # Always TRUE initially
+  keep_ps[PA4 == 0] <- (propensity_scores[PA4 == 0] < trim_level)
 
   # Compute Hessian matrix manually (following DRDID approach)
   # Hessian = chol2inv(chol(t(X) %*% (W * X))) * n
@@ -60,7 +114,7 @@ compute_pscore <- function(data, condition_subgroup, xformula) {
   W <- propensity_scores * (1 - propensity_scores) * i_weights
   hessian_matrix <- chol2inv(chol(t(covX) %*% (W * covX))) * n
 
-  return(list(propensity_scores = propensity_scores, hessian_matrix = hessian_matrix))
+  return(list(propensity_scores = propensity_scores, hessian_matrix = hessian_matrix, keep_ps = keep_ps))
 }
 
 compute_pscore_null <- function(data, condition_subgroup) {
@@ -69,10 +123,13 @@ compute_pscore_null <- function(data, condition_subgroup) {
   condition_data <- data[data$subgroup %in% c(condition_subgroup, 4)]
   uid_condition_data <- unique(condition_data, by = "id")
 
-  propensity_scores <- rep(1, nrow(uid_condition_data))
+  n <- nrow(uid_condition_data)
+  propensity_scores <- rep(1, n)
   hessian_matrix <- NA
+  # No trimming needed for REG method - all units included
+  keep_ps <- rep(TRUE, n)
 
-  return(list(propensity_scores = propensity_scores, hessian_matrix = hessian_matrix))
+  return(list(propensity_scores = propensity_scores, hessian_matrix = hessian_matrix, keep_ps = keep_ps))
 }
 
 # Function to compute outcome regression for multiple subgroups
@@ -102,8 +159,11 @@ compute_outcome_regression <- function(data, condition_subgroup, xformula){
 
   # Flag for NA coefficients
   if(anyNA(reg.coeff)) {
-    stop(paste("Outcome regression model coefficients for subgroup", condition_subgroup,
-               "have NA components. Multicollinearity of covariates is a likely reason"))
+    stop(paste0(
+      "Outcome regression model has NA coefficients.\n",
+      "  Comparison: ", get_comparison_description(condition_subgroup), " units.\n",
+      "  This is likely due to multicollinearity among covariates."
+    ))
   }
 
   # compute regression adjustment
@@ -145,22 +205,25 @@ compute_did <- function(data, condition_subgroup, pscores, reg_adjustment, xform
   PA4 = ifelse(condition_data$subgroup == 4, 1, 0)
   PAa = ifelse(condition_data$subgroup == condition_subgroup, 1, 0)
 
-  # Compute propensity scores
+  # Get propensity scores, hessian, trim indicator, and outcome regression
   if (condition_subgroup == 3) {
     pscore <- pscores[[1]]$propensity_scores
     hessian <- pscores[[1]]$hessian_matrix
+    keep_ps <- pscores[[1]]$keep_ps
     deltaY <- reg_adjustment[[1]]$deltaY
     or_delta <- reg_adjustment[[1]]$or_delta
 
   } else if (condition_subgroup == 2) {
     pscore <- pscores[[2]]$propensity_scores
     hessian <- pscores[[2]]$hessian_matrix
+    keep_ps <- pscores[[2]]$keep_ps
     deltaY <- reg_adjustment[[2]]$deltaY
     or_delta <- reg_adjustment[[2]]$or_delta
 
   } else if (condition_subgroup == 1) {
     pscore <- pscores[[3]]$propensity_scores
     hessian <- pscores[[3]]$hessian_matrix
+    keep_ps <- pscores[[3]]$keep_ps
     deltaY <- reg_adjustment[[3]]$deltaY
     or_delta <- reg_adjustment[[3]]$or_delta
 
@@ -175,12 +238,15 @@ compute_did <- function(data, condition_subgroup, pscores, reg_adjustment, xform
   ################################
   # Get doubly-robust estimation #
   ################################
-  w_treat = i_weights * PA4
+  # Apply trimming indicator to weights (following DRDID approach)
+  # Control units with pscore >= trim_level get keep_ps = FALSE, so their weight becomes 0
+  w_treat = keep_ps * i_weights * PA4
   if (est_method == "reg") {
-    # Compute doubly-robust estimation
-    w_control = (i_weights * PAa)
+    # Compute regression-based estimation (no IPW weights)
+    w_control = keep_ps * (i_weights * PAa)
   } else {
-    w_control = (i_weights * pscore * PAa) / (1 - pscore)
+    # IPW or DR: apply propensity score weighting
+    w_control = keep_ps * (i_weights * pscore * PAa) / (1 - pscore)
   }
   riesz_treat = w_treat * (deltaY - or_delta)
   riesz_control = w_control * (deltaY - or_delta)
@@ -219,6 +285,11 @@ compute_did <- function(data, condition_subgroup, pscores, reg_adjustment, xform
     or_ex <- i_weights * PAa * (deltaY - or_delta) * covX
     XpX <- crossprod(or_x, covX)/nrow(condition_data)
 
+    # Check if design matrix is singular (following DRDID approach)
+    if (base::rcond(XpX) < .Machine$double.eps) {
+      stop("The regression design matrix is singular. Consider removing some covariates.")
+    }
+
     #asymptotic linear representation of the beta
     asy_linear_or <- t(solve(XpX, t(or_ex)))
 
@@ -250,7 +321,7 @@ compute_did <- function(data, condition_subgroup, pscores, reg_adjustment, xform
 # Repeated Cross-Section Functions
 #--------------------------------------------------
 
-compute_pscore_rc <- function(data, condition_subgroup, xformula) {
+compute_pscore_rc <- function(data, condition_subgroup, xformula, trim_level = 0.995) {
   # Similar to compute_pscore but no unique(by="id") - uses all RCS data
   condition_data <- data[data$subgroup %in% c(condition_subgroup, 4)]
   condition_data[, "PA4" := ifelse(condition_data$subgroup == 4, 1, 0)]
@@ -273,14 +344,41 @@ compute_pscore_rc <- function(data, condition_subgroup, xformula) {
     )
   )
 
-  if (!model$converged) warning(paste("RC pscore model for subgroup", condition_subgroup, "did not converge."))
-  if(anyNA(model$coefficients)) stop(paste("RC pscore model coefficients for subgroup", condition_subgroup, "have NA components. Multicollinearity of covariates is a likely reason. "))
+  # Flag for convergence of glm
+  if (!model$converged) {
+    warning(paste0(
+      "Propensity score model did not converge.\n",
+      "  Comparison: ", get_comparison_description(condition_subgroup), " units.\n",
+      "  Consider using fewer covariates or checking for separation issues."
+    ))
+  }
+
+  # Flag for weird coefficients
+  if(anyNA(model$coefficients)) {
+    stop(paste0(
+      "Propensity score model has NA coefficients.\n",
+      "  Comparison: ", get_comparison_description(condition_subgroup), " units.\n",
+      "  This is likely due to multicollinearity among covariates."
+    ))
+  }
 
   # Compute propensity scores using fitted values
   propensity_scores <- fitted(model)
 
-  if (any(propensity_scores < 5e-8)) warning(paste("Propensity scores for comparison subgroup", condition_subgroup, "have poor overlap."))
-  propensity_scores <- pmin(propensity_scores, 1 - 1e-16)
+  # Warning for overlap condition (proportion-based check)
+  overlap_warning <- check_overlap_and_get_warning(propensity_scores, condition_subgroup)
+  if (!is.null(overlap_warning)) {
+    warning(overlap_warning)
+  }
+
+  # Avoid divide by zero (following DRDID approach)
+  propensity_scores <- pmin(propensity_scores, 1 - 1e-6)
+
+  # Trimming indicator (following DRDID approach)
+  # - Treated units (PA4=1): always included (trim.ps = TRUE)
+  # - Control units (PA4=0): excluded if pscore >= trim_level
+  keep_ps <- (propensity_scores < 1.01)  # Always TRUE initially
+  keep_ps[PA4 == 0] <- (propensity_scores[PA4 == 0] < trim_level)
 
   # Compute Hessian matrix manually (following DRDID approach)
   # Hessian = chol2inv(chol(t(X) %*% (W * X))) * n
@@ -288,14 +386,17 @@ compute_pscore_rc <- function(data, condition_subgroup, xformula) {
   W <- propensity_scores * (1 - propensity_scores) * i_weights
   hessian_matrix <- chol2inv(chol(t(covX) %*% (W * covX))) * n
 
-  return(list(propensity_scores = propensity_scores, hessian_matrix = hessian_matrix))
+  return(list(propensity_scores = propensity_scores, hessian_matrix = hessian_matrix, keep_ps = keep_ps))
 }
 
 compute_pscore_null_rc <- function(data, condition_subgroup) {
   condition_data <- data[data$subgroup %in% c(condition_subgroup, 4)]
-  propensity_scores <- rep(1, nrow(condition_data))
+  n <- nrow(condition_data)
+  propensity_scores <- rep(1, n)
   hessian_matrix <- NA
-  return(list(propensity_scores = propensity_scores, hessian_matrix = hessian_matrix))
+  # No trimming needed for REG method - all units included
+  keep_ps <- rep(TRUE, n)
+  return(list(propensity_scores = propensity_scores, hessian_matrix = hessian_matrix, keep_ps = keep_ps))
 }
 
 compute_outcome_regression_rc <- function(data, condition_subgroup, xformula){
@@ -321,7 +422,15 @@ compute_outcome_regression_rc <- function(data, condition_subgroup, xformula){
        )
      )
 
-     if(anyNA(reg.coeff)) stop(paste("Outcome regression coefficients NA for subgroup", subg, "post", pst))
+     if(anyNA(reg.coeff)) {
+       subg_desc <- if(subg == 4) "Treated-Eligible" else get_comparison_description(condition_subgroup)
+       period_desc <- if(pst == 1) "post-treatment" else "pre-treatment"
+       stop(paste0(
+         "Outcome regression model has NA coefficients.\n",
+         "  Cell: ", subg_desc, " units in ", period_desc, " period.\n",
+         "  This is likely due to multicollinearity among covariates."
+       ))
+     }
 
      # Predict for ALL
      cov_all <- stats::model.matrix(as.formula(xformula), data = condition_data)
@@ -350,6 +459,7 @@ compute_did_rc <- function(data, condition_subgroup, pscores, reg_adjustment, xf
 
   pscore <- pscores[[idx]]$propensity_scores
   hessian <- pscores[[idx]]$hessian_matrix
+  keep_ps <- pscores[[idx]]$keep_ps
   mu <- reg_adjustment[[idx]]
 
   # Basic variables
@@ -371,11 +481,11 @@ compute_did_rc <- function(data, condition_subgroup, pscores, reg_adjustment, xf
     #-----------------------------------------
     # IPW Estimator
     #-----------------------------------------
-    # Riesz representers
-    riesz_treat_pre <- i_weights * PA4 * (1 - post)
-    riesz_treat_post <- i_weights * PA4 * post
-    riesz_control_pre <- i_weights * pscore * PAa * (1 - post) / (1 - pscore)
-    riesz_control_post <- i_weights * pscore * PAa * post / (1 - pscore)
+    # Riesz representers (with trimming applied following DRDID approach)
+    riesz_treat_pre <- keep_ps * i_weights * PA4 * (1 - post)
+    riesz_treat_post <- keep_ps * i_weights * PA4 * post
+    riesz_control_pre <- keep_ps * i_weights * pscore * PAa * (1 - post) / (1 - pscore)
+    riesz_control_post <- keep_ps * i_weights * pscore * PAa * post / (1 - pscore)
 
     # Elements of the influence function (summands)
     eta_treat_pre <- riesz_treat_pre * y / mean(riesz_treat_pre)
@@ -423,10 +533,10 @@ compute_did_rc <- function(data, condition_subgroup, pscores, reg_adjustment, xf
     or_ctrl_pre <- mu$or_ctrl_pre
     or_ctrl_post <- mu$or_ctrl_post
 
-    # Riesz representers
-    riesz_treat_pre <- i_weights * PA4 * (1 - post)
-    riesz_treat_post <- i_weights * PA4 * post
-    riesz_control <- i_weights * PA4
+    # Riesz representers (with trimming applied following DRDID approach)
+    riesz_treat_pre <- keep_ps * i_weights * PA4 * (1 - post)
+    riesz_treat_post <- keep_ps * i_weights * PA4 * post
+    riesz_control <- keep_ps * i_weights * PA4
 
     reg_att_treat_pre <- riesz_treat_pre * y
     reg_att_treat_post <- riesz_treat_post * y
@@ -445,6 +555,9 @@ compute_did_rc <- function(data, condition_subgroup, pscores, reg_adjustment, xf
     wols_x_pre <- weights_ols_pre * covX
     wols_eX_pre <- weights_ols_pre * (y - or_ctrl_pre) * covX
     XpX_pre <- base::crossprod(wols_x_pre, covX) / n
+    if (base::rcond(XpX_pre) < .Machine$double.eps) {
+      stop("The regression design matrix for pre-treatment is singular. Consider removing some covariates.")
+    }
     XpX_inv_pre <- solve(XpX_pre)
     asy_lin_rep_ols_pre <- wols_eX_pre %*% XpX_inv_pre
 
@@ -453,6 +566,9 @@ compute_did_rc <- function(data, condition_subgroup, pscores, reg_adjustment, xf
     wols_x_post <- weights_ols_post * covX
     wols_eX_post <- weights_ols_post * (y - or_ctrl_post) * covX
     XpX_post <- base::crossprod(wols_x_post, covX) / n
+    if (base::rcond(XpX_post) < .Machine$double.eps) {
+      stop("The regression design matrix for post-treatment is singular. Consider removing some covariates.")
+    }
     XpX_inv_post <- solve(XpX_post)
     asy_lin_rep_ols_post <- wols_eX_post %*% XpX_inv_post
 
@@ -481,15 +597,15 @@ compute_did_rc <- function(data, condition_subgroup, pscores, reg_adjustment, xf
     or_trt_pre <- mu$or_trt_pre
     or_trt_post <- mu$or_trt_post
 
-    # Riesz representers
-    riesz_treat_pre <- i_weights * PA4 * (1 - post)
-    riesz_treat_post <- i_weights * PA4 * post
-    riesz_control_pre <- i_weights * pscore * PAa * (1 - post) / (1 - pscore)
-    riesz_control_post <- i_weights * pscore * PAa * post / (1 - pscore)
+    # Riesz representers (with trimming applied following DRDID approach)
+    riesz_treat_pre <- keep_ps * i_weights * PA4 * (1 - post)
+    riesz_treat_post <- keep_ps * i_weights * PA4 * post
+    riesz_control_pre <- keep_ps * i_weights * pscore * PAa * (1 - post) / (1 - pscore)
+    riesz_control_post <- keep_ps * i_weights * pscore * PAa * post / (1 - pscore)
 
-    riesz_d <- i_weights * PA4
-    riesz_dt1 <- i_weights * PA4 * post
-    riesz_dt0 <- i_weights * PA4 * (1 - post)
+    riesz_d <- keep_ps * i_weights * PA4
+    riesz_dt1 <- keep_ps * i_weights * PA4 * post
+    riesz_dt0 <- keep_ps * i_weights * PA4 * (1 - post)
 
     # Elements of the influence function (summands)
     eta_treat_pre <- riesz_treat_pre * (y - or_ctrl) / mean(riesz_treat_pre)
@@ -525,6 +641,9 @@ compute_did_rc <- function(data, condition_subgroup, pscores, reg_adjustment, xf
     wols_x_pre <- weights_ols_pre * covX
     wols_eX_pre <- weights_ols_pre * (y - or_ctrl_pre) * covX
     XpX_pre <- base::crossprod(wols_x_pre, covX) / n
+    if (base::rcond(XpX_pre) < .Machine$double.eps) {
+      stop("The regression design matrix for control pre-treatment is singular. Consider removing some covariates.")
+    }
     XpX_inv_pre <- solve(XpX_pre)
     asy_lin_rep_ols_pre <- wols_eX_pre %*% XpX_inv_pre
 
@@ -533,6 +652,9 @@ compute_did_rc <- function(data, condition_subgroup, pscores, reg_adjustment, xf
     wols_x_post <- weights_ols_post * covX
     wols_eX_post <- weights_ols_post * (y - or_ctrl_post) * covX
     XpX_post <- base::crossprod(wols_x_post, covX) / n
+    if (base::rcond(XpX_post) < .Machine$double.eps) {
+      stop("The regression design matrix for control post-treatment is singular. Consider removing some covariates.")
+    }
     XpX_inv_post <- solve(XpX_post)
     asy_lin_rep_ols_post <- wols_eX_post %*% XpX_inv_post
 
@@ -541,6 +663,9 @@ compute_did_rc <- function(data, condition_subgroup, pscores, reg_adjustment, xf
     wols_x_pre_treat <- weights_ols_pre_treat * covX
     wols_eX_pre_treat <- weights_ols_pre_treat * (y - or_trt_pre) * covX
     XpX_pre_treat <- base::crossprod(wols_x_pre_treat, covX) / n
+    if (base::rcond(XpX_pre_treat) < .Machine$double.eps) {
+      stop("The regression design matrix for treated pre-treatment is singular. Consider removing some covariates.")
+    }
     XpX_inv_pre_treat <- solve(XpX_pre_treat)
     asy_lin_rep_ols_pre_treat <- wols_eX_pre_treat %*% XpX_inv_pre_treat
 
@@ -549,6 +674,9 @@ compute_did_rc <- function(data, condition_subgroup, pscores, reg_adjustment, xf
     wols_x_post_treat <- weights_ols_post_treat * covX
     wols_eX_post_treat <- weights_ols_post_treat * (y - or_trt_post) * covX
     XpX_post_treat <- base::crossprod(wols_x_post_treat, covX) / n
+    if (base::rcond(XpX_post_treat) < .Machine$double.eps) {
+      stop("The regression design matrix for treated post-treatment is singular. Consider removing some covariates.")
+    }
     XpX_inv_post_treat <- solve(XpX_post_treat)
     asy_lin_rep_ols_post_treat <- wols_eX_post_treat %*% XpX_inv_post_treat
 
