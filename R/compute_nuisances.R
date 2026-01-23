@@ -4,6 +4,48 @@
 #' @noRd
 #--------------------------------------------------
 
+# Helper function to get descriptive comparison name for a subgroup
+# Subgroup encoding:
+#   4 = Treated + Eligible (focal group)
+#   3 = Treated + Ineligible
+#   2 = Eligible + Untreated
+#   1 = Untreated + Ineligible
+get_comparison_description <- function(condition_subgroup) {
+  switch(as.character(condition_subgroup),
+    "3" = "Treated-Eligible vs Treated-Ineligible",
+    "2" = "Treated-Eligible vs Eligible-Untreated",
+    "1" = "Treated-Eligible vs Untreated-Ineligible"
+  )
+}
+
+# Helper function to check overlap and generate descriptive warning messages
+# Returns NULL if overlap is acceptable, otherwise returns warning message
+check_overlap_and_get_warning <- function(propensity_scores, condition_subgroup,
+                                          threshold = 1e-3, max_proportion = 0.05) {
+  # Calculate overlap diagnostics
+  n_total <- length(propensity_scores)
+  n_below_threshold <- sum(propensity_scores < threshold)
+  prop_below <- n_below_threshold / n_total
+
+  # Warn if more than max_proportion of units have ps below threshold
+  if (prop_below <= max_proportion) {
+    return(NULL)
+  }
+
+  # Build comparison description
+  comparison_desc <- get_comparison_description(condition_subgroup)
+
+  # Build informative warning message
+ msg <- paste0(
+    "Poor propensity score overlap detected.\n",
+    "  Comparison: ", comparison_desc, " units.\n",
+    "  Diagnostics: ", round(prop_below * 100, 1), "% of units have propensity score < ", threshold, ".\n",
+    "  Consider checking covariate balance or using fewer/different covariates."
+  )
+
+  return(msg)
+}
+
 # Function to compute propensity scores using fastglm for multiple subgroups
 compute_pscore <- function(data, condition_subgroup, xformula, trim_level = 0.995) {
   # Subset data for condition_subgroup and subgroup == 4 or the given condition_subgroup
@@ -32,23 +74,29 @@ compute_pscore <- function(data, condition_subgroup, xformula, trim_level = 0.99
 
   # Flag for convergence of glm
   if (!model$converged) {
-    warning(paste("Logistic regression model for subgroup", condition_subgroup,
-                  "did not converge."))
+    warning(paste0(
+      "Propensity score model did not converge.\n",
+      "  Comparison: ", get_comparison_description(condition_subgroup), " units.\n",
+      "  Consider using fewer covariates or checking for separation issues."
+    ))
   }
 
   # Flag for weird coefficients
   if(anyNA(model$coefficients)) {
-    stop(paste("Pscore model coefficients for subgroup", condition_subgroup,
-               "have NA components. Multicollinearity of covariates is a likely reason"))
+    stop(paste0(
+      "Propensity score model has NA coefficients.\n",
+      "  Comparison: ", get_comparison_description(condition_subgroup), " units.\n",
+      "  This is likely due to multicollinearity among covariates."
+    ))
   }
 
   # Compute propensity scores using fitted values
   propensity_scores <- fitted(model)
 
-  # Warning for overlap condition
-  if (any(propensity_scores < 5e-4)) {
-    warning(paste("Propensity scores for comparison subgroup", condition_subgroup,
-                  "have poor overlap."))
+  # Warning for overlap condition (proportion-based check)
+  overlap_warning <- check_overlap_and_get_warning(propensity_scores, condition_subgroup)
+  if (!is.null(overlap_warning)) {
+    warning(overlap_warning)
   }
 
   # Avoid divide by zero (following DRDID approach)
@@ -111,8 +159,11 @@ compute_outcome_regression <- function(data, condition_subgroup, xformula){
 
   # Flag for NA coefficients
   if(anyNA(reg.coeff)) {
-    stop(paste("Outcome regression model coefficients for subgroup", condition_subgroup,
-               "have NA components. Multicollinearity of covariates is a likely reason"))
+    stop(paste0(
+      "Outcome regression model has NA coefficients.\n",
+      "  Comparison: ", get_comparison_description(condition_subgroup), " units.\n",
+      "  This is likely due to multicollinearity among covariates."
+    ))
   }
 
   # compute regression adjustment
@@ -293,13 +344,32 @@ compute_pscore_rc <- function(data, condition_subgroup, xformula, trim_level = 0
     )
   )
 
-  if (!model$converged) warning(paste("RC pscore model for subgroup", condition_subgroup, "did not converge."))
-  if(anyNA(model$coefficients)) stop(paste("RC pscore model coefficients for subgroup", condition_subgroup, "have NA components. Multicollinearity of covariates is a likely reason. "))
+  # Flag for convergence of glm
+  if (!model$converged) {
+    warning(paste0(
+      "Propensity score model did not converge.\n",
+      "  Comparison: ", get_comparison_description(condition_subgroup), " units.\n",
+      "  Consider using fewer covariates or checking for separation issues."
+    ))
+  }
+
+  # Flag for weird coefficients
+  if(anyNA(model$coefficients)) {
+    stop(paste0(
+      "Propensity score model has NA coefficients.\n",
+      "  Comparison: ", get_comparison_description(condition_subgroup), " units.\n",
+      "  This is likely due to multicollinearity among covariates."
+    ))
+  }
 
   # Compute propensity scores using fitted values
   propensity_scores <- fitted(model)
 
-  if (any(propensity_scores < 5e-8)) warning(paste("Propensity scores for comparison subgroup", condition_subgroup, "have poor overlap."))
+  # Warning for overlap condition (proportion-based check)
+  overlap_warning <- check_overlap_and_get_warning(propensity_scores, condition_subgroup)
+  if (!is.null(overlap_warning)) {
+    warning(overlap_warning)
+  }
 
   # Avoid divide by zero (following DRDID approach)
   propensity_scores <- pmin(propensity_scores, 1 - 1e-6)
@@ -352,7 +422,15 @@ compute_outcome_regression_rc <- function(data, condition_subgroup, xformula){
        )
      )
 
-     if(anyNA(reg.coeff)) stop(paste("Outcome regression coefficients NA for subgroup", subg, "post", pst))
+     if(anyNA(reg.coeff)) {
+       subg_desc <- if(subg == 4) "Treated-Eligible" else get_comparison_description(condition_subgroup)
+       period_desc <- if(pst == 1) "post-treatment" else "pre-treatment"
+       stop(paste0(
+         "Outcome regression model has NA coefficients.\n",
+         "  Cell: ", subg_desc, " units in ", period_desc, " period.\n",
+         "  This is likely due to multicollinearity among covariates."
+       ))
+     }
 
      # Predict for ALL
      cov_all <- stats::model.matrix(as.formula(xformula), data = condition_data)

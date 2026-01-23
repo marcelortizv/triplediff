@@ -340,6 +340,15 @@ run_nopreprocess_2periods <- function(yname,
     }
   }
 
+  # Update xformula to reflect dropped covariates (following DRDID approach)
+  # Get final covariate column names after all collinearity checks
+  final_cov_cols <- setdiff(names(cleaned_data), c("id", "y", "post", "treat", "period", "partition", "weights", "cluster", "subgroup"))
+  if (length(final_cov_cols) > 0) {
+    xformla <- stats::as.formula(paste("~", paste(final_cov_cols, collapse = " + ")))
+  } else {
+    xformla <- ~1
+  }
+
   out <- list(preprocessed_data = cleaned_data,
               xformula = xformla,
               est_method = est_method,
@@ -713,6 +722,15 @@ run_preprocess_2Periods <- function(yname,
       cols_to_keep <- setdiff(names(cleaned_data), partition_check$all_collinear)
       cleaned_data <- cleaned_data[, ..cols_to_keep]
     }
+  }
+
+  # Update xformula to reflect dropped covariates (following DRDID approach)
+  # Get final covariate column names after all collinearity checks
+  final_cov_cols <- setdiff(names(cleaned_data), c("id", "y", "post", "treat", "period", "partition", "weights", "cluster", "subgroup"))
+  if (length(final_cov_cols) > 0) {
+    xformla <- stats::as.formula(paste("~", paste(final_cov_cols, collapse = " + ")))
+  } else {
+    xformla <- ~1
   }
 
   out <- list(preprocessed_data = cleaned_data,
@@ -1143,8 +1161,44 @@ run_preprocess_multPeriods <- function(yname,
                                                             data = dta,
                                                             na.action = na.pass))
   }
+
+  # Remove collinear variables (following DRDID approach)
+  # Determine the number of static columns (before covariates)
+  # Static cols: id, y, first_treat, period, partition, weights, [cluster]
+  idx_static_vars <- ifelse(is.null(cluster), 6, 7)
+
+  # Convert the covariate columns (including intercept) to a matrix
+  cov_m <- as.matrix(cleaned_data[, -c(1:idx_static_vars), with = FALSE])
+
+  # Only check for collinearity if there are covariates beyond the intercept
+  if (ncol(cov_m) > 1) {
+    # Use the qr() function to detect collinear columns
+    qr_m <- qr(cov_m, tol = 1e-6)
+    # Get the rank of the matrix
+    rank_m <- qr_m$rank
+    # Get the indices of the non-collinear columns
+    non_collinear_indices <- qr_m$pivot[seq_len(rank_m)]
+    # Check if any covariates were dropped due to global collinearity
+    dropped_covariates_global <- setdiff(colnames(cov_m), colnames(cov_m)[non_collinear_indices])
+    if (length(dropped_covariates_global) > 0) {
+      warning("The following covariates were dropped due to global collinearity: ", paste(dropped_covariates_global, collapse = ", "))
+    }
+    # Drop the collinear columns from the data.table
+    cleaned_data <- cleaned_data[, c(seq(1, idx_static_vars, 1), non_collinear_indices + idx_static_vars), with = FALSE]
+  }
+
   # drop the intercept
   cleaned_data[, "(Intercept)" := NULL]
+
+  # Update xformula to reflect dropped covariates (following DRDID approach)
+  # Get final covariate column names after collinearity check
+  # Static cols in multi-period: id, y, first_treat, period, partition, weights, [cluster]
+  final_cov_cols <- setdiff(names(cleaned_data), c("id", "y", "first_treat", "period", "partition", "weights", "cluster"))
+  if (length(final_cov_cols) > 0) {
+    xformla <- stats::as.formula(paste("~", paste(final_cov_cols, collapse = " + ")))
+  } else {
+    xformla <- ~1
+  }
 
   # order dataset wrt idname and tname
   setorder(cleaned_data, "id", "period")
