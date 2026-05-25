@@ -28,5 +28,7 @@ LinkingTo:
     Rcpp (>= 1.0.12)
 Suggests: 
     testthat (>= 3.0.0)
+Remotes:
+    bcallaway11/BMisc
 Config/testthat/edition: 3
 URL: http://marcelortiz.com/triplediff/
