@@ -213,7 +213,7 @@ run_nopreprocess_2periods <- function(yname,
         warning("Panel is unbalanced. Treating as repeated cross-sections (allow_unbalanced_panel = TRUE).")
       } else {
         # Balance the panel by dropping units
-        dta <- BMisc::makeBalancedPanel(dta, idname, tname)
+        dta <- BMisc::make_balanced_panel(dta, idname, tname)
         n <- uniqueN(dta[[idname]])
         row_new <- dta[, .N]
         row_diff <- row_orig - row_new
@@ -576,7 +576,7 @@ run_preprocess_2Periods <- function(yname,
         warning("Panel is unbalanced. Proceeding as such.")
       } else {
         # Balance the panel by dropping units
-        dta <- BMisc::makeBalancedPanel(dta, idname, tname)
+        dta <- BMisc::make_balanced_panel(dta, idname, tname)
         n <- uniqueN(dta[[idname]])
         row_new <- dta[, .N]
         row_diff <- row_orig - row_new
@@ -653,7 +653,7 @@ run_preprocess_2Periods <- function(yname,
   # Flag for small groups for inference
   # Calculate the size of each group in the 'treat' column
   # Subset 'gsize' to get the small groups based on "required size"
-  gsize <- cleaned_data[, if(.N < length(BMisc::rhs.vars(xformla)) + 5) .N, by = "treat"]
+  gsize <- cleaned_data[, if(.N < length(BMisc::rhs_vars(xformla)) + 5) .N, by = "treat"]
   # If there are any small groups, stop execution and print an error message
   if (nrow(gsize) > 0) {
     stop("Either treatment or the comparison group in your dataset is very small. Inference is not feasible.")
@@ -1054,7 +1054,7 @@ run_preprocess_multPeriods <- function(yname,
       } else {
         warning("Panel is unbalanced but allow_unbalanced_panel = FALSE. Forcing to convert data to balanced panel.")
         # Balance the panel by dropping units
-        dta <- BMisc::makeBalancedPanel(dta, idname, tname)
+        dta <- BMisc::make_balanced_panel(dta, idname, tname)
         n <- uniqueN(dta[[idname]])
         row_new <- dta[, .N]
         row_diff <- row_orig - row_new
@@ -1137,7 +1137,7 @@ run_preprocess_multPeriods <- function(yname,
   }
 
   # Calculate the required size
-  reqsize <- length(BMisc::rhs.vars(xformla)) + 5
+  reqsize <- length(BMisc::rhs_vars(xformla)) + 5
   # Identify groups to warn about
   small_groups <- gsize[N < reqsize]
   # Warn if some groups are small
