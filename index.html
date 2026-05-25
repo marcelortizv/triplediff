@@ -7,8 +7,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <title>Triple-Difference Estimators • triplediff</title>
 <script src="deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<link href="deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
-<script src="deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
+<link href="deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
+<script src="deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="Triple-Difference Estimators">
 <meta name="description" content="Implements triple-difference (DDD) estimators for both average treatment effects and event-study parameters. Methods include regression adjustment, inverse-probability weighting, and doubly-robust estimators, all of which rely on a conditional DDD parallel-trends assumption and allow covariate adjustment across multiple pre- and post-treatment periods. The methodology is detailed in Ortiz-Villavicencio and Sant'Anna (2025) &lt;doi:10.48550/arXiv.2505.09942&gt;.">
@@ -327,19 +327,19 @@
 <span><span class="co">#&gt;  Type of confidence band:  Pointwise Confidence Interval</span></span>
 <span><span class="co">#&gt;  =====================================================================</span></span>
 <span><span class="co">#&gt;  See Ortiz-Villavicencio and Sant'Anna (2025) for details.</span></span></code></pre></div>
-<p>From this result, we can observe the standard errors for <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>A</mi><mi>T</mi><mi>T</mi><mrow><mo stretchy="true" form="prefix">(</mo><mn>2</mn><mo>,</mo><mn>2</mn><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">ATT(2,2)</annotation></semantics></math> are lower than the ones obtained with the <code>control_group = "nevertreated"</code> option since we leverage the additional information from the not-yet-treated units in the estimation.</p>
+<p>From this result, we can observe the standard errors for <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>A</mi><mi>T</mi><mi>T</mi><mo stretchy="false" form="prefix">(</mo><mn>2</mn><mo>,</mo><mn>2</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">ATT(2,2)</annotation></semantics></math> are lower than the ones obtained with the <code>control_group = "nevertreated"</code> option since we leverage the additional information from the not-yet-treated units in the estimation.</p>
 <ul>
 <li>⚠️ We recommend users to read our paper for further details on the GMM-based procedure and its difference with other estimators relying in not-yet-treated units as comparison group.</li>
 </ul>
 </div>
 </div>
 <div class="section level2">
-<h2 id="release-note-">Release Note 📢<a class="anchor" aria-label="anchor" href="#release-note-"></a>
+<h2 id="release-note-loudspeaker">Release Note 📢<a class="anchor" aria-label="anchor" href="#release-note-loudspeaker"></a>
 </h2>
 <p>The current version is released in an <strong>alpha</strong> stage: the core features are implemented and made available so users can try them out and provide feedback. Please, be aware that it remains under active development, so long-term stability is not guaranteed—APIs may evolve, adding more features and/or breaking changes can occur at any time, without a deprecation cycle.</p>
 <p>Use <a href="https://github.com/marcelortizv/triplediff/issues" class="external-link">GitHub Issues</a> to report bugs, request features or provide feedback.</p>
 <div class="section level3">
-<h3 id="id_-currently-supported">🚀 Currently Supported<a class="anchor" aria-label="anchor" href="#id_-currently-supported"></a>
+<h3 id="rocket-currently-supported">🚀 Currently Supported<a class="anchor" aria-label="anchor" href="#rocket-currently-supported"></a>
 </h3>
 <ul>
 <li>️✅ Two-period DDD with single treatment date.</li>
@@ -352,7 +352,7 @@
 </ul>
 </div>
 <div class="section level3">
-<h3 id="id_️-not-yet-supported">⚠️ Not Yet Supported<a class="anchor" aria-label="anchor" href="#id_%EF%B8%8F-not-yet-supported"></a>
+<h3 id="warning-not-yet-supported">⚠️ Not Yet Supported<a class="anchor" aria-label="anchor" href="#warning-not-yet-supported"></a>
 </h3>
 <ul>
 <li>🔲 Built-in plotting capabilities for visualizing results.

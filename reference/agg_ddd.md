@@ -121,8 +121,8 @@ agg_ddd(out, type = "simple", alpha = 0.10)
 #> agg_ddd(ddd_obj = out, type = "simple", alpha = 0.1)
 #> ========================= DDD Aggregation ============================
 #>  Overall ATT:
-#>     ATT    Std. Error     [ 90%  Conf. Int.]  
-#>  19.005        0.3718    18.3935     19.6166 *
+#>      ATT    Std. Error     [ 90%  Conf. Int.]  
+#>  18.6383        0.3347    18.0878     19.1888 *
 #> 
 #>  Note: * indicates that the confidence interval does not contain zero.
 #>  --------------------------- Data Info   -----------------------------
@@ -142,13 +142,13 @@ agg_ddd(out, type = "eventstudy", alpha = 0.10)
 #> ========================= DDD Aggregation ============================
 #>  Overall summary of ATT's based on event-study/dynamic aggregation: 
 #>      ATT    Std. Error     [ 90%  Conf. Int.]  
-#>  19.2985        0.3653    18.6976     19.8993 *
+#>  18.9605        0.3254    18.4253     19.4956 *
 #> 
 #>  Event Study:
 #>  Event time Estimate Std. Error [90% Ptwise.  Conf. Band]  
-#>          -1  -0.2292     0.4289       -0.9346      0.4762  
-#>           0  18.5301     0.4589       17.7752     19.2850 *
-#>           1  20.0668     0.4283       19.3623     20.7714 *
+#>          -1  -0.1004     0.4030       -0.7633      0.5625  
+#>           0  18.0946     0.4280       17.3907     18.7986 *
+#>           1  19.8263     0.3742       19.2108     20.4417 *
 #> 
 #>  Note: * indicates that the confidence interval does not contain zero.
 #>  --------------------------- Data Info   -----------------------------
@@ -168,12 +168,12 @@ agg_ddd(out, type = "group", alpha = 0.10)
 #> ========================= DDD Aggregation ============================
 #>  Overall summary of ATT's based on group/cohort aggregation: 
 #>      ATT    Std. Error     [ 90%  Conf. Int.]  
-#>  20.7971        0.2922    20.3166     21.2777 *
+#>  20.2332        0.2551    19.8135     20.6528 *
 #> 
 #>  Group Effects:
 #>  Group Estimate Std. Error [90% Ptwise.  Conf. Band]  
-#>      2  14.9986     0.3623       14.4026     15.5946 *
-#>      3  25.4900     0.4594       24.7344     26.2456 *
+#>      2  15.1527     0.3421        14.590     15.7155 *
+#>      3  24.5191     0.3921        23.874     25.1641 *
 #> 
 #>  Note: * indicates that the confidence interval does not contain zero.
 #>  --------------------------- Data Info   -----------------------------
@@ -193,12 +193,12 @@ agg_ddd(out, type = "calendar", alpha = 0.10)
 #> ========================= DDD Aggregation ============================
 #>  Overall summary of ATT's based on calendar time aggregation: 
 #>      ATT    Std. Error     [ 90%  Conf. Int.]  
-#>  16.4972        0.2783    16.0395      16.955 *
+#>  16.4255        0.2721    15.9779      16.873 *
 #> 
 #>  Calendar Effects:
 #>  Time Estimate Std. Error [90% Ptwise.  Conf. Band]  
-#>     2   9.9303     0.4422        9.2029     10.6577 *
-#>     3  23.0642     0.3908       22.4214     23.7069 *
+#>     2  10.4792     0.4294        9.7729     11.1855 *
+#>     3  22.3717     0.3237       21.8393     22.9041 *
 #> 
 #>  Note: * indicates that the confidence interval does not contain zero.
 #>  --------------------------- Data Info   -----------------------------

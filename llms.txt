@@ -28,6 +28,7 @@ You can install the latest *development* version of `triplediff` from
 Github with:
 
 ``` r
+
 # install.packages("devtools")
 devtools::install_github("marcelortizv/triplediff")
 
@@ -80,6 +81,7 @@ generate. The `gen_dgp_2periods` function returns a data frame with the
 required columns for the `ddd` function with 4 covariates.
 
 ``` r
+
 set.seed(1234) # Set seed for reproducibility
 # Simulate data for a two-periods DDD setup
 df <- gen_dgp_2periods(
@@ -111,6 +113,7 @@ Now we can estimate the average treatment effect on the treated (ATT)
 using the `ddd` function.
 
 ``` r
+
 # Estimate the average treatment effect on the treated, ATT(2,2)
 
 att_22 <- ddd(yname = "y", tname = "time", idname = "id", gname = "state",
@@ -158,6 +161,7 @@ function returns a data frame with the required columns for the `ddd`
 function with 4 covariates.
 
 ``` r
+
 set.seed(1234) # Set seed for reproducibility
 # Simulate data for a multiple-period DDD setup with staggered treatment adoption
 data <- gen_dgp_mult_periods(size = 500, dgp_type = 1)$data
@@ -186,6 +190,7 @@ Now we can estimate the group-time average treatment effect on the
 treated using the `ddd` function.
 
 ``` r
+
 # Estimate the group-time average treatment effect in DDD
 
 att_gt <- ddd(yname = "y", tname = "time", idname = "id", gname = "state", 
@@ -235,6 +240,7 @@ treated to obtain the event-study type estimates. The `agg_ddd` function
 allows us to aggregate the results from the `ddd` function.
 
 ``` r
+
 es_e <- agg_ddd(att_gt, type = "eventstudy")
 
 summary(es_e)
@@ -268,6 +274,7 @@ From these event-study type estimates, we can plot the results using the
 `ggplot` library to create crisp visualizations.
 
 ``` r
+
 es_df <- with(es_e$aggte_ddd, {
     tibble::tibble(period   = egt,
                    estimate = att.egt,
@@ -308,6 +315,7 @@ group. This is done by setting the `control_group` parameter to
 `"notyettreated"` in the `ddd` function.
 
 ``` r
+
 # do the same but using GMM-based notyettreated
 att_gt_nyt <- ddd(yname = "y", tname = "time", idname = "id", gname = "state", 
               pname = "partition", xformla = ~cov1 + cov2 + cov3 + cov4,
@@ -351,10 +359,10 @@ summary(att_gt_nyt)
 #>  See Ortiz-Villavicencio and Sant'Anna (2025) for details.
 ```
 
-From this result, we can observe the standard errors for $ATT(2,2)$ are
-lower than the ones obtained with the `control_group = "nevertreated"`
-option since we leverage the additional information from the
-not-yet-treated units in the estimation.
+From this result, we can observe the standard errors for $`ATT(2,2)`$
+are lower than the ones obtained with the
+`control_group = "nevertreated"` option since we leverage the additional
+information from the not-yet-treated units in the estimation.
 
 - ⚠️ We recommend users to read our paper for further details on the
   GMM-based procedure and its difference with other estimators relying
