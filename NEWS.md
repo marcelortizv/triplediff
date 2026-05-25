@@ -21,3 +21,7 @@
   * Add comprehensive test suite including Monte Carlo coverage test when trimming. 
 
 
+# triplediff 0.2.2
+
+  * Track BMisc (>= 1.4.9) API rename: replaced `makeBalancedPanel` with `make_balanced_panel` and `rhs.vars` with `rhs_vars` in internal preprocessing. No user-visible behavior change. (#34)
+

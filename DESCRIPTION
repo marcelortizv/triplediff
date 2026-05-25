@@ -1,6 +1,6 @@
 Package: triplediff
 Title: Triple-Difference Estimators
-Version: 0.2.1
+Version: 0.2.2
 Authors@R: c(person("Marcelo", "Ortiz-Villavicencio", email = "marcelo.ortiz@emory.edu", role = c("aut", "cre")),
               person("Pedro H. C.", "Sant'Anna", email = "pedro.santanna@emory.edu", role = c("aut"))
             )
@@ -18,7 +18,7 @@ Depends:
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3
 Imports:
-    BMisc (>= 1.4.6),
+    BMisc (>= 1.4.9),
     data.table (>= 1.15.0),
     fastglm (>= 0.0.3),
     Matrix (>= 1.6.1),
