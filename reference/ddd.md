@@ -312,6 +312,12 @@ ddd(yname = "y", tname = "time", idname = "id",
      gname = "state", pname = "partition", xformla = ~cov1 + cov2 + cov3 + cov4,
      data = data, control_group = "nevertreated", base_period = "varying",
      est_method = "dr")
+#> Warning: 'BMisc::getListElement' is deprecated.
+#> Use 'get_list_element' instead.
+#> See help("Deprecated")
+#> Warning: 'BMisc::getListElement' is deprecated.
+#> Use 'get_list_element' instead.
+#> See help("Deprecated")
 #>  Call:
 #> ddd(yname = "y", tname = "time", idname = "id", gname = "state", 
 #>     pname = "partition", xformla = ~cov1 + cov2 + cov3 + cov4, 

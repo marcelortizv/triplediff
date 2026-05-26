@@ -115,6 +115,12 @@ out <- ddd(yname = "y", tname = "time", idname = "id",
             gname = "state", pname = "partition", xformla = ~cov1 + cov2 + cov3 + cov4,
             data = data, control_group = "nevertreated", base_period = "varying",
             est_method = "dr")
+#> Warning: 'BMisc::getListElement' is deprecated.
+#> Use 'get_list_element' instead.
+#> See help("Deprecated")
+#> Warning: 'BMisc::getListElement' is deprecated.
+#> Use 'get_list_element' instead.
+#> See help("Deprecated")
 # Simple aggregation
 agg_ddd(out, type = "simple", alpha = 0.10)
 #>  Call:
@@ -137,6 +143,12 @@ agg_ddd(out, type = "simple", alpha = 0.10)
 
 # Event study aggregation
 agg_ddd(out, type = "eventstudy", alpha = 0.10)
+#> Warning: 'BMisc::getListElement' is deprecated.
+#> Use 'get_list_element' instead.
+#> See help("Deprecated")
+#> Warning: 'BMisc::getListElement' is deprecated.
+#> Use 'get_list_element' instead.
+#> See help("Deprecated")
 #>  Call:
 #> agg_ddd(ddd_obj = out, type = "eventstudy", alpha = 0.1)
 #> ========================= DDD Aggregation ============================
@@ -163,6 +175,12 @@ agg_ddd(out, type = "eventstudy", alpha = 0.10)
 
 # Group aggregation
 agg_ddd(out, type = "group", alpha = 0.10)
+#> Warning: 'BMisc::getListElement' is deprecated.
+#> Use 'get_list_element' instead.
+#> See help("Deprecated")
+#> Warning: 'BMisc::getListElement' is deprecated.
+#> Use 'get_list_element' instead.
+#> See help("Deprecated")
 #>  Call:
 #> agg_ddd(ddd_obj = out, type = "group", alpha = 0.1)
 #> ========================= DDD Aggregation ============================
@@ -188,6 +206,12 @@ agg_ddd(out, type = "group", alpha = 0.10)
 
 # Calendar aggregation
 agg_ddd(out, type = "calendar", alpha = 0.10)
+#> Warning: 'BMisc::getListElement' is deprecated.
+#> Use 'get_list_element' instead.
+#> See help("Deprecated")
+#> Warning: 'BMisc::getListElement' is deprecated.
+#> Use 'get_list_element' instead.
+#> See help("Deprecated")
 #>  Call:
 #> agg_ddd(ddd_obj = out, type = "calendar", alpha = 0.1)
 #> ========================= DDD Aggregation ============================
