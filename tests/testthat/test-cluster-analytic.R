@@ -7,16 +7,15 @@
 #   scaling. The ddd object exposes $cluster_vector (per-unit cluster ids aligned
 #   to inf_func_mat rows), $cluster_var, $inf_func_mat, $se, $n.
 #
-# IMPORTANT (known implementation bug, see report):
-#   run_preprocess_multPeriods() currently FORCES boot = TRUE (and cband = TRUE)
-#   whenever a `cluster` is supplied with boot = FALSE. As a result the analytic
-#   cluster-robust branch in att_gt() (gated on `!boot`) is UNREACHABLE in the
-#   multi-period path: the reported SEs come from the multiplier bootstrap, not
-#   the analytic cluster-sum CRVE. The tests that depend on that analytic path
-#   (checks 1, 2 and 5b of the porting guide) are written exactly as specified
-#   but SKIPPED with an explicit message so the suite stays honest rather than
-#   masking the bug with a weakened assertion. Remove the skip() once the source
-#   no longer overrides boot for cluster + boot = FALSE.
+# NOTE on reachability:
+#   An earlier revision of run_preprocess_multPeriods() FORCED boot = TRUE (and
+#   cband = TRUE) whenever a `cluster` was supplied with boot = FALSE, which made
+#   the analytic cluster-robust branch in att_gt() (gated on `!boot`) unreachable
+#   in the multi-period path. That override has since been REMOVED, so the
+#   analytic path is now reached directly by ddd(..., cluster = "cl",
+#   boot = FALSE). The analytic_cluster_reachable() guard below is kept as a
+#   REGRESSION CHECK: it asserts boot stayed FALSE and no bootstrap ran, and will
+#   fail if that override is ever re-introduced.
 # =============================================================================
 
 # ---- shared helper: attach a time-invariant cluster column to mult-period data
@@ -36,9 +35,9 @@ make_mult_data_with_clusters <- function(seed = 123, size = 600, n_clusters = 30
   merge(d, clmap, by = "id")
 }
 
-# Returns TRUE if the working-tree ddd() actually reached the analytic cluster
-# path (i.e. it did NOT silently flip to bootstrap). Used to skip cleanly when
-# the known preprocessing bug is present.
+# Returns TRUE if ddd() actually reached the analytic cluster path (i.e. it did
+# NOT silently flip to bootstrap). Asserted below as a regression guard against
+# the old preprocessing override that forced boot = TRUE under clustering.
 analytic_cluster_reachable <- function(ddd_obj) {
   isFALSE(ddd_obj$argu$boot) && is.null(ddd_obj$bT)
 }

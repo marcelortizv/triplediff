@@ -3,14 +3,12 @@
 # the warn + i.i.d.-fallback behaviour when clustering is requested on an object
 # that was NOT clustered on the requested variable.
 #
-# Note on a known upstream bug (see report):
-#   ddd(..., cluster = "cl", boot = FALSE) currently has boot forced to TRUE by
-#   run_preprocess_multPeriods(), which also forces cband = TRUE on the object.
-#   The AGGREGATION-level analytic SEs are nevertheless reachable because
-#   compute_aggregation() recomputes SEs from the stored influence function and
-#   honours its own boot/cband arguments. To exercise the analytic aggregation
-#   path we therefore call agg_ddd(..., boot = FALSE, cband = FALSE), which is
-#   independent of how the ddd object's bootstrap flag was set.
+# Note on reachability:
+#   An earlier revision of run_preprocess_multPeriods() forced boot = TRUE (and
+#   cband = TRUE) for ddd(..., cluster = "cl", boot = FALSE); that override has
+#   since been REMOVED. The aggregation-level analytic SEs are exercised by
+#   calling agg_ddd(..., boot = FALSE, cband = FALSE), which recomputes SEs from
+#   the stored influence function independently of the ddd object's boot flag.
 # =============================================================================
 
 make_mult_data_with_clusters <- function(seed = 123, size = 500, n_clusters = 25,
