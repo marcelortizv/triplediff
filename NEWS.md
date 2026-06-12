@@ -24,4 +24,5 @@
 # triplediff 0.2.2
 
   * Track BMisc (>= 1.4.9) API rename: replaced `makeBalancedPanel` with `make_balanced_panel` and `rhs.vars` with `rhs_vars` in internal preprocessing. No user-visible behavior change. (#34)
+  * Replaced the remaining deprecated `BMisc::getListElement` call with `BMisc::get_list_element` to silence deprecation warnings (follow-up to #34).
 

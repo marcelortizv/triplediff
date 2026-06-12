@@ -1235,8 +1235,8 @@ run_preprocess_multPeriods <- function(yname,
 #' @keywords internal
 #' @export
 process_attgt <- function(attgt_list){
-  groups <- length(unique(unlist(BMisc::getListElement(attgt_list, "group"))))
-  time_periods <- length(unique(unlist(BMisc::getListElement(attgt_list, "year"))))
+  groups <- length(unique(unlist(BMisc::get_list_element(attgt_list, "group"))))
+  time_periods <- length(unique(unlist(BMisc::get_list_element(attgt_list, "year"))))
 
   # empty vectors to hold results
   group <- c()

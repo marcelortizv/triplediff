@@ -407,11 +407,11 @@ compute_aggregation <- function(ddd_obj,
     })
 
     # recover standard errors separately by group
-    selective.se.g <- unlist(BMisc::getListElement(selective.se.inner, "se"))
+    selective.se.g <- unlist(BMisc::get_list_element(selective.se.inner, "se"))
     selective.se.g[selective.se.g <= sqrt(.Machine$double.eps)*10] <- NA
 
     # recover influence function separately by group
-    selective.inf.func.g <- simplify2array(BMisc::getListElement(selective.se.inner, "inf.func"))
+    selective.inf.func.g <- simplify2array(BMisc::get_list_element(selective.se.inner, "inf.func"))
 
     # use multiplier bootstrap (across groups) to get critical value
     # for constructing uniform confidence bands
@@ -533,10 +533,10 @@ compute_aggregation <- function(ddd_obj,
     })
 
     # recover standard errors separately by time
-    calendar.se.t <- unlist(BMisc::getListElement(calendar.se.inner, "se"))
+    calendar.se.t <- unlist(BMisc::get_list_element(calendar.se.inner, "se"))
     calendar.se.t[calendar.se.t <= sqrt(.Machine$double.eps)*10] <- NA
     # recover influence function separately by time
-    calendar.inf.func.t <- simplify2array(BMisc::getListElement(calendar.se.inner, "inf.func"))
+    calendar.inf.func.t <- simplify2array(BMisc::get_list_element(calendar.se.inner, "inf.func"))
 
     # use multiplier boostrap (across groups) to get critical value
     # for constructing uniform confidence bands
@@ -663,10 +663,10 @@ compute_aggregation <- function(ddd_obj,
       list(inf.func=inf.func.e, se=se.e)
     })
 
-    dynamic.se.e <- unlist(BMisc::getListElement(dynamic.se.inner, "se"))
+    dynamic.se.e <- unlist(BMisc::get_list_element(dynamic.se.inner, "se"))
     dynamic.se.e[dynamic.se.e <= sqrt(.Machine$double.eps)*10] <- NA
 
-    dynamic.inf.func.e <- simplify2array(BMisc::getListElement(dynamic.se.inner, "inf.func"))
+    dynamic.inf.func.e <- simplify2array(BMisc::get_list_element(dynamic.se.inner, "inf.func"))
 
     dynamic.crit.val <- stats::qnorm(1 - alpha/2)
 
