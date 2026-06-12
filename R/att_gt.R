@@ -486,19 +486,54 @@ att_gt <- function(did_preprocessed){
   periods <- attgt_res$periods
   att_gt_ddd <- attgt_res$att
   
+  # ---- per-unit cluster vector aligned to the rows of inf_func_mat -------------
+  # inf_func_mat rows are in id_index = unique(data$id) order (see top of att_gt()).
+  # Map one cluster id per unit onto that exact ordering. `data` still carries the
+  # `cluster` column from preprocessing.
+  cluster      <- did_preprocessed$cluster           # cluster variable NAME (or NULL)
+  cluster_vec  <- NULL
+  cluster_analytic <- FALSE
+  if (!is.null(cluster) && length(cluster) > 0) {
+    cl_map      <- unique(data[, .(id, cluster)])     # data.table: one row per id
+    cluster_vec <- cl_map$cluster[match(id_index, cl_map$id)]
+    # only usable if it aligns with inf_func_mat and has no missing ids
+    if (length(cluster_vec) == n && !anyNA(cluster_vec)) {
+      cluster_analytic <- !boot                       # analytic branch only when not bootstrapping
+    } else {
+      cluster_vec <- NULL
+    }
+  }
+
   # Get analytical errors: This is analogous to cluster robust standard errors at the unit level
   n <- did_preprocessed$n
-  V <- Matrix::t(inf_func_mat)%*%inf_func_mat/n
-  se_gt_ddd <- sqrt(Matrix::diag(V)/n)
+  if (cluster_analytic) {
+    # Cluster-robust analytical variance: cluster sums of the influence function,
+    # mirroring the cluster-sum aggregation of the multiplier bootstrap
+    # (Callaway & Sant'Anna 2021, Remark 10). Same 1/n scaling as the i.i.d. V.
+    Sc <- rowsum(as.matrix(inf_func_mat), cluster_vec)   # n_clusters x k cluster sums
+    V  <- Matrix::Matrix(crossprod(Sc) / n)
+  } else {
+    V <- Matrix::t(inf_func_mat) %*% inf_func_mat / n
+  }
+  se_gt_ddd <- sqrt(Matrix::diag(V) / n)
+
+  # If clustering was requested without the bootstrap but the cluster-robust V could
+  # not be formed (e.g. cluster ids unavailable), warn that SEs are NOT cluster-robust.
+  if (!is.null(cluster) && length(cluster) > 0 && !boot && !cluster_analytic) {
+    warning("Clustered standard errors could not be computed analytically; the reported standard errors do NOT account for clustering. Set boot = TRUE for the cluster-robust multiplier bootstrap.")
+  }
 
   # Zero standard error replaced by NA
   se_gt_ddd[se_gt_ddd <= sqrt(.Machine$double.eps)*10] <- NA
 
   # if control group is "notyettreated", we need to adjust the standard errors
-  if (control_group == "notyettreated") {
+  if (control_group == "notyettreated" && !cluster_analytic) {
     # adjust standard errors for not yet treated control group
     se_gt_ddd[!is.na(se_gt_ddd_nyt)] <- se_gt_ddd_nyt[!is.na(se_gt_ddd_nyt)]
   }
+  # When cluster_analytic, the GMM (not-yet-treated) cells take their cluster-robust SE
+  # from the cluster-sum V above (IF_gmm is already stored in inf_func_mat). This is
+  # exact: without clustering sum(IF_gmm^2)/n == 1/sum(inv_OMEGA) == the old gmm_se.
 
   # Identify entries of main diagonal V that are zero or NA
   zero_na_sd_entry <- unique(which(is.na(se_gt_ddd)))
@@ -569,7 +604,9 @@ att_gt <- function(did_preprocessed){
                n = n,
                bT = bT,
                inf_func_mat = inf_func_mat,
-               first_period_dta = first_period_dta
+               first_period_dta = first_period_dta,
+               cluster_vector = cluster_vec,   # per-unit clusters aligned to inf_func_mat rows (or NULL)
+               cluster_var    = if (!is.null(cluster_vec)) cluster else NULL
               ))
 
   return(ret)

@@ -408,6 +408,8 @@ ddd <- function(yname,
         bT = att_gt_dr$bT,
         inf_func_mat = att_gt_dr$inf_func_mat,
         first_period_dta = att_gt_dr$first_period_dta,
+        cluster_vector = att_gt_dr$cluster_vector,
+        cluster_var    = att_gt_dr$cluster_var,
         call.params = call.params,
         argu = argu
       )
