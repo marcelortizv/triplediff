@@ -91,16 +91,22 @@ get_agg_inf_func <- function(att, inf_func, whichones, weights_agg, wif=NULL) {
 #' @return scalar standard error
 #'
 #' @keywords internal
-compute_se_agg <- function(influence_function, boot=FALSE, boot_std_errors = NA) {
+compute_se_agg <- function(influence_function, boot=FALSE, boot_std_errors = NA,
+                           cluster_vec = NULL) {
 
   n <- length(influence_function)
 
   # if we performed boot, boot_std_errors will be a vector of bootstrapped standard errors no null
   if (boot) {
     return(boot_std_errors)
-  } else {
-    return(sqrt( mean((influence_function)^2)/n ))
   }
+  # Analytical cluster-robust SE: cluster sums of the aggregated influence function,
+  # matching the cluster-sum bootstrap (CS 2021, Remark 10). i.i.d. when no clusters.
+  if (!is.null(cluster_vec) && length(cluster_vec) == n) {
+    S <- rowsum(influence_function, cluster_vec)
+    return(sqrt(sum(S^2)) / n)
+  }
+  return(sqrt( mean((influence_function)^2)/n ))
 }
 
 #' @title Compute Aggregated Treatment Effect Parameters
@@ -201,6 +207,32 @@ compute_aggregation <- function(ddd_obj,
     cluster <- ddd_obj$argu$cluster
   }
 
+  # Resolve the per-unit cluster vector for aggregation-level clustering.
+  # Reuse the aligned vector stored on the ddd object (built in att_gt()).
+  agg_cluster_vec <- NULL
+  if (!is.null(cluster) && length(cluster) > 0) {
+    cv  <- ddd_obj$cluster_vector
+    can_cluster <- !is.null(cv) && length(cv) == n &&
+      identical(cluster, ddd_obj$cluster_var)
+    if (can_cluster) {
+      agg_cluster_vec <- cv
+    } else {
+      warning(paste0(
+        "Clustered standard errors were requested in agg_ddd()/compute_aggregation() ",
+        "(cluster = '", cluster, "'), but the needed cluster information is not available ",
+        "on this ddd object",
+        if (!is.null(ddd_obj$cluster_var)) {
+          paste0(" (ddd() clustered on '", ddd_obj$cluster_var,
+                 "', and aggregation cannot switch to a different cluster variable)")
+        } else {
+          " (cluster was not supplied to ddd(), so aggregation cannot introduce clustering)"
+        },
+        ". Reporting standard errors that do NOT account for clustering; re-run ddd() with ",
+        "cluster = '", cluster, "' for clustered inference."))
+      cluster <- NULL    # fall back to i.i.d. for BOTH analytic and bootstrap paths
+    }
+  }
+
   # for bootstrap Boolean
   if (is.null(boot)){
     boot <- ddd_obj$argu$boot
@@ -241,6 +273,7 @@ compute_aggregation <- function(ddd_obj,
   did_preprocessed$alpha <- alpha # level of significance
   did_preprocessed$panel <- ddd_obj$argu$panel # panel indicator
   did_preprocessed$allow_unbalanced_panel <- ddd_obj$argu$allow_unbalanced_panel # unbalanced panel indicator
+  did_preprocessed$cluster_vector <- agg_cluster_vec # aligned per-unit cluster vector for mboot
 
 
   if((na.rm == FALSE) && base::anyNA(ATT)) stop("Missing values at att_gt found. If you want to remove these, set `na.rm = TRUE'.")
@@ -354,7 +387,7 @@ compute_aggregation <- function(ddd_obj,
     }
 
     # get standard errors from overall influence function
-    simple.se <- compute_se_agg(simple.if, boot, simple_boot_see)
+    simple.se <- compute_se_agg(simple.if, boot, simple_boot_see, cluster_vec = agg_cluster_vec)
     if(!is.na(simple.se)){
       if(simple.se <= sqrt(.Machine$double.eps)*10) simple.se <- NA
     }
@@ -401,7 +434,7 @@ compute_aggregation <- function(ddd_obj,
       } else{
         g_boot_se <- NA
       }
-      se.g <- compute_se_agg(inf.func.g, boot, g_boot_se)
+      se.g <- compute_se_agg(inf.func.g, boot, g_boot_se, cluster_vec = agg_cluster_vec)
 
       list(inf.func=inf.func.g, se=se.g)
     })
@@ -465,7 +498,7 @@ compute_aggregation <- function(ddd_obj,
       selective_boot_se <- NA
     }
     # get overall standard error
-    selective.se <- compute_se_agg(selective.inf.func, boot, selective_boot_se)
+    selective.se <- compute_se_agg(selective.inf.func, boot, selective_boot_se, cluster_vec = agg_cluster_vec)
     if(!is.na(selective.se)){
       if((selective.se <= sqrt(.Machine$double.eps)*10)) selective.se <- NA
     }
@@ -528,7 +561,7 @@ compute_aggregation <- function(ddd_obj,
       } else{
         t_boot_se <- NA
       }
-      se.t <- compute_se_agg(inf.func.t, boot, t_boot_se)
+      se.t <- compute_se_agg(inf.func.t, boot, t_boot_se, cluster_vec = agg_cluster_vec)
       list(inf.func=inf.func.t, se=se.t)
     })
 
@@ -582,7 +615,7 @@ compute_aggregation <- function(ddd_obj,
     }
 
     # get overall standard error
-    calendar.se <- compute_se_agg(calendar.inf.func, boot, calendar_boot_se)
+    calendar.se <- compute_se_agg(calendar.inf.func, boot, calendar_boot_se, cluster_vec = agg_cluster_vec)
     if(!is.na(calendar.se)){
       if (calendar.se <= sqrt(.Machine$double.eps)*10) calendar.se <- NA
     }
@@ -659,7 +692,7 @@ compute_aggregation <- function(ddd_obj,
       } else{
         e_boot_se <- NA
       }
-      se.e <- compute_se_agg(inf.func.e, boot, e_boot_se)
+      se.e <- compute_se_agg(inf.func.e, boot, e_boot_se, cluster_vec = agg_cluster_vec)
       list(inf.func=inf.func.e, se=se.e)
     })
 
@@ -709,7 +742,7 @@ compute_aggregation <- function(ddd_obj,
     } else {
       dynamic_boot_se <- NA
     }
-    dynamic.se <- compute_se_agg(dynamic.inf.func, boot, dynamic_boot_se)
+    dynamic.se <- compute_se_agg(dynamic.inf.func, boot, dynamic_boot_se, cluster_vec = agg_cluster_vec)
     if(!is.na(dynamic.se)){
       if (dynamic.se <= sqrt(.Machine$double.eps)*10) dynamic.se <- NA
     }
