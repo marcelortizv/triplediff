@@ -22,6 +22,11 @@ mboot <- function(inf_func, did_preprocessed, use_parallel = FALSE, cores = 1) {
   # setup needed variables
   data <- did_preprocessed$preprocessed_data
   cluster <- did_preprocessed$cluster
+  # Reuse the per-unit cluster vector that att_gt()/compute_aggregation() aligned to the
+  # influence-function rows, when available. Falls back to deriving it from the data.
+  cluster_vector_in  <- did_preprocessed$cluster_vector
+  use_cluster_vector <- !is.null(cluster_vector_in) &&
+    length(cluster_vector_in) == NROW(inf_func)
   biters <- did_preprocessed$nboot
   alpha <- did_preprocessed$alpha
   panel <- did_preprocessed$panel
@@ -50,22 +55,17 @@ mboot <- function(inf_func, did_preprocessed, use_parallel = FALSE, cores = 1) {
   if (length(cluster)==0) {
     bres <- sqrt(n) * run_multiplier_bootstrap(inf_func, biters, use_parallel, cores)
   } else {
-    # Compute multiplier bootstrap for clustered standard errors
-
-    # Extract the unique id-cluster pairs (following did package pattern)
-    unique_clusters_df <- unique(dta[, c("id", "cluster")])
-    cluster_vec <- unique_clusters_df$cluster
-
-    # Count the number of unique clusters
-    n_clusters <- length(unique(cluster_vec))
-    # Count the number of observations in each cluster
-    cluster_counts <- as.vector(table(cluster_vec))
-    # Compute the mean influence function per cluster
-    cluster_mean_if <- rowsum(inf_func, cluster_vec, reorder = TRUE) / cluster_counts
-
-    # Run the bootstrap procedure
-    bres <- sqrt(n_clusters) * run_multiplier_bootstrap(cluster_mean_if, biters, use_parallel, cores)
-
+    # Cluster-robust multiplier bootstrap, Callaway & Sant'Anna (2021, Remark 10):
+    # cluster-specific multipliers on the influence function aggregated to cluster SUMS.
+    if (use_cluster_vector) {
+      cluster_vec <- cluster_vector_in
+    } else {
+      unique_clusters_df <- unique(dta[, c("id", "cluster")])
+      cluster_vec <- unique_clusters_df$cluster
+    }
+    n_clusters      <- length(unique(cluster_vec))
+    cluster_sum_if  <- rowsum(inf_func, cluster_vec, reorder = TRUE)   # SUMS, not means
+    bres <- sqrt(n_clusters) * run_multiplier_bootstrap(cluster_sum_if, biters, use_parallel, cores)
   }
 
 
@@ -89,7 +89,10 @@ mboot <- function(inf_func, did_preprocessed, use_parallel = FALSE, cores = 1) {
   bT <- bT[is.finite(bT)]
   crit_val <- quantile(bT, 1-alpha, type=1, na.rm = T) # uniform critical value
   se <- rep(NA, length(ndg.dim))
-  se[ndg.dim] <- as.numeric(bSigma) / sqrt(n_clusters)
+  # With cluster SUMS this is the cluster-robust SE (1/n)*sqrt(sum_c S_c^2); without
+  # clustering n_clusters == n and it reduces to the i.i.d. bSigma/sqrt(n). (Equivalent
+  # to the old bSigma/sqrt(n_clusters) only when clusters are equal-sized.)
+  se[ndg.dim] <- as.numeric(bSigma) * sqrt(n_clusters) / n
 
   return(list(bres = bres, V = V, se = se, bT= bT, unif_crit_val = crit_val))
 }

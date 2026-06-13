@@ -20,6 +20,7 @@ NULL
 #'   \code{"calendar"} computes average treatment effects across different
 #'   time periods, with weights proportional to the group size; here the overall effect averages the effect across each
 #'   time period.
+#' @param cluster The name of the variable to be used for clustering. The maximum number of cluster variables is 1. Default is \code{NULL}.
 #' @param balance_e If set (and if one computes event study), it balances
 #'  the sample with respect to event time.  For example, if `balance_e=2`,
 #'  `agg_ddd` will drop groups that are not exposed to treatment for
@@ -77,6 +78,7 @@ NULL
 #' @export
 agg_ddd <- function(ddd_obj,
                    type = "eventstudy",
+                   cluster = NULL,
                    balance_e = NULL,
                    min_e = -Inf,
                    max_e = Inf,
@@ -90,6 +92,7 @@ agg_ddd <- function(ddd_obj,
 
  aggte_ddd <- compute_aggregation(ddd_obj = ddd_obj,
                                   type = type,
+                                  cluster = cluster,
                                   balance_e = balance_e,
                                   min_e = min_e,
                                   max_e = max_e,

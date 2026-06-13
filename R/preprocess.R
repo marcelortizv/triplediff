@@ -863,21 +863,6 @@ run_preprocess_multPeriods <- function(yname,
       }
     }
 
-    # check if bootstrap is on
-    if (!boot){
-      warning("Clustered SEs are only available when boot=TRUE. Setting boot=TRUE and cband=TRUE for bootstrapped standard errors.")
-      boot <- TRUE
-      args$boot <- boot
-      cband <- TRUE
-      args$cband <- cband
-
-      # adding boot reps too
-      if (is.null(nboot)){
-        warning("Number of bootstrap samples not specified. Defaulting to 999 reps.")
-        nboot <- 999
-        args$nboot <- nboot
-      }
-    }
   }
 
   # Flag for parallel and cores
@@ -1235,8 +1220,8 @@ run_preprocess_multPeriods <- function(yname,
 #' @keywords internal
 #' @export
 process_attgt <- function(attgt_list){
-  groups <- length(unique(unlist(BMisc::getListElement(attgt_list, "group"))))
-  time_periods <- length(unique(unlist(BMisc::getListElement(attgt_list, "year"))))
+  groups <- length(unique(unlist(BMisc::get_list_element(attgt_list, "group"))))
+  time_periods <- length(unique(unlist(BMisc::get_list_element(attgt_list, "year"))))
 
   # empty vectors to hold results
   group <- c()

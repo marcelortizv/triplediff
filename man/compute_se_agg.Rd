@@ -4,7 +4,12 @@
 \alias{compute_se_agg}
 \title{Take influence function and compute standard errors}
 \usage{
-compute_se_agg(influence_function, boot = FALSE, boot_std_errors = NA)
+compute_se_agg(
+  influence_function,
+  boot = FALSE,
+  boot_std_errors = NA,
+  cluster_vec = NULL
+)
 }
 \arguments{
 \item{influence_function}{An influence function}
