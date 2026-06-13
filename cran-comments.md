@@ -1,26 +1,35 @@
-## Resubmission
-This is a resubmission to address the scheduled archival of the `parglm` package
-and to fix a bug discovered in the previous version.
+## Submission
 
-### Changes in this version:
+This release fixes the deprecation WARNING reported on the CRAN checks for
+version 0.2.0 (the `examples` check emitted
+`'BMisc::rhs.vars' is deprecated`). All internal calls now use the current
+`BMisc` API (`BMisc (>= 1.4.9)`, available on CRAN), so no deprecated functions
+are called. The previously used `Remotes:` field has been removed now that the
+required `BMisc` version is on CRAN.
 
-1. **Removed parglm dependency**: Replaced `parglm` with `fastglm` to avoid issues
-   related to parglm's scheduled archival on 2026-01-29. This change ensures
-   long-term stability and removes the strong reverse dependency on parglm.
+### Changes in this version (0.2.3):
 
-2. **Enhanced functionality**: Added support for unbalanced panel data and
-   repeated cross-sectional data by properly implementing the `allow_unbalanced_panel`
-   parameter across all functions.
+1. Fixed BMisc deprecation warnings: replaced the deprecated `rhs.vars`,
+   `makeBalancedPanel`, and `getListElement` calls with their current
+   equivalents (`rhs_vars`, `make_balanced_panel`, `get_list_element`). This
+   resolves the `examples` WARNING reported for 0.2.0.
+
+2. New functionality: added analytical cluster-robust standard errors (without
+   the bootstrap) in the multiple-period path; added a `cluster` argument to
+   `agg_ddd()` for clustered aggregated standard errors; and updated the
+   clustered multiplier bootstrap to follow Callaway & Sant'Anna (2021,
+   Remark 10).
 
 ## Test environments
-* local macOS 14, R 4.4.0
-* Ubuntu 24.04 (GitHub Actions), R 4.3.3 and 4.4.0
-* Windows Server 2025 R-devel (win-builder)
-* Windows Server 2025 R-release (win-builder)
-* Windows Server 2025 R-oldrelease (win-builder)
+
+* local macOS, R 4.x: R CMD check --as-cran
+* win-builder: R-devel and R-release
+* GitHub Actions: Ubuntu (R-release)
 
 ## R CMD check results
-0 errors ✔ | 0 warnings ✔ | 0 notes ✔
+
+0 errors | 0 warnings | 0 notes
 
 ## Reverse dependencies
+
 There are no reverse dependencies for this package.
