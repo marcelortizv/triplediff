@@ -73,3 +73,11 @@ CRAN release: 2026-01-16
   than cluster *means*. Clustered bootstrap standard errors change for
   unbalanced clusters and repeated cross-sections; equal-sized clusters
   are unaffected.
+
+## triplediff 0.2.4
+
+- Resubmission. Simplified the
+  [`ddd()`](http://marcelortiz.com/triplediff/reference/ddd.md) examples
+  by removing the bootstrap-based clustered standard errors example, so
+  the package examples stay within CRAN’s limit on the number of cores
+  used during checks. No changes to package functionality.

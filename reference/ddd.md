@@ -261,48 +261,6 @@ summary(att_22)
 #>  =====================================================================
 #>  See Ortiz-Villavicencio and Sant'Anna (2025) for details.
 
-# Performing clustered standard errors with mutiplier bootstrap
-
-att_cluster <-  ddd(yname = "y", tname = "time", idname = "id", gname = "state",
-                    pname = "partition", xformla = ~cov1 + cov2 + cov3 + cov4,
-                    data = df, control_group = "nevertreated",
-                    base_period = "universal", est_method = "dr", 
-                    boot = TRUE, nboot = 500, cband = TRUE, cluster = "cluster")
-
-summary(att_cluster)
-#>  Call:
-#> ddd(yname = "y", tname = "time", idname = "id", gname = "state", 
-#>     pname = "partition", xformla = ~cov1 + cov2 + cov3 + cov4, 
-#>     data = df, control_group = "nevertreated", base_period = "universal", 
-#>     est_method = "dr", boot = TRUE, nboot = 500, cluster = "cluster", 
-#>     cband = TRUE)
-#> =========================== DDD Summary ==============================
-#>  DR-DDD estimation for the ATT: 
-#>      ATT       Std. Error    Pr(>|t|)  [95% Simult. Conf. Band]              
-#>     -0.0780       0.0920       0.3963      -0.2619       0.1059              
-#> 
-#>  Note: * indicates that the confidence interval does not contain zero.
-#>  --------------------------- Data Info   -----------------------------
-#>  Panel Data
-#>  Outcome variable: y
-#>  Qualification variable: partition
-#>  No. of units at each subgroup:
-#>    treated-and-eligible: 1232
-#>    treated-but-ineligible: 1285
-#>    eligible-but-untreated: 1256
-#>    untreated-and-ineligible: 1227
-#>  --------------------------- Algorithms ------------------------------
-#>  Outcome Regression estimated using: OLS
-#>  Propensity score estimated using: Maximum Likelihood
-#>  --------------------------- Std. Errors  ----------------------------
-#>  Level of significance:  0.05
-#>  Boostrapped standard error based on 500 reps. 
-#>  Method: Multiplier Bootstrap.
-#>  Type of confidence band:  Uniform Confidence Band 
-#>  Clustering Std. Errors by: cluster
-#>  =====================================================================
-#>  See Ortiz-Villavicencio and Sant'Anna (2025) for details.
-
 #----------------------------------------------------------
 # Triple Diff with multiple time periods
 #----------------------------------------------------------
@@ -320,10 +278,10 @@ ddd(yname = "y", tname = "time", idname = "id",
 #> =========================== DDD Summary ==============================
 #>  DR-DDD estimation for the ATT(g,t): 
 #> Group Time  ATT(g,t)  Std. Error [95% Pointwise  Conf. Band]  
-#>   2    2      10.1689     0.2879       9.6047       10.7331  *
-#>   2    3      20.0451     0.2776      19.5010       20.5893  *
-#>   3    2      -0.1446     0.2736      -0.6808        0.3916   
-#>   3    3      25.2267     0.3106      24.6178       25.8355  *
+#>   2    2       9.6861     0.3079       9.0827       10.2894  *
+#>   2    3      19.5819     0.3057      18.9827       20.1811  *
+#>   3    2      -0.0855     0.3906      -0.8511        0.6800   
+#>   3    3      24.7945     0.3456      24.1171       25.4718  *
 #> 
 #>  Note: * indicates that the confidence interval does not contain zero.
 #>  --------------------------- Data Info   -----------------------------
@@ -332,9 +290,9 @@ ddd(yname = "y", tname = "time", idname = "id",
 #>  Qualification variable: partition
 #>  Control group: Never Treated
 #>  No. of units per treatment group:
-#>   Units enabling treatment at period 3: 443
-#>   Units enabling treatment at period 2: 356
-#>   Units never enabling treatment: 201
+#>   Units enabling treatment at period 3: 482
+#>   Units enabling treatment at period 2: 323
+#>   Units never enabling treatment: 195
 #>  --------------------------- Algorithms ------------------------------
 #>  Outcome Regression estimated using: OLS
 #>  Propensity score estimated using: Maximum Likelihood

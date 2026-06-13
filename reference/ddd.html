@@ -13,7 +13,7 @@ Furthermore, this package supports the application of machine learning methods f
 
     <a class="navbar-brand me-2" href="../index.html">triplediff</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.3</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -262,48 +262,6 @@ Use with caution as skipping checks may lead to unexpected errors if data is mal
 <span class="r-out co"><span class="r-pr">#&gt;</span>  =====================================================================</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  See Ortiz-Villavicencio and Sant'Anna (2025) for details.</span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Performing clustered standard errors with mutiplier bootstrap</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">att_cluster</span> <span class="op">&lt;-</span>  <span class="fu">ddd</span><span class="op">(</span>yname <span class="op">=</span> <span class="st">"y"</span>, tname <span class="op">=</span> <span class="st">"time"</span>, idname <span class="op">=</span> <span class="st">"id"</span>, gname <span class="op">=</span> <span class="st">"state"</span>,</span></span>
-<span class="r-in"><span>                    pname <span class="op">=</span> <span class="st">"partition"</span>, xformla <span class="op">=</span> <span class="op">~</span><span class="va">cov1</span> <span class="op">+</span> <span class="va">cov2</span> <span class="op">+</span> <span class="va">cov3</span> <span class="op">+</span> <span class="va">cov4</span>,</span></span>
-<span class="r-in"><span>                    data <span class="op">=</span> <span class="va">df</span>, control_group <span class="op">=</span> <span class="st">"nevertreated"</span>,</span></span>
-<span class="r-in"><span>                    base_period <span class="op">=</span> <span class="st">"universal"</span>, est_method <span class="op">=</span> <span class="st">"dr"</span>, </span></span>
-<span class="r-in"><span>                    boot <span class="op">=</span> <span class="cn">TRUE</span>, nboot <span class="op">=</span> <span class="fl">500</span>, cband <span class="op">=</span> <span class="cn">TRUE</span>, cluster <span class="op">=</span> <span class="st">"cluster"</span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">att_cluster</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Call:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ddd(yname = "y", tname = "time", idname = "id", gname = "state", </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     pname = "partition", xformla = ~cov1 + cov2 + cov3 + cov4, </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     data = df, control_group = "nevertreated", base_period = "universal", </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     est_method = "dr", boot = TRUE, nboot = 500, cluster = "cluster", </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     cband = TRUE)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> =========================== DDD Summary ==============================</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  DR-DDD estimation for the ATT: </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      ATT       Std. Error    Pr(&gt;|t|)  [95% Simult. Conf. Band]              </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     -0.0780       0.0920       0.3963      -0.2619       0.1059              </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Note: * indicates that the confidence interval does not contain zero.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  --------------------------- Data Info   -----------------------------</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Panel Data</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Outcome variable: y</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Qualification variable: partition</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  No. of units at each subgroup:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    treated-and-eligible: 1232</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    treated-but-ineligible: 1285</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    eligible-but-untreated: 1256</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    untreated-and-ineligible: 1227</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  --------------------------- Algorithms ------------------------------</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Outcome Regression estimated using: OLS</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Propensity score estimated using: Maximum Likelihood</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  --------------------------- Std. Errors  ----------------------------</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Level of significance:  0.05</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Boostrapped standard error based on 500 reps. </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Method: Multiplier Bootstrap.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Type of confidence band:  Uniform Confidence Band </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Clustering Std. Errors by: cluster</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  =====================================================================</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  See Ortiz-Villavicencio and Sant'Anna (2025) for details.</span>
-<span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">#----------------------------------------------------------</span></span></span>
 <span class="r-in"><span><span class="co"># Triple Diff with multiple time periods</span></span></span>
 <span class="r-in"><span><span class="co">#----------------------------------------------------------</span></span></span>
@@ -321,10 +279,10 @@ Use with caution as skipping checks may lead to unexpected errors if data is mal
 <span class="r-out co"><span class="r-pr">#&gt;</span> =========================== DDD Summary ==============================</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  DR-DDD estimation for the ATT(g,t): </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Group Time  ATT(g,t)  Std. Error [95% Pointwise  Conf. Band]  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   2    2      10.1689     0.2879       9.6047       10.7331  *</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   2    3      20.0451     0.2776      19.5010       20.5893  *</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   3    2      -0.1446     0.2736      -0.6808        0.3916   </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   3    3      25.2267     0.3106      24.6178       25.8355  *</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   2    2       9.6861     0.3079       9.0827       10.2894  *</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   2    3      19.5819     0.3057      18.9827       20.1811  *</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   3    2      -0.0855     0.3906      -0.8511        0.6800   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   3    3      24.7945     0.3456      24.1171       25.4718  *</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Note: * indicates that the confidence interval does not contain zero.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  --------------------------- Data Info   -----------------------------</span>
@@ -333,9 +291,9 @@ Use with caution as skipping checks may lead to unexpected errors if data is mal
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Qualification variable: partition</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Control group: Never Treated</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  No. of units per treatment group:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Units enabling treatment at period 3: 443</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Units enabling treatment at period 2: 356</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Units never enabling treatment: 201</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Units enabling treatment at period 3: 482</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Units enabling treatment at period 2: 323</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Units never enabling treatment: 195</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  --------------------------- Algorithms ------------------------------</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Outcome Regression estimated using: OLS</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Propensity score estimated using: Maximum Likelihood</span>

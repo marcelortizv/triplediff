@@ -2,7 +2,7 @@ pandoc: 3.8.3
 pkgdown: 2.2.0
 pkgdown_sha: ~
 articles: {}
-last_built: 2026-06-13T17:59Z
+last_built: 2026-06-13T20:04Z
 urls:
   reference: http://marcelortiz.com/triplediff/reference
   article: http://marcelortiz.com/triplediff/articles
