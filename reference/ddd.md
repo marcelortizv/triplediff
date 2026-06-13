@@ -279,7 +279,7 @@ summary(att_cluster)
 #> =========================== DDD Summary ==============================
 #>  DR-DDD estimation for the ATT: 
 #>      ATT       Std. Error    Pr(>|t|)  [95% Simult. Conf. Band]              
-#>     -0.0780       0.0944       0.4088      -0.2647       0.1087              
+#>     -0.0780       0.0920       0.3963      -0.2619       0.1059              
 #> 
 #>  Note: * indicates that the confidence interval does not contain zero.
 #>  --------------------------- Data Info   -----------------------------
@@ -312,12 +312,6 @@ ddd(yname = "y", tname = "time", idname = "id",
      gname = "state", pname = "partition", xformla = ~cov1 + cov2 + cov3 + cov4,
      data = data, control_group = "nevertreated", base_period = "varying",
      est_method = "dr")
-#> Warning: 'BMisc::getListElement' is deprecated.
-#> Use 'get_list_element' instead.
-#> See help("Deprecated")
-#> Warning: 'BMisc::getListElement' is deprecated.
-#> Use 'get_list_element' instead.
-#> See help("Deprecated")
 #>  Call:
 #> ddd(yname = "y", tname = "time", idname = "id", gname = "state", 
 #>     pname = "partition", xformla = ~cov1 + cov2 + cov3 + cov4, 

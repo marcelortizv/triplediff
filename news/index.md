@@ -41,3 +41,35 @@ CRAN release: 2026-01-16
 - Track BMisc (\>= 1.4.9) API rename: replaced `makeBalancedPanel` with
   `make_balanced_panel` and `rhs.vars` with `rhs_vars` in internal
   preprocessing. No user-visible behavior change. (#34)
+- Replaced the remaining deprecated
+  [`BMisc::getListElement`](https://bcallaway11.github.io/BMisc/reference/getListElement.html)
+  call with
+  [`BMisc::get_list_element`](https://bcallaway11.github.io/BMisc/reference/get_list_element.html)
+  to silence deprecation warnings (follow-up to \#34).
+
+## triplediff 0.2.3
+
+- Added analytical cluster-robust standard errors without the bootstrap
+  in the multiple-period path. Calling
+  [`ddd()`](http://marcelortiz.com/triplediff/reference/ddd.md) with
+  `cluster = <var>` and `boot = FALSE` now returns analytical
+  cluster-robust standard errors (cluster-sum CRVE on the influence
+  function) instead of requiring the bootstrap. The `ddd` object now
+  carries `cluster_vector` and `cluster_var`. Two-period designs still
+  require `boot = TRUE` for clustered inference.
+- Added a `cluster` argument to
+  [`agg_ddd()`](http://marcelortiz.com/triplediff/reference/agg_ddd.md).
+  Aggregated parameters (simple, event-study, group, and calendar) now
+  report analytical cluster-robust standard errors. If clustering is
+  requested on a different variable than
+  [`ddd()`](http://marcelortiz.com/triplediff/reference/ddd.md) used (or
+  on an object built without clustering),
+  [`agg_ddd()`](http://marcelortiz.com/triplediff/reference/agg_ddd.md)
+  warns and falls back to i.i.d. standard errors instead of silently
+  mis-reporting.
+- Behavior change: the clustered multiplier bootstrap now follows
+  Callaway & Sant’Anna (2021, Remark 10), applying one multiplier per
+  cluster to the influence function aggregated to cluster *sums* rather
+  than cluster *means*. Clustered bootstrap standard errors change for
+  unbalanced clusters and repeated cross-sections; equal-sized clusters
+  are unaffected.

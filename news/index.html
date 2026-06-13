@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">triplediff</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.3</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -56,6 +56,13 @@
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.2.2" id="triplediff-022">triplediff 0.2.2<a class="anchor" aria-label="anchor" href="#triplediff-022"></a></h2>
 <ul><li>Track BMisc (&gt;= 1.4.9) API rename: replaced <code>makeBalancedPanel</code> with <code>make_balanced_panel</code> and <code>rhs.vars</code> with <code>rhs_vars</code> in internal preprocessing. No user-visible behavior change. (#34)</li>
+<li>Replaced the remaining deprecated <code><a href="https://bcallaway11.github.io/BMisc/reference/getListElement.html" class="external-link">BMisc::getListElement</a></code> call with <code><a href="https://bcallaway11.github.io/BMisc/reference/get_list_element.html" class="external-link">BMisc::get_list_element</a></code> to silence deprecation warnings (follow-up to #34).</li>
+</ul></div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.2.3" id="triplediff-023">triplediff 0.2.3<a class="anchor" aria-label="anchor" href="#triplediff-023"></a></h2>
+<ul><li>Added analytical cluster-robust standard errors without the bootstrap in the multiple-period path. Calling <code><a href="../reference/ddd.html">ddd()</a></code> with <code>cluster = &lt;var&gt;</code> and <code>boot = FALSE</code> now returns analytical cluster-robust standard errors (cluster-sum CRVE on the influence function) instead of requiring the bootstrap. The <code>ddd</code> object now carries <code>cluster_vector</code> and <code>cluster_var</code>. Two-period designs still require <code>boot = TRUE</code> for clustered inference.</li>
+<li>Added a <code>cluster</code> argument to <code><a href="../reference/agg_ddd.html">agg_ddd()</a></code>. Aggregated parameters (simple, event-study, group, and calendar) now report analytical cluster-robust standard errors. If clustering is requested on a different variable than <code><a href="../reference/ddd.html">ddd()</a></code> used (or on an object built without clustering), <code><a href="../reference/agg_ddd.html">agg_ddd()</a></code> warns and falls back to i.i.d. standard errors instead of silently mis-reporting.</li>
+<li>Behavior change: the clustered multiplier bootstrap now follows Callaway &amp; Sant’Anna (2021, Remark 10), applying one multiplier per cluster to the influence function aggregated to cluster <em>sums</em> rather than cluster <em>means</em>. Clustered bootstrap standard errors change for unbalanced clusters and repeated cross-sections; equal-sized clusters are unaffected.</li>
 </ul></div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>

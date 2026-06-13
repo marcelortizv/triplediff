@@ -5,7 +5,12 @@ Function to take an nx1 influence function and return a standard error
 ## Usage
 
 ``` r
-compute_se_agg(influence_function, boot = FALSE, boot_std_errors = NA)
+compute_se_agg(
+  influence_function,
+  boot = FALSE,
+  boot_std_errors = NA,
+  cluster_vec = NULL
+)
 ```
 
 ## Arguments

@@ -9,7 +9,7 @@ a standard error"></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">triplediff</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.3</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -40,7 +40,12 @@ a standard error</p>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">compute_se_agg</span><span class="op">(</span><span class="va">influence_function</span>, boot <span class="op">=</span> <span class="cn">FALSE</span>, boot_std_errors <span class="op">=</span> <span class="cn">NA</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">compute_se_agg</span><span class="op">(</span></span>
+<span>  <span class="va">influence_function</span>,</span>
+<span>  boot <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  boot_std_errors <span class="op">=</span> <span class="cn">NA</span>,</span>
+<span>  cluster_vec <span class="op">=</span> <span class="cn">NULL</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
