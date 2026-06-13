@@ -31,3 +31,7 @@
   * Added analytical cluster-robust standard errors without the bootstrap in the multiple-period path. Calling `ddd()` with `cluster = <var>` and `boot = FALSE` now returns analytical cluster-robust standard errors (cluster-sum CRVE on the influence function) instead of requiring the bootstrap. The `ddd` object now carries `cluster_vector` and `cluster_var`. Two-period designs still require `boot = TRUE` for clustered inference.
   * Added a `cluster` argument to `agg_ddd()`. Aggregated parameters (simple, event-study, group, and calendar) now report analytical cluster-robust standard errors. If clustering is requested on a different variable than `ddd()` used (or on an object built without clustering), `agg_ddd()` warns and falls back to i.i.d. standard errors instead of silently mis-reporting.
   * Behavior change: the clustered multiplier bootstrap now follows Callaway & Sant'Anna (2021, Remark 10), applying one multiplier per cluster to the influence function aggregated to cluster *sums* rather than cluster *means*. Clustered bootstrap standard errors change for unbalanced clusters and repeated cross-sections; equal-sized clusters are unaffected.
+
+# triplediff 0.2.4
+
+  * Resubmission. Simplified the `ddd()` examples by removing the bootstrap-based clustered standard errors example, so the package examples stay within CRAN's limit on the number of cores used during checks. No changes to package functionality.
