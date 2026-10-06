@@ -83,7 +83,8 @@ Standard errors are always clustered at the unit level (\code{idname}); \code{cl
 If \code{boot = TRUE}, the function computes the bootstrap standard errors clustering at the unit level setting as cluster variable the one in \code{idname}.}
 
 \item{cband}{Logical. If \code{TRUE}, the function computes a uniform confidence band that covers all of the average treatment effects
-with fixed probability \code{1-alpha}.  In order to compute uniform confidence bands, \code{boot} must also be set to \code{TRUE}.  The default is \code{FALSE}.}
+with fixed probability \code{1-alpha}.  In order to compute uniform confidence bands, \code{boot} must also be set to \code{TRUE};
+with \code{boot = FALSE}, \code{ddd()} warns and sets \code{cband = FALSE}.  The default is \code{FALSE}.}
 
 \item{alpha}{The level of significance for the confidence intervals.  Default is \code{0.05}.}
 

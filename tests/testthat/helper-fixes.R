@@ -113,3 +113,12 @@ fx_2p_unbalanced <- function(d) {
   da <- d[!(d$id %in% A & d$time == 2), ]
   list(A = A, B = B, da = da, db = da[!(da$id %in% B & da$time == 1), ])
 }
+# No never-treated group: cohorts S in {1, 2, 3, 4} (cohort 1 is treated in the first period), periods 1-4.
+fx_dgp_nonever <- function(n, seed) {
+  set.seed(seed)
+  S <- sample(c(1, 2, 3, 4), n, TRUE, c(.1, .3, .3, .3)); Q <- rbinom(n, 1, .5); x1 <- rnorm(n); u <- rnorm(n)
+  d <- data.table::data.table(id = rep(seq_len(n), 4), time = rep(1:4, each = n), S = rep(S, 4), Q = rep(Q, 4),
+                              x1 = rep(x1, 4))
+  d[, y := rep(u, 4) + time * (0.5 * x1 + 0.2 * S + 0.3 * Q) + rnorm(.N) + ifelse(Q == 1 & time >= S, 2, 0)]
+  d[]
+}

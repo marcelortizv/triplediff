@@ -1006,14 +1006,13 @@ run_preprocess_multPeriods <- function(yname,
   # handle units treated in the first period
   if (nfirstperiod > 0) {
     warning(paste0("Dropped ", nfirstperiod, " units that were already treated in the first period."))
-    dta <- dta[get(gname) %in% c(0, glist)]
+    # drop only the units treated in the first period; keep all other units, including a last-treated
+    # cohort that serves only as a comparison group when there is no never-treated group
+    dta <- dta[treated_first_period == FALSE]
 
-    # update tlist and glist
+    # update tlist and the list of treated cohorts (glist is filtered, not rebuilt from the data, so a
+    # comparison-only cohort does not re-enter it)
     tlist <- dta[, sort(unique(get(tname)))]
-    glist <- dta[, sort(unique(get(gname)))]
-    glist <- glist[glist > 0]
-
-    # Drop groups treated in the first period or before
     first_period <- tlist[1]
     #glist <- glist[glist > first_period + anticipation]
     glist <- glist[glist > first_period]

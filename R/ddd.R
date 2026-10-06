@@ -44,7 +44,8 @@ NULL
 #' Standard errors are always clustered at the unit level (\code{idname}); \code{cluster = idname} is the same as \code{cluster = NULL}.
 #' If \code{boot = TRUE}, the function computes the bootstrap standard errors clustering at the unit level setting as cluster variable the one in \code{idname}.
 #' @param cband Logical. If \code{TRUE}, the function computes a uniform confidence band that covers all of the average treatment effects
-#' with fixed probability \code{1-alpha}.  In order to compute uniform confidence bands, \code{boot} must also be set to `TRUE`.  The default is `FALSE`.
+#' with fixed probability \code{1-alpha}.  In order to compute uniform confidence bands, \code{boot} must also be set to `TRUE`;
+#' with \code{boot = FALSE}, \code{ddd()} warns and sets \code{cband = FALSE}.  The default is `FALSE`.
 #' @param alpha The level of significance for the confidence intervals.  Default is \code{0.05}.
 #' @param use_parallel Logical. If \code{TRUE}, the function runs in parallel processing. Valid only when \code{boot = TRUE}. Default is \code{FALSE}.
 #' @param cores The number of cores to be used in the parallel processing. Default is \code{cores = 1}.
@@ -299,6 +300,12 @@ ddd <- function(yname,
       #                               use_parallel = use_parallel,
       #                               cores = cores,
       #                               inffunc = inffunc)}
+  }
+
+  # Uniform confidence bands need the multiplier bootstrap: handle cband = TRUE with boot = FALSE up front
+  if (isTRUE(dp$cband) && !isTRUE(dp$boot)) {
+    warning("cband = TRUE requires boot = TRUE. Setting cband = FALSE: confidence intervals are pointwise.")
+    dp$cband <- FALSE
   }
 
   #------------------------------------------
