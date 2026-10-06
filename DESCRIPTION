@@ -27,7 +27,8 @@ Imports:
     Rcpp (>= 1.0.12)
 LinkingTo: 
     Rcpp (>= 1.0.12)
-Suggests: 
+Suggests:
+    ggplot2 (>= 3.4.0),
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
 URL: http://marcelortiz.com/triplediff/
