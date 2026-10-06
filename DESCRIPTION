@@ -13,6 +13,7 @@ Description: Implements triple-difference (DDD) estimators for both average
               Sant'Anna (2025) <doi:10.48550/arXiv.2505.09942>.
 License: MIT + file LICENSE
 Encoding: UTF-8
+LazyData: true
 Depends:
     R (>= 4.3)
 Roxygen: list(markdown = TRUE)
