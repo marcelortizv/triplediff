@@ -448,11 +448,13 @@ run_preprocess_2Periods <- function(yname,
   # Handle RCS ID creation
   #-------------------------------------
 
-  # If idname is the placeholder, create the actual ID column
+  # If idname is the placeholder, create the actual ID column.
+  # Work on a copy so that the user's data are not modified by reference.
   if (idname == ".row_id") {
     if (".row_id" %in% names(dta)) {
       stop("Column '.row_id' is an internal name. Please rename it or provide a different idname.")
     }
+    dta <- data.table::copy(dta)
     # Create unique row IDs for RCS data
     dta[, .row_id := .I]
   }
