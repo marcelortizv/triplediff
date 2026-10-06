@@ -35,3 +35,7 @@
 # triplediff 0.2.4
 
   * Resubmission. Simplified the `ddd()` examples by removing the bootstrap-based clustered standard errors example, so the package examples stay within CRAN's limit on the number of cores used during checks. No changes to package functionality.
+
+# triplediff 0.3.0 (development version)
+
+  * Added the `gruber1994` dataset: the Gruber (1994) maternity-mandate data. It holds repeated cross-sections of workers from the May Current Population Survey for 1974, 1975, 1977 and 1978 in 8 states (27,575 rows, 29 columns). In `ddd()`, `treatment_starts` plays the role of `gname` and `treat_group` the role of `pname`; use `panel = FALSE`. See `?gruber1994`.
