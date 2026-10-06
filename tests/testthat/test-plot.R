@@ -372,3 +372,61 @@ test_that("a clear error is raised when ggplot2 is not available", {
   expect_error(plot(fit_u), "needs the ggplot2 package", fixed = TRUE)
   expect_error(plot(es, ylim = "a"), "needs the ggplot2 package", fixed = TRUE)
 })
+
+#-----------------------------------------------------------------------------
+# T15: period ticks beyond 20 periods (spec section 3.4)
+#-----------------------------------------------------------------------------
+test_that("more than 20 periods get integer pretty() ticks; up to 20 get every period", {
+  # Copy of an aggregation with the periods `e` and simple estimates and SEs.
+  with_periods <- function(obj, e) {
+    obj$aggte_ddd$egt     <- e
+    obj$aggte_ddd$att.egt <- 0.1 * e
+    obj$aggte_ddd$se.egt  <- rep(0.25, length(e))
+    obj
+  }
+  scale_breaks <- function(p) ggplot2::layer_scales(p)$x$get_breaks()
+  # Ticks drawn in the panel: breaks outside the shown range are NA.
+  drawn_breaks <- function(p) {
+    b <- ggplot2::ggplot_build(p)$layout$panel_params[[1]]$x$get_breaks()
+    b[!is.na(b)]
+  }
+
+  # 26 event times: pretty(c(-15, 10), n = 10) is -16, -14, ..., 10, all integers
+  e26 <- seq(-15, 10)
+  p26 <- plot(with_periods(es, e26))
+  expect_equal(scale_breaks(p26), seq(-16, 10, by = 2), tolerance = TOL)
+  expect_identical(ggplot2::layer_scales(p26)$x$get_labels(),
+                   as.character(seq(-16, 10, by = 2)))
+  d26 <- drawn_breaks(p26)
+  expect_equal(d26, seq(-14, 10, by = 2), tolerance = TOL)
+  expect_true(all(d26 == round(d26)))
+  expect_true(all(d26 >= min(e26) & d26 <= max(e26)))
+  expect_true(all(d26 %in% e26))
+  expect_lt(length(d26), length(e26))
+  # Thinning the ticks never drops a point or an interval
+  pts <- layer_of(p26, "GeomPoint")
+  expect_equal(sort(pts$x), e26, tolerance = TOL)
+  expect_equal(nrow(layer_of(p26, "GeomErrorbar")), length(e26))
+  expect_identical(pts$colour, ifelse(pts$x < 0, COL_PRE, COL_POST))
+
+  # Boundary: exactly 20 periods keep every period as a tick ...
+  e20 <- seq(-10, 9)
+  expect_equal(scale_breaks(plot(with_periods(es, e20))), e20, tolerance = TOL)
+  # ... and 21 periods switch to pretty() breaks
+  e21 <- seq(-10, 10)
+  expect_equal(scale_breaks(plot(with_periods(es, e21))), seq(-10, 10, by = 2),
+               tolerance = TOL)
+
+  # Non-integer pretty() breaks are dropped: pretty(c(0, 5), n = 10) steps by 0.5
+  e_q <- seq(0, 5, by = 0.25)
+  expect_length(e_q, 21)
+  expect_equal(scale_breaks(plot(with_periods(es, e_q))), 0:5, tolerance = TOL)
+
+  # Calendar years: 31 periods get 5-year ticks, labelled without scientific notation
+  yrs <- 1990:2020
+  pc <- plot(with_periods(cal, yrs))
+  expect_equal(scale_breaks(pc), seq(1990, 2020, by = 5), tolerance = TOL)
+  expect_identical(ggplot2::layer_scales(pc)$x$get_labels(),
+                   as.character(seq(1990, 2020, by = 5)))
+  expect_equal(nrow(layer_of(pc, "GeomPoint")), length(yrs))
+})

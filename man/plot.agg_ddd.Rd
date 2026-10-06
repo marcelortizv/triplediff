@@ -75,8 +75,8 @@ if (requireNamespace("ggplot2", quietly = TRUE)) {
              pname = "partition", xformla = ~cov1 + cov2 + cov3 + cov4,
              data = data, control_group = "nevertreated",
              base_period = "universal", est_method = "dr")
-  plot(agg_ddd(out, type = "eventstudy"))
-  plot(agg_ddd(out, type = "group"))
+  print(plot(agg_ddd(out, type = "eventstudy")))
+  print(plot(agg_ddd(out, type = "group")))
 }
 \dontshow{data.table::setDTthreads(.old_dt_threads)}
 
