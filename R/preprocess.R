@@ -801,6 +801,16 @@ run_preprocess_multPeriods <- function(yname,
     }
   }
 
+  # Create the internal row id for RCS data without an id BEFORE any check that uses the id.
+  # Work on a copy so that the user's data are not modified by reference.
+  if (idname == ".row_id") {
+    if (".row_id" %in% names(dta)) {
+      stop("Column '.row_id' already exists in data. Please rename it or provide a different idname.")
+    }
+    dta <- data.table::copy(dta)
+    dta[, .row_id := .I]
+  }
+
   #-------------------------------------
   # Error checking
   #-------------------------------------
@@ -880,13 +890,8 @@ run_preprocess_multPeriods <- function(yname,
     xformla <- ~1
   }
 
-  # keep relevant columns in data
-  # For RCS placeholder, exclude idname from initial column selection (will be created later)
-  if (idname == ".row_id") {
-    cols_to_keep <- c(tname, yname, gname, pname, weightsname, cluster)
-  } else {
-    cols_to_keep <- c(idname, tname, yname, gname, pname, weightsname, cluster)
-  }
+  # keep relevant columns in data (for RCS without an id, idname is the internal '.row_id' created above)
+  cols_to_keep <- c(idname, tname, yname, gname, pname, weightsname, cluster)
 
   model_frame <- model.frame(xformla, data = dta, na.action = na.pass)
   # Subset the data.table to keep only relevant columns
@@ -1058,19 +1063,6 @@ run_preprocess_multPeriods <- function(yname,
   } else {
     # panel = FALSE: treat as repeated cross-sections
     true_repeated_cross_sections <- TRUE
-  }
-
-  #-------------------------------------
-  # Handle RCS ID creation
-  #-------------------------------------
-
-  # If idname is the placeholder, create the actual ID column in dta
-  if (idname == ".row_id") {
-    if (".row_id" %in% names(dta)) {
-      stop("Column '.row_id' already exists in data. Please rename it or provide a different idname.")
-    }
-    # Create unique row IDs for RCS data
-    dta[, .row_id := .I]
   }
 
   #-------------------------------------
