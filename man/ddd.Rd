@@ -72,13 +72,14 @@ unbalanced panel, \code{TRUE} uses the repeated cross-section estimator, with st
 unit observed in both periods as one unit. This parameter requires \code{panel = TRUE} and a valid \code{idname}.}
 
 \item{weightsname}{The name of the column containing the weights. Default is \code{NULL}. As part of data processing, weights are enforced to be normalized
-and have mean 1 across all observations.}
+and have mean 1 across all observations. Weights must be the same in every period for a given unit.}
 
 \item{boot}{Logical. If \code{TRUE}, the function computes standard errors using the multiplier bootstrap. Default is \code{FALSE}.}
 
 \item{nboot}{The number of bootstrap samples to be used. Default is \code{NULL}. If \code{boot = TRUE}, the default is \code{nboot = 999}.}
 
 \item{cluster}{The name of the variable to be used for clustering. The maximum number of cluster variables is 1. Default is \code{NULL}.
+Standard errors are always clustered at the unit level (\code{idname}); \code{cluster = idname} is the same as \code{cluster = NULL}.
 If \code{boot = TRUE}, the function computes the bootstrap standard errors clustering at the unit level setting as cluster variable the one in \code{idname}.}
 
 \item{cband}{Logical. If \code{TRUE}, the function computes a uniform confidence band that covers all of the average treatment effects

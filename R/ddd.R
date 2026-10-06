@@ -37,10 +37,11 @@ NULL
 #' unbalanced panel, \code{TRUE} uses the repeated cross-section estimator, with standard errors that treat the two rows of a
 #' unit observed in both periods as one unit. This parameter requires \code{panel = TRUE} and a valid \code{idname}.
 #' @param weightsname The name of the column containing the weights. Default is \code{NULL}. As part of data processing, weights are enforced to be normalized
-#' and have mean 1 across all observations.
+#' and have mean 1 across all observations. Weights must be the same in every period for a given unit.
 #' @param boot Logical. If \code{TRUE}, the function computes standard errors using the multiplier bootstrap. Default is \code{FALSE}.
 #' @param nboot The number of bootstrap samples to be used. Default is \code{NULL}. If \code{boot = TRUE}, the default is \code{nboot = 999}.
 #' @param cluster The name of the variable to be used for clustering. The maximum number of cluster variables is 1. Default is \code{NULL}.
+#' Standard errors are always clustered at the unit level (\code{idname}); \code{cluster = idname} is the same as \code{cluster = NULL}.
 #' If \code{boot = TRUE}, the function computes the bootstrap standard errors clustering at the unit level setting as cluster variable the one in \code{idname}.
 #' @param cband Logical. If \code{TRUE}, the function computes a uniform confidence band that covers all of the average treatment effects
 #' with fixed probability \code{1-alpha}.  In order to compute uniform confidence bands, \code{boot} must also be set to `TRUE`.  The default is `FALSE`.
@@ -353,7 +354,7 @@ ddd <- function(yname,
     panel = args$panel, # getting from args because it could change in the pre process
     allow_unbalanced_panel = args$allow_unbalanced_panel, # getting from args because it could change in the pre process
     cband = dp$cband, # getting from dp because it could change in the pre process
-    cluster = args$cluster,
+    cluster = dp$cluster, # getting from dp: idname is dropped from cluster in the pre process
     boot = dp$boot, # getting from dp because it could change in the pre process
     alpha = dp$alpha, # getting from dp because it could change in the pre process
     nboot = dp$nboot, # getting from dp because it could change in the pre process

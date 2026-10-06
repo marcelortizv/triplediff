@@ -125,11 +125,15 @@ run_nopreprocess_2periods <- function(yname,
   }
 
   # Flags for cluster variable
-  if (!is.null(cluster)) {
-    # dropping idname from cluster
-    if (idname %in% cluster) {
-      cluster <- setdiff(cluster, idname)
+  # Clustering at the unit level (cluster = idname) is the default: drop idname from cluster
+  if (!is.null(cluster) && (idname %in% cluster)) {
+    cluster <- setdiff(cluster, idname)
+    if (length(cluster) == 0) {
+      cluster <- NULL
     }
+    args$cluster <- cluster
+  }
+  if (!is.null(cluster)) {
 
     # flag if cluster variable is in dataset
     if (!is.element(cluster, base::colnames(dta))) {
@@ -464,11 +468,15 @@ run_preprocess_2Periods <- function(yname,
   validate_args_2Periods(args, dta)
 
   # Flags for cluster variable
-  if (!is.null(cluster)) {
-    # dropping idname from cluster
-    if (idname %in% cluster) {
-      cluster <- setdiff(cluster, idname)
+  # Clustering at the unit level (cluster = idname) is the default: drop idname from cluster
+  if (!is.null(cluster) && (idname %in% cluster)) {
+    cluster <- setdiff(cluster, idname)
+    if (length(cluster) == 0) {
+      cluster <- NULL
     }
+    args$cluster <- cluster
+  }
+  if (!is.null(cluster)) {
 
     # flag if cluster variable is in dataset
     if (!is.element(cluster, base::colnames(dta))) {
@@ -861,11 +869,15 @@ run_preprocess_multPeriods <- function(yname,
   validate_args_multPeriods(args, dta)
 
   # Flags for cluster variable
-  if (!is.null(cluster)) {
-    # dropping idname from cluster
-    if (idname %in% cluster) {
-      cluster <- setdiff(cluster, idname)
+  # Clustering at the unit level (cluster = idname) is the default: drop idname from cluster
+  if (!is.null(cluster) && (idname %in% cluster)) {
+    cluster <- setdiff(cluster, idname)
+    if (length(cluster) == 0) {
+      cluster <- NULL
     }
+    args$cluster <- cluster
+  }
+  if (!is.null(cluster)) {
 
     # flag if cluster variable is in dataset
     if (!is.element(cluster, base::colnames(dta))) {
@@ -927,6 +939,9 @@ run_preprocess_multPeriods <- function(yname,
   # enforcing normalization of weights. At this point we already drop any missing values in weights.
   weights <- weights/mean(weights)
   dta$weights <- weights
+
+  # Check if weights are unique by idname (as in the two-period path)
+  checkWeightsUniqueness(dta, idname)
 
   # get a list of dates from min to max
   tlist <- dta[, sort(unique(get(tname)))]
