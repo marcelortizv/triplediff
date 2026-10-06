@@ -58,3 +58,31 @@ fx_hand_gmm <- function(d, g, t, b, comps, xformla, method) {
 fx_num_deriv <- function(est_fun, w0, h, s = 1e-4) {
   (est_fun(w0 * (1 + s * h)) - est_fun(w0 * (1 - s * h))) / (2 * s)
 }
+
+# Three periods, cohorts S in {0, 3}; covariate x = W (independent noise) in period 1 and Z in periods 2-3.
+# fixed = TRUE records x = Z in every period. Truth: ATT(3,1) = 0, ATT(3,3) = 2.
+fx_dgp_c <- function(n, seed, fixed = FALSE) {
+  set.seed(seed)
+  Z <- runif(n, -1, 1); W <- runif(n, -1, 1); p <- plogis(2 * Z)
+  A <- rbinom(n, 1, p); Q <- rbinom(n, 1, p)
+  e1 <- rnorm(n); e2 <- rnorm(n); e3 <- rnorm(n)
+  data.table::data.table(id = rep(seq_len(n), 3), time = rep(1:3, each = n),
+                         y = c(e1, Z + e2, 2 * Z + e3 + 2 * A * Q),
+                         x = c(if (fixed) Z else W, Z, Z), S = rep(3 * A, 3), Q = rep(Q, 3),
+                         W = rep(W, 3), Z = rep(Z, 3))
+}
+
+# Four periods, cohorts S in {0, 3, 4}; binary Z drives assignment, W = Z w.p. 3/4 (else -Z);
+# x = W in period 1 and Z in periods 2-4. Trends Y1 - Y2 depend on W only.
+fx_dgp_d2 <- function(n, seed) {
+  set.seed(seed)
+  Z <- ifelse(runif(n) < .5, 1, -1); W <- ifelse(runif(n) < .75, Z, -Z); U <- runif(n)
+  pp <- rbind(c(.15, .15, .15, .30, .10, .15), c(.25, .25, .20, .05, .15, .10))
+  P <- pp[ifelse(Z == 1, 1, 2), , drop = FALSE]
+  k <- pmin(rowSums(t(apply(P, 1, cumsum)) < U) + 1L, 6L)
+  S <- c(0, 0, 3, 3, 4, 4)[k]; Q <- c(0, 1, 0, 1, 0, 1)[k]; e <- matrix(rnorm(4 * n), n, 4)
+  tr3 <- S == 3 & Q == 1; tr4 <- S == 4 & Q == 1
+  data.table::data.table(id = rep(seq_len(n), 4), time = rep(1:4, each = n),
+                         y = c(W + e[, 1], e[, 2], e[, 3] + 2 * tr3, e[, 4] + 2 * tr3 + 3 * tr4),
+                         x = c(W, Z, Z, Z), S = rep(S, 4), Q = rep(Q, 4))
+}

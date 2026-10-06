@@ -142,10 +142,13 @@ compute_outcome_regression <- function(data, condition_subgroup, xformula){
   y0_control = control_data[control_data$post == 0, y]
   # generate deltaY for control group
   deltaY_control = y1_control - y0_control
-  # get covariates including the intercept (conditioning in pre-treatment period since covariates are invariant)
-  cov_control <- stats::model.matrix(as.formula(xformula), data = control_data[control_data$post == 0])
-  # get weights (conditioning in pre-treatment period since weights are invariant)
-  i_weights = control_data[control_data$post == 0, weights]
+  # covariates (with intercept) and weights from the first row of each unit, i.e. the earlier period of the
+  # cell. compute_pscore() and compute_did() use the same rows, so the outcome regression, the propensity
+  # score and the influence function all condition on one covariate period (as in did). Rows are sorted by
+  # (id, period), so these rows are in the same unit order as the post == 1 and post == 0 rows above.
+  control_first <- unique(control_data, by = "id")
+  cov_control <- stats::model.matrix(as.formula(xformula), data = control_first)
+  i_weights = control_first$weights
 
   # Fit outcome regression using fastglm
   reg.coeff <- stats::coef(
@@ -170,8 +173,8 @@ compute_outcome_regression <- function(data, condition_subgroup, xformula){
   y1 = condition_data[condition_data$post == 1, y]
   y0 = condition_data[condition_data$post == 0, y]
   deltaY = y1 - y0
-  # get covariates including the intercept (conditioning in pre-treatment period since covariates are invariant)
-  covX <- stats::model.matrix(xformula, data = condition_data[condition_data$post == 0])
+  # covariates of the first row of each unit (earlier period of the cell), as in the fit above
+  covX <- stats::model.matrix(xformula, data = unique(condition_data, by = "id"))
   # compute OR delta
   or_delta = as.vector(tcrossprod(reg.coeff, as.matrix(covX)))
   # compute regression adjustment

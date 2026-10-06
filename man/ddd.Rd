@@ -43,7 +43,10 @@ for treated units and defines which group the unit belongs to. It takes value 0 
 the units eligible for treatment and 0 otherwise.}
 
 \item{xformla}{The formula for the covariates to be included in the model. It should be of the form \code{~ x1 + x2}.
-Default is \code{xformla = ~1} (no covariates).}
+Default is \code{xformla = ~1} (no covariates). With two periods and panel data, covariates must be time invariant.
+With multiple periods, each ATT(g,t) uses the covariates of the earlier of its two periods for both the
+propensity score and the outcome regression (as in the did package). Under \code{base_period = "universal"},
+a pre-treatment ATT(g,t) with t < g - 1 therefore uses the covariates of period t.}
 
 \item{data}{A data frame or data table containing the data.}
 

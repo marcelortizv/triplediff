@@ -15,7 +15,10 @@ NULL
 #' @param pname The name of the column containing the partition variable (e.g., the subgroup identifier). This is an indicator variable that is 1 for
 #' the units eligible for treatment and 0 otherwise.
 #' @param xformla The formula for the covariates to be included in the model. It should be of the form \code{~ x1 + x2}.
-#' Default is \code{xformla = ~1} (no covariates).
+#' Default is \code{xformla = ~1} (no covariates). With two periods and panel data, covariates must be time invariant.
+#' With multiple periods, each ATT(g,t) uses the covariates of the earlier of its two periods for both the
+#' propensity score and the outcome regression (as in the did package). Under \code{base_period = "universal"},
+#' a pre-treatment ATT(g,t) with t < g - 1 therefore uses the covariates of period t.
 #' @param data A data frame or data table containing the data.
 #' @param control_group Valid for multiple periods only. The control group to be used in the estimation. Default is \code{control_group = "notyettreated"} which sets as control group the units that have not yet participated in the treatment.
 #' The alternative is \code{control_group = "nevertreated"} which sets as control group the units that never participate in the treatment and does not change across groups or time periods.
