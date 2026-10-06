@@ -9,17 +9,18 @@ NULL
 #'
 #' @param ddd_obj a \code{ddd} object (i.e., the results of the [ddd()] function)
 #' @param type Which type of aggregated treatment effect parameter to compute.
-#'   \code{"simple"} just computes a weighted average of all
-#'   group-time average treatment effects with weights proportional to group
-#'   size.
+#'   \code{"simple"} computes a weighted average of all post-treatment
+#'   group-time average treatment effects, with cohort weights proportional to
+#'   the share of treated units in each cohort.
 #'   \code{"eventstudy"} computes average effects across
 #'   different lengths of exposure to the treatment (event times). Here the overall effect averages the effect of the
 #'   treatment across the positive lengths of exposure. This is the default option;
 #'   \code{"group"} computes average treatment effects across different groups/cohorts; here
-#'   the overall effect averages the effect across different groups using group size as weights;
+#'   the overall effect averages the effect across different groups, with weights proportional
+#'   to the share of treated units in each cohort;
 #'   \code{"calendar"} computes average treatment effects across different
-#'   time periods, with weights proportional to the group size; here the overall effect averages the effect across each
-#'   time period.
+#'   time periods, with cohort weights proportional to the share of treated units; here the overall
+#'   effect averages the effect across each time period. See Details for the cohort weights.
 #' @param cluster The name of the variable to be used for clustering. The maximum number of cluster variables is 1. Default is \code{NULL}.
 #' @param balance_e If set (and if one computes event study), it balances
 #'  the sample with respect to event time.  For example, if `balance_e=2`,
@@ -47,6 +48,16 @@ NULL
 #'  with fixed probability `0.95`.  In order to compute uniform confidence
 #'  bands, `boot` must also be set to `TRUE`.  The default is
 #'  the value set in the ddd object
+#'
+#' @details
+#' Cohort weights. Every aggregation weights cohort \eqn{g} by its share of
+#' treated units, \eqn{P(S = g, Q = 1)}: units first enabled in period \eqn{g}
+#' (the \code{gname} column of [ddd()]) that are also eligible (\code{pname} equal to 1),
+#' as in the event-study parameter of Ortiz-Villavicencio and Sant'Anna (2025).
+#' Ineligible units of a cohort do not count toward its weight. Before version
+#' 0.3.0, cohorts were weighted by \eqn{P(S = g)}, which also counted ineligible
+#' units. The two weightings agree only when every cohort has the same share of
+#' eligible units.
 #'
 #' @return A object (list) of class [`agg_ddd`] that holds the results from the
 #'  aggregation step.
