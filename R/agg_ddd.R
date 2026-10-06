@@ -41,13 +41,13 @@ NULL
 #'  standard errors are reported.
 #' @param nboot The number of bootstrap iterations to use.  The default is the value set in the ddd object,
 #'  and this is only applicable if `boot=TRUE`.
-#' @param alpha The level of confidence for the confidence intervals.  The default is 0.05. Otherwise, it will
-#' use the value set in the ddd object.
+#' @param alpha The significance level for the confidence intervals and bands. The default, \code{NULL},
+#'  uses the level stored in the \code{ddd} object (the \code{alpha} passed to [ddd()]).
 #' @param cband Boolean for whether or not to compute a uniform confidence
-#'  band that covers all of the group-time average treatment effects
-#'  with fixed probability `0.95`.  In order to compute uniform confidence
+#'  band that covers all of the aggregated treatment effects
+#'  with fixed probability \code{1 - alpha}.  In order to compute uniform confidence
 #'  bands, `boot` must also be set to `TRUE`.  The default is
-#'  the value set in the ddd object
+#'  the value set in the ddd object.
 #'
 #' @details
 #' Cohort weights. Every aggregation weights cohort \eqn{g} by its share of
@@ -97,7 +97,7 @@ agg_ddd <- function(ddd_obj,
                    boot = NULL,
                    nboot = NULL,
                    cband = NULL,
-                   alpha = 0.05) {
+                   alpha = NULL) {
 
  call <- match.call()
 

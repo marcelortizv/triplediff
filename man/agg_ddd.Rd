@@ -15,7 +15,7 @@ agg_ddd(
   boot = NULL,
   nboot = NULL,
   cband = NULL,
-  alpha = 0.05
+  alpha = NULL
 )
 }
 \arguments{
@@ -63,13 +63,13 @@ standard errors are reported.}
 and this is only applicable if \code{boot=TRUE}.}
 
 \item{cband}{Boolean for whether or not to compute a uniform confidence
-band that covers all of the group-time average treatment effects
-with fixed probability \code{0.95}.  In order to compute uniform confidence
+band that covers all of the aggregated treatment effects
+with fixed probability \code{1 - alpha}.  In order to compute uniform confidence
 bands, \code{boot} must also be set to \code{TRUE}.  The default is
-the value set in the ddd object}
+the value set in the ddd object.}
 
-\item{alpha}{The level of confidence for the confidence intervals.  The default is 0.05. Otherwise, it will
-use the value set in the ddd object.}
+\item{alpha}{The significance level for the confidence intervals and bands. The default, \code{NULL},
+uses the level stored in the \code{ddd} object (the \code{alpha} passed to \code{\link[=ddd]{ddd()}}).}
 }
 \value{
 A object (list) of class \code{\link{agg_ddd}} that holds the results from the
