@@ -365,7 +365,8 @@ run_nopreprocess_2periods <- function(yname,
               subgroup_counts = subgroup_counts,
               panel = panel,
               allow_unbalanced_panel = allow_unbalanced_panel,
-              true_repeated_cross_sections = true_repeated_cross_sections)
+              true_repeated_cross_sections = true_repeated_cross_sections,
+              unit_level_if = panel && allow_unbalanced_panel && true_repeated_cross_sections)
 
   return(out)
 
@@ -537,19 +538,7 @@ run_preprocess_2Periods <- function(yname,
   glist <- dta[, sort(unique(get(gname)))] # this has to be [0, G], second position in treated group.
   dta[, post := as.numeric(get(tname) == tlist[2])]
 
-  # Checking if covariates are time invariant in panel data case
-  # Only check for panel data (not RCS)
-  if (panel) {
-    # Create the model matrix
-    cov_pre <- model.matrix(as.formula(xformla), data = dta[dta[["post"]] == 0])
-    cov_post <- model.matrix(as.formula(xformla), data = dta[dta[["post"]] == 1])
-    # Check if covariates are time invariant
-    if (!all(cov_pre == cov_post)) {
-      stop("Covariates are not time invariant. Please check xformla")
-    }
-  }
-
-  # sort data based on idnam and tname
+  # sort data based on idname and tname (before any step that pairs the two rows of a unit)
   data.table::setorderv(dta, c(idname, tname), c(1,1))
 
   # -----------------------------------------------------------------------
@@ -571,9 +560,9 @@ run_preprocess_2Periods <- function(yname,
   if (panel) {
     if (!is_balanced) {
       if (allow_unbalanced_panel) {
-        # Treat unbalanced panel as repeated cross-sections
+        # Unbalanced panel with allow_unbalanced_panel = TRUE: ddd() uses the repeated cross-section estimator
         true_repeated_cross_sections <- TRUE
-        warning("Panel is unbalanced. Proceeding as such.")
+        warning("Panel is unbalanced. Using the repeated cross-section estimator (allow_unbalanced_panel = TRUE).")
       } else {
         # Balance the panel by dropping units
         dta <- BMisc::make_balanced_panel(dta, idname, tname)
@@ -594,6 +583,17 @@ run_preprocess_2Periods <- function(yname,
   } else {
     # panel = FALSE: treat as repeated cross-sections
     true_repeated_cross_sections <- TRUE
+  }
+
+  # Checking if covariates are time invariant, only for data used as a balanced panel.
+  # Rows are sorted by (idname, tname) and balanced here, so the two periods are paired unit by unit.
+  # (After BMisc::make_balanced_panel() dta is a data.frame, hence the [i, ] form.)
+  if (panel && !true_repeated_cross_sections) {
+    cov_pre <- model.matrix(as.formula(xformla), data = dta[dta[["post"]] == 0, ])
+    cov_post <- model.matrix(as.formula(xformla), data = dta[dta[["post"]] == 1, ])
+    if (!all(cov_pre == cov_post)) {
+      stop("Covariates are not time invariant. Please check xformla")
+    }
   }
 
   #-------------------------------------
@@ -750,7 +750,8 @@ run_preprocess_2Periods <- function(yname,
               subgroup_counts = subgroup_counts,
               panel = panel,
               allow_unbalanced_panel = allow_unbalanced_panel,
-              true_repeated_cross_sections = true_repeated_cross_sections)
+              true_repeated_cross_sections = true_repeated_cross_sections,
+              unit_level_if = panel && allow_unbalanced_panel && true_repeated_cross_sections)
 
   return(out)
 }

@@ -86,3 +86,30 @@ fx_dgp_d2 <- function(n, seed) {
                          y = c(W + e[, 1], e[, 2], e[, 3] + 2 * tr3, e[, 4] + 2 * tr3 + 3 * tr4),
                          x = c(W, Z, Z, Z), S = rep(S, 4), Q = rep(Q, 4))
 }
+
+# Two-period panel from the package generator (balanced, time-invariant covariates, gname 'state' in {0, 1}).
+fx_2p_base <- function() {
+  set.seed(505)
+  as.data.frame(gen_dgp_2periods(1000, 1)$data)
+}
+fx_fit_2p <- function(d, ...) {
+  ddd(yname = "y", tname = "time", idname = "id", gname = "state", pname = "partition",
+      xformla = ~cov1 + cov2, data = d, est_method = "dr", inffunc = TRUE, ...)
+}
+# Multi-period panel from the package generator (cohorts 0, 2, 3; periods 1-3; column 'cluster').
+fx_mp_base <- function() {
+  set.seed(1234)
+  as.data.frame(gen_dgp_mult_periods(1000, 1)$data)
+}
+fx_fit_mp <- function(d, cg = "nevertreated", bp = "varying", ...) {
+  ddd(yname = "y", tname = "time", idname = "id", gname = "state", pname = "partition",
+      xformla = ~cov1 + cov2 + cov3 + cov4, data = d, control_group = cg, base_period = bp,
+      est_method = "dr", inffunc = TRUE, ...)
+}
+# Two-period design used by item 5: 10 units lose period 2 (da); 10 other units also lose period 1 (db).
+fx_2p_unbalanced <- function(d) {
+  ids <- sort(unique(d$id)); set.seed(2)
+  A <- sample(ids, 10); B <- sample(setdiff(ids, A), 10)
+  da <- d[!(d$id %in% A & d$time == 2), ]
+  list(A = A, B = B, da = da, db = da[!(da$id %in% B & da$time == 1), ])
+}

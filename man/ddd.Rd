@@ -66,7 +66,9 @@ If \code{FALSE}, the data is treated as repeated cross-sections (RCS) where each
 For RCS data, \code{idname} can be omitted or set to \code{NULL}, and the function will automatically create unique IDs for each observation.}
 
 \item{allow_unbalanced_panel}{Logical. If \code{TRUE}, allows for unbalanced panel data where units may not be observed in all time periods.
-Default is \code{FALSE}. Note: This parameter requires \code{panel = TRUE} and a valid \code{idname}.}
+Default is \code{FALSE}: units that are not observed in every period are dropped with a warning. With two periods and an
+unbalanced panel, \code{TRUE} uses the repeated cross-section estimator, with standard errors that treat the two rows of a
+unit observed in both periods as one unit. This parameter requires \code{panel = TRUE} and a valid \code{idname}.}
 
 \item{weightsname}{The name of the column containing the weights. Default is \code{NULL}. As part of data processing, weights are enforced to be normalized
 and have mean 1 across all observations.}
