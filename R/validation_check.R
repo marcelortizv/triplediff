@@ -57,6 +57,13 @@ validate_args_2Periods <- function(args, dta){
     stop("The type of ddd specified only allow for two groups (treated and untreated). Change type of ddd for multiple groups")
   }
 
+  # Never-treated units must be coded 0 (Inf is recoded to 0 before this check)
+  gvals <- sort(unique(dta[[gname]]))
+  if (!isTRUE(gvals[1] == 0)) {
+    stop("gname = ", gname, ": in two-period designs, never-treated units must have gname = 0 (or Inf). Found values ",
+         paste(gvals, collapse = ", "), ".")
+  }
+
 
 
   # Flag for pname
@@ -72,7 +79,7 @@ validate_args_2Periods <- function(args, dta){
 
   # Check if partition values are binary
   plist <- unique(dta[[pname]])[base::order(unique(dta[[pname]]))]
-  if (length(plist) != 2) {
+  if (length(plist) != 2 || !isTRUE(all(plist == c(0, 1)))) {
     stop("pname =", pname, " must have only two values (0 and 1). Please check pname")
   }
 
@@ -88,11 +95,12 @@ validate_args_2Periods <- function(args, dta){
     }
   }
 
-  # Check if any combination of idname and tname is duplicated
-  n_id_year = anyDuplicated(dta[, .(idname, tname)])
-  # If any combination is duplicated, stop execution and throw an error
-  if (n_id_year > 0) {
-    stop("The value of idname must be unique (by tname)")
+  # Check if any combination of idname and tname is duplicated (skip the internal RCS row id)
+  if (idname != ".row_id") {
+    n_id_year <- anyDuplicated(dta, by = c(idname, tname))
+    if (n_id_year > 0) {
+      stop("The value of idname must be unique (by tname)")
+    }
   }
 
   # Check if partition is unique by idname
@@ -209,7 +217,7 @@ validate_args_multPeriods <- function(args, dta){
 
   # Check if partition values are binary
   plist <- unique(dta[[pname]])[base::order(unique(dta[[pname]]))]
-  if (length(plist) != 2) {
+  if (length(plist) != 2 || !isTRUE(all(plist == c(0, 1)))) {
     stop("pname =", pname, " must have only two values (0 and 1). Please check pname")
   }
 
@@ -225,11 +233,12 @@ validate_args_multPeriods <- function(args, dta){
     }
   }
 
-  # Check if any combination of idname and tname is duplicated
-  n_id_year = anyDuplicated(dta[, .(idname, tname)])
-  # If any combination is duplicated, stop execution and throw an error
-  if (n_id_year > 0) {
-    stop("The value of idname must be unique (by tname)")
+  # Check if any combination of idname and tname is duplicated (skip the internal RCS row id)
+  if (idname != ".row_id") {
+    n_id_year <- anyDuplicated(dta, by = c(idname, tname))
+    if (n_id_year > 0) {
+      stop("The value of idname must be unique (by tname)")
+    }
   }
 
   # Flag for weightsname

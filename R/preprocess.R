@@ -168,6 +168,12 @@ run_nopreprocess_2periods <- function(yname,
     xformla <- ~1
   }
 
+  # Two-period gname coding: Inf marks never-treated units; recode it to 0 (on a copy)
+  if (is.numeric(dta[[gname]]) && any(dta[[gname]] == Inf, na.rm = TRUE)) {
+    dta <- data.table::copy(dta)
+    dta[get(gname) == Inf, (gname) := 0]
+  }
+
   # Creating a post dummy variable based on tlist[2] (second period = post treatment)
   tlist <- dta[, sort(unique(get(tname)))]
   glist <- dta[, sort(unique(get(gname)))] # this has to be [0, G], second position in treated group.
@@ -445,6 +451,13 @@ run_preprocess_2Periods <- function(yname,
     }
     # Create unique row IDs for RCS data
     dta[, .row_id := .I]
+  }
+
+  # Two-period gname coding: Inf marks never-treated units; recode it to 0 (as the multi-period path does).
+  # Work on a copy so that the user's data are not modified.
+  if (gname %in% names(dta) && is.numeric(dta[[gname]]) && any(dta[[gname]] == Inf, na.rm = TRUE)) {
+    dta <- data.table::copy(dta)
+    dta[get(gname) == Inf, (gname) := 0]
   }
 
   # Run argument checks

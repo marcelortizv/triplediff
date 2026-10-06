@@ -9,11 +9,12 @@ NULL
 #' Furthermore, this package supports the application of machine learning methods for the estimation of the nuisance parameters.
 #' @param yname The name of the outcome variable.
 #' @param tname The name of the column containing the time periods.
-#' @param idname The name of the column containing the unit id.
+#' @param idname The name of the column containing the unit id. Each (idname, tname) pair must appear at most once.
 #' @param gname The name of the column containing the first period when a particular observation is treated. It is a positive number
 #' for treated units and defines which group the unit belongs to. It takes value 0 or Inf for untreated units.
+#' In two-period designs, never-treated units must be coded 0 or Inf; any other code stops with an error.
 #' @param pname The name of the column containing the partition variable (e.g., the subgroup identifier). This is an indicator variable that is 1 for
-#' the units eligible for treatment and 0 otherwise.
+#' the units eligible for treatment and 0 otherwise. It must be coded 0 and 1.
 #' @param xformla The formula for the covariates to be included in the model. It should be of the form \code{~ x1 + x2}.
 #' Default is \code{xformla = ~1} (no covariates). With two periods and panel data, covariates must be time invariant.
 #' With multiple periods, each ATT(g,t) uses the covariates of the earlier of its two periods for both the
