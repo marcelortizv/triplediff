@@ -479,7 +479,7 @@ compute_aggregation <- function(ddd_obj,
                                           pg=pgg,
                                           weights=weights,
                                           G=G,
-                                          group=group)
+                                          group=glist)
 
     # get overall influence function
     selective.inf.func <- get_agg_inf_func(att=selective.att.g,
