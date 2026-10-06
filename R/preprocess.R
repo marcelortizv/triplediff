@@ -183,21 +183,24 @@ run_nopreprocess_2periods <- function(yname,
   glist <- dta[, sort(unique(get(gname)))] # this has to be [0, G], second position in treated group.
   dta[, post := as.numeric(get(tname) == tlist[2])]
 
-  # sort data based on idnam and tname
-  data.table::setorderv(dta, c(idname, tname), c(1,1))
-
   #-------------------------------------
   # Handle RCS ID creation
   #-------------------------------------
 
-  # If idname is the placeholder, create the actual ID column
+  # If idname is the placeholder, create the actual ID column before the sort below uses it,
+  # in the user's row order (as run_preprocess_2Periods() does).
+  # Work on a copy so that the user's data are not modified by reference.
   if (idname == ".row_id") {
     if (".row_id" %in% names(dta)) {
       stop("Column '.row_id' already exists in data. Please rename it or provide a different idname.")
     }
+    dta <- data.table::copy(dta)
     # Create unique row IDs for RCS data
     dta[, .row_id := .I]
   }
+
+  # sort data based on idnam and tname
+  data.table::setorderv(dta, c(idname, tname), c(1,1))
 
   # -----------------------------------------------------------------------
   # Panel balance detection and handling
@@ -241,19 +244,6 @@ run_nopreprocess_2periods <- function(yname,
   } else {
     # panel = FALSE: treat as repeated cross-sections
     true_repeated_cross_sections <- TRUE
-  }
-
-  #-------------------------------------
-  # Handle RCS ID creation
-  #-------------------------------------
-
-  # If idname is the placeholder, create the actual ID column in dta
-  if (idname == ".row_id") {
-    if (".row_id" %chin% names(dta)) {
-      stop("Column '.row_id' already exists in data. Please rename it or provide a different idname.")
-    }
-    # Create unique row IDs for RCS data
-    dta[, (idname) := .I]
   }
 
   #-------------------------------------
