@@ -4,10 +4,9 @@
 <p align="center">
   <img src="man/figures/triplediff-logo.png" alt="triplediff hex logo" width="160">
 </p>
-<h1 align="center">Triple-Difference Estimators</h1>
+<h1 align="center">Triple Differences Estimators</h1>
 <p align="center">
-  Average treatment effects and event studies for triple-difference (DDD) designs,<br/>
-  with two periods or staggered adoption, and with panel or repeated cross-section data.
+  Average treatment effects and event studies for triple-difference (DDD) designs.<br/>
 </p>
 <p align="center">
   <a href="https://CRAN.R-project.org/package=triplediff"><img src="https://www.r-pkg.org/badges/version/triplediff" alt="CRAN status" height="20"></a>
@@ -29,7 +28,7 @@
 <p align="center">
   <img src="man/figures/README-hero.svg" width="900" alt="Animation in three steps. Step 1, raw panel: units grouped by enabling period S and eligibility Q over periods 1 to 3; a line sweeps across the periods and the treated cells turn orange. Step 2, ddd(): for each ATT(g,t), only the data it uses stay in view, in periods g minus 1 and t: the enabled eligible units, the ineligible units of the same group, and the groups not yet or never enabled; each estimate joins a coefficient strip. Step 3, agg_ddd(): the event-study points appear, and the links to the ATT(g,t) each point averages appear and disappear.">
 </p>
-<p align="center"><sub>Three steps: look at the raw panel, let <code>ddd()</code> compute each ATT(g,t) as a two-period DDD, and let <code>agg_ddd()</code> average them into an event study. The animation uses the simulated panel of the <a href="#quick-start">Quick start</a> with not-yet-treated comparison groups.</sub></p>
+<p align="center"><sub>Three steps: understand your data, let <code>ddd()</code> compute each ATT(g,t), and let <code>agg_ddd()</code> average them into an event study. The animation uses the simulated panel of the <a href="#quick-start">Quick start</a> with not-yet-treated comparison groups.</sub></p>
 
 ## What triplediff does
 
@@ -67,8 +66,7 @@ Or install the development version from GitHub:
 devtools::install_github("marcelortizv/triplediff")
 ```
 
-This README uses version 0.3.0. The `gruber1994` data and the `plot()`
-methods are new in version 0.3.0.
+This README uses version 0.3.0.
 
 ## Quick start
 
@@ -205,8 +203,7 @@ p_heat <- ggplot(cells, aes(x = time, y = row, fill = status)) +
 DDD compares the treated cells with three comparison groups. For
 ATT(2,2) with `control_group = "nevertreated"`, these are the ineligible
 units of the S = 2 group, and the eligible and the ineligible units of
-the S = ∞ group. The comparison uses the change from t = 1 to t = 2 in
-each group.
+the S = ∞ group.
 
 **Step 2: estimate the group-time effects.** Now we can estimate the
 group-time average treatment effect on the treated using the `ddd`
@@ -494,24 +491,6 @@ p_gruber <- ggplot(cells_g, aes(x = factor(year), y = row, fill = status)) +
 </details>
 
 <img src="man/figures/README-gruber-heatmap-1.png" alt="Heatmap of the number of workers per state, eligibility group and year in the Gruber (1994) data. In the mandate states IL, NJ and NY, eligible workers are pale in 1974 and 1975 and orange in 1977 and 1978. Ineligible workers there are mid grey after the mandates. All cells of the comparison states CT, IN, MA, NC and OH are dark." width="100%" />
-
-Each row is a different worker, so set `panel = FALSE`:
-
-``` r
-gruber_fit <- ddd(yname = "log_wage", tname = "year", idname = "id",
-                  gname = "treatment_starts", pname = "treat_group",
-                  xformla = ~ nonwhite + union + education + experience,
-                  data = gruber1994, control_group = "nevertreated",
-                  base_period = "universal", est_method = "dr", panel = FALSE)
-es_gruber <- agg_ddd(gruber_fit, type = "eventstudy")
-plot(es_gruber)
-```
-
-<img src="man/figures/README-gruber-eventstudy-1.png" alt="Event-study plot for the Gruber (1994) data. Estimates at event times -2, 1 and 2 are close to zero, and their confidence intervals include zero. Event time -1 is the reference period." width="100%" />
-
-The data have no year 1976, so there is no estimate for event time 0.
-The overall event-study effect on log wages is 0.008 (standard error
-0.041). See `?gruber1994` for the sample and the variables.
 
 Reference: Gruber, J. (1994). The Incidence of Mandated Maternity
 Benefits. *American Economic Review*, 84(3), 622-641.
