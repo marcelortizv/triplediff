@@ -8,7 +8,7 @@
   x,
   ylim = NULL,
   xlab = NULL,
-  ylab = "ATT",
+  ylab = "Estimate",
   title = NULL,
   subtitle = "auto",
   ...
@@ -23,11 +23,11 @@ values. It zooms the vertical (estimate) axis without removing data. The
 range shown is always widened to include zero.}
 
 \item{xlab}{\code{NULL} (default) or a single character string. \code{NULL} uses the
-default label of the aggregation type: \code{"Event time (e)"},
-\code{"Group enabling period (g)"} or \code{"Calendar period (t)"}.}
+default label of the aggregation type: \code{"Event time"},
+\code{"Group enabling period"} or \code{"Calendar period"}.}
 
 \item{ylab}{\code{NULL} or a single character string for the vertical axis label.
-Default is \code{"ATT"}. \code{NULL} removes the label.}
+Default is \code{"Estimate"}. \code{NULL} removes the label.}
 
 \item{title}{\code{NULL} (default, no title) or a single character string.}
 

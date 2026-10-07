@@ -89,8 +89,8 @@ test_that("event-study plot has the right layers, data, colours and labels", {
   expect_equal(eb$ymin[m], a$att.egt[has_se] - z * a$se.egt[has_se], tolerance = TOL)
   expect_equal(eb$ymax[m], a$att.egt[has_se] + z * a$se.egt[has_se], tolerance = TOL)
 
-  expect_identical(p$labels$x, "Event time (e)")
-  expect_identical(p$labels$y, "ATT")
+  expect_identical(p$labels$x, "Event time")
+  expect_identical(p$labels$y, "Estimate")
   expect_null(p$labels$title)
   expect_identical(p$labels$subtitle, "Pointwise 95% confidence intervals (analytical SEs)")
 
@@ -103,8 +103,8 @@ test_that("event-study plot has the right layers, data, colours and labels", {
 # T3: group and calendar
 #-----------------------------------------------------------------------------
 test_that("group and calendar plots are one-colour paths that reach zero", {
-  for (case in list(list(obj = grp, xlab = "Group enabling period (g)"),
-                    list(obj = cal, xlab = "Calendar period (t)"))) {
+  for (case in list(list(obj = grp, xlab = "Group enabling period"),
+                    list(obj = cal, xlab = "Calendar period"))) {
     a <- case$obj$aggte_ddd
     p <- plot(case$obj)
     expect_identical(unname(geoms(p)), c("GeomHline", "GeomErrorbar", "GeomPoint"))

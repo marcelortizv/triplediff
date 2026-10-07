@@ -168,10 +168,10 @@ ddd_plot_theme <- function(value_axis) {
 #'   values. It zooms the vertical (estimate) axis without removing data. The
 #'   range shown is always widened to include zero.
 #' @param xlab `NULL` (default) or a single character string. `NULL` uses the
-#'   default label of the aggregation type: `"Event time (e)"`,
-#'   `"Group enabling period (g)"` or `"Calendar period (t)"`.
+#'   default label of the aggregation type: `"Event time"`,
+#'   `"Group enabling period"` or `"Calendar period"`.
 #' @param ylab `NULL` or a single character string for the vertical axis label.
-#'   Default is `"ATT"`. `NULL` removes the label.
+#'   Default is `"Estimate"`. `NULL` removes the label.
 #' @param title `NULL` (default, no title) or a single character string.
 #' @param subtitle `"auto"` (default), `NULL`, or a single character string.
 #'   `"auto"` describes the intervals drawn, for example
@@ -217,7 +217,7 @@ ddd_plot_theme <- function(value_axis) {
 #' \dontshow{data.table::setDTthreads(.old_dt_threads)}
 #'
 #' @export
-plot.agg_ddd <- function(x, ylim = NULL, xlab = NULL, ylab = "ATT", title = NULL,
+plot.agg_ddd <- function(x, ylim = NULL, xlab = NULL, ylab = "Estimate", title = NULL,
                          subtitle = "auto", ...) {
   check_ggplot2()
   check_plot_lim(ylim, "ylim")
@@ -261,9 +261,9 @@ plot.agg_ddd <- function(x, ylim = NULL, xlab = NULL, ylab = "ATT", title = NULL
 
   if (is.null(xlab)) {
     xlab <- switch(type,
-                   eventstudy = "Event time (e)",
-                   group      = "Group enabling period (g)",
-                   calendar   = "Calendar period (t)")
+                   eventstudy = "Event time",
+                   group      = "Group enabling period",
+                   calendar   = "Calendar period")
   }
   if (identical(subtitle, "auto")) {
     subtitle <- interval_subtitle(uniform, alpha, a$argu$boot, a$argu$nboot, a$argu$cluster)
