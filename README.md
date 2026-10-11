@@ -6,7 +6,7 @@
 </p>
 <h1 align="center">Triple Differences Estimators</h1>
 <p align="center">
-  Average treatment effects and event studies for triple-difference (DDD) designs.<br/>
+  Average treatment effects and event studies for triple-difference designs (DDD).<br/>
 </p>
 <p align="center">
   <a href="https://CRAN.R-project.org/package=triplediff"><img src="https://www.r-pkg.org/badges/version/triplediff" alt="CRAN status" height="20"></a>
