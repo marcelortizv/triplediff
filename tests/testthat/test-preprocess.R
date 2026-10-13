@@ -1481,3 +1481,187 @@ test_that("End-to-end Panel DDD estimation with REG method (no trimming needed)"
   expect_true(!is.na(result$ATT))
   expect_true(!is.na(result$se))
 })
+
+# Input validation: duplicated rows, pname coding, two-period gname.
+
+test_that("duplicated (id, time) rows stop with a clear error", {
+  d <- fx_2p_base(); dd <- rbind(d, d[3, ])
+  expect_error(fx_fit_2p(dd), "must be unique")
+  expect_error(fx_fit_2p(dd, panel = FALSE), "must be unique")
+  m <- fx_mp_base()
+  expect_error(fx_fit_mp(rbind(m, m[5, ])), "must be unique")
+  m2 <- m; m2$id <- NULL                    # RCS without an id: rows are the units
+  expect_no_error(ddd(yname = "y", tname = "time", idname = NULL, gname = "state", pname = "partition",
+                      xformla = ~cov1 + cov2, data = m2, control_group = "notyettreated",
+                      base_period = "varying", est_method = "dr", panel = FALSE))
+})
+
+test_that("pname must be coded 0 and 1", {
+  d <- fx_2p_base(); d$partition <- d$partition + 1
+  expect_error(ddd(yname = "y", tname = "time", idname = "id", gname = "state", pname = "partition",
+                   xformla = ~1, data = d, est_method = "ipw"), "only two values \\(0 and 1\\)")
+  m <- fx_mp_base(); m$partition <- m$partition + 1
+  expect_error(fx_fit_mp(m), "only two values \\(0 and 1\\)")
+})
+
+test_that("two-period gname: Inf means never treated; other codes stop", {
+  d <- fx_2p_base(); ref <- fx_fit_2p(d)
+  dinf <- d; dinf$state[dinf$state == 0] <- Inf
+  oi <- fx_fit_2p(dinf)
+  expect_identical(oi$ATT, ref$ATT); expect_identical(oi$se, ref$se)
+  expect_equal(fx_fit_2p(dinf, skip_data_checks = TRUE)$ATT, fx_fit_2p(d, skip_data_checks = TRUE)$ATT, tolerance = 1e-12)
+  d21 <- d; d21$state <- ifelse(d21$state == 0, 2, 1)
+  expect_error(fx_fit_2p(d21), "never-treated units must have gname = 0")
+  dti <- data.table::as.data.table(dinf); fx_fit_2p(dti)
+  expect_true(any(is.infinite(dti$state)))    # the user's data are not modified
+})
+
+# Two-period panels: row order, unbalanced panels and allow_unbalanced_panel.
+
+test_that("a balanced two-period panel gives the same result in any row order", {
+  d <- fx_2p_base(); o1 <- fx_fit_2p(d)
+  set.seed(1); o2 <- fx_fit_2p(d[sample(nrow(d)), ])
+  expect_identical(o2$ATT, o1$ATT); expect_identical(o2$se, o1$se)
+})
+
+test_that("an unbalanced two-period panel is balanced before the covariate check", {
+  d <- fx_2p_base(); u <- fx_2p_unbalanced(d)
+  expect_warning(oa <- fx_fit_2p(u$da), "Dropped observations from 10 units")
+  ra <- fx_fit_2p(d[!(d$id %in% u$A), ])
+  expect_identical(oa$ATT, ra$ATT); expect_identical(oa$se, ra$se)
+  expect_warning(ob <- fx_fit_2p(u$db), "Dropped observations from 20 units")
+  rb <- fx_fit_2p(d[!(d$id %in% c(u$A, u$B)), ])
+  expect_identical(ob$ATT, rb$ATT); expect_identical(ob$se, rb$se)
+})
+
+test_that("allow_unbalanced_panel = TRUE uses the repeated cross-section estimator", {
+  d <- fx_2p_base(); u <- fx_2p_unbalanced(d)
+  expect_warning(ou <- fx_fit_2p(u$db, allow_unbalanced_panel = TRUE), "Panel is unbalanced")
+  orc <- fx_fit_2p(u$db, panel = FALSE)
+  expect_equal(ou$ATT, orc$ATT, tolerance = 1e-12)
+  # Unit-level standard error: the influence function is summed by unit
+  dd <- data.table::as.data.table(u$db); data.table::setorderv(dd, c("id", "time"))
+  nid <- data.table::uniqueN(dd$id)
+  psi <- (nid / nrow(dd)) * rowsum(orc$att_inf_func, dd$id)[, 1]
+  expect_equal(length(ou$att_inf_func), nid)
+  expect_equal(ou$se, stats::sd(psi) / sqrt(nid), tolerance = 1e-10)
+})
+
+# cluster = idname, and weights that vary within a unit.
+
+test_that("cluster = idname is unit-level clustering", {
+  m <- fx_mp_base()
+  o0 <- fx_fit_mp(m); o1 <- fx_fit_mp(m, cluster = "id")
+  expect_identical(o1$ATT, o0$ATT); expect_identical(o1$se, o0$se); expect_null(o1$argu$cluster)
+  expect_no_warning(a1 <- agg_ddd(o1, type = "eventstudy"))
+  expect_identical(a1$aggte_ddd$overall.se, agg_ddd(o0, type = "eventstudy")$aggte_ddd$overall.se)
+  oc <- fx_fit_mp(m, cluster = c("id", "cluster")); occ <- fx_fit_mp(m, cluster = "cluster")
+  expect_identical(oc$se, occ$se); expect_identical(oc$argu$cluster, "cluster")
+  d <- fx_2p_base()
+  expect_identical(fx_fit_2p(d, cluster = "id")$se, fx_fit_2p(d)$se)
+})
+
+test_that("multi-period weights must be constant within a unit", {
+  m <- fx_mp_base(); set.seed(83)
+  m$w <- runif(nrow(m), .5, 1.5)
+  expect_error(fx_fit_mp(m, weightsname = "w"), "must be the same across all periods")
+  uw <- runif(length(unique(m$id)), .5, 1.5); m$w2 <- uw[match(m$id, sort(unique(m$id)))]
+  expect_no_error(fx_fit_mp(m, weightsname = "w2"))
+})
+
+# Units treated in the first period without never-treated units; cband without the bootstrap.
+
+test_that("units treated in period 1 are dropped without losing the comparison-only cohort", {
+  d <- fx_dgp_nonever(1600, 99)
+  f <- function(dd) ddd(yname = "y", tname = "time", idname = "id", gname = "S", pname = "Q", xformla = ~x1,
+                        data = dd, control_group = "notyettreated", base_period = "varying", est_method = "dr")
+  expect_warning(o <- f(d), "already treated in the first period")
+  r <- f(d[S != 1])
+  expect_identical(o$ATT, r$ATT); expect_identical(o$se, r$se)
+  expect_identical(o$groups, r$groups); expect_identical(o$periods, r$periods); expect_identical(o$n, r$n)
+  expect_equal(length(o$ATT), length(o$se)); expect_equal(length(o$ATT), length(o$groups))
+})
+
+test_that("cband = TRUE without the bootstrap is handled before estimation", {
+  m <- fx_mp_base()
+  expect_warning(o <- fx_fit_mp(m, cband = TRUE, boot = FALSE), "cband = TRUE requires boot = TRUE")
+  expect_false(o$argu$cband)
+  expect_no_error(agg_ddd(o, type = "eventstudy"))
+})
+
+# Multi-period repeated cross-sections without an id and with a cluster variable.
+
+test_that("multi-period RCS without an id runs with cluster and equals the unique-row-id fit", {
+  d <- fx_mp_base(); d$id <- NULL
+  f <- function(dd, idname, ...) ddd(yname = "y", tname = "time", idname = idname, gname = "state", pname = "partition",
+                                     xformla = ~cov1 + cov2, data = dd, control_group = "notyettreated",
+                                     base_period = "varying", est_method = "dr", panel = FALSE, ...)
+  o <- f(d, NULL, cluster = "cluster")
+  d2 <- d; d2$rid <- seq_len(nrow(d2))
+  r <- f(d2, "rid", cluster = "cluster")
+  expect_equal(o$ATT, r$ATT, tolerance = 1e-12)
+  expect_equal(o$se, r$se, tolerance = 1e-12)
+  dt <- data.table::as.data.table(d)
+  f(dt, NULL, cluster = "cluster")
+  expect_false(".row_id" %in% names(dt))
+  expect_no_error(f(dt, NULL))
+})
+
+# Two-period repeated cross-sections without an id do not modify the user's data.table.
+
+test_that("two-period ddd() without an id leaves the user's data.table unchanged", {
+  dt <- data.table::as.data.table(fx_2p_base())
+  dt[, id := NULL]
+  saved <- data.table::copy(dt)
+  f <- function() ddd(yname = "y", tname = "time", idname = NULL, gname = "state", pname = "partition",
+                      xformla = ~cov1 + cov2, data = dt, est_method = "dr", panel = FALSE, inffunc = TRUE)
+  o1 <- f()
+  expect_identical(dt, saved)
+  expect_false(".row_id" %in% names(dt))
+  o2 <- f()
+  expect_identical(dt, saved)
+  expect_identical(o2$ATT, o1$ATT); expect_identical(o2$se, o1$se)
+  expect_identical(o2$att_inf_func, o1$att_inf_func)
+  # same fit as with a data.frame input, which ddd() always copies
+  o3 <- ddd(yname = "y", tname = "time", idname = NULL, gname = "state", pname = "partition",
+            xformla = ~cov1 + cov2, data = as.data.frame(saved), est_method = "dr", panel = FALSE, inffunc = TRUE)
+  expect_identical(o1$ATT, o3$ATT); expect_identical(o1$se, o3$se)
+})
+
+# Two-period repeated cross-sections without an id and with skip_data_checks = TRUE.
+
+fx_n20_fit <- function(dd, skip, method = "dr", ...) {
+  ddd(yname = "y", tname = "time", idname = NULL, gname = "state", pname = "partition",
+      xformla = ~cov1 + cov2, data = dd, est_method = method, panel = FALSE, inffunc = TRUE,
+      skip_data_checks = skip, ...)
+}
+fx_n20_same <- function(a, b) {
+  for (k in c("ATT", "se", "lci", "uci", "att_inf_func", "subgroup_counts", "argu")) {
+    expect_identical(a[[k]], b[[k]], label = paste0("skip_data_checks = TRUE: ", k))
+  }
+}
+
+test_that("two-period RCS without an id: skip_data_checks = TRUE equals the checked fit", {
+  d <- fx_2p_base(); d$id <- NULL
+  # rows in a non-sorted order: the internal row id must follow the user's row order in both paths
+  set.seed(20); d <- d[sample(nrow(d)), ]; rownames(d) <- NULL
+  for (m in c("dr", "reg", "ipw")) {
+    fx_n20_same(fx_n20_fit(d, TRUE, m), fx_n20_fit(d, FALSE, m))
+  }
+  # sampling weights
+  set.seed(21); d$w <- stats::runif(nrow(d), 0.5, 1.5)
+  fx_n20_same(fx_n20_fit(d, TRUE, weightsname = "w"), fx_n20_fit(d, FALSE, weightsname = "w"))
+})
+
+test_that("two-period RCS without an id and skip_data_checks = TRUE leaves the user's data.table unchanged", {
+  dt <- data.table::as.data.table(fx_2p_base())
+  dt[, id := NULL]
+  saved <- data.table::copy(dt)
+  o1 <- fx_n20_fit(dt, TRUE)
+  expect_identical(dt, saved)
+  expect_false(".row_id" %in% names(dt))
+  o2 <- fx_n20_fit(dt, TRUE)
+  expect_identical(o2$ATT, o1$ATT); expect_identical(o2$se, o1$se)
+  expect_identical(o2$att_inf_func, o1$att_inf_func)
+  fx_n20_same(o1, fx_n20_fit(dt, FALSE))
+})
