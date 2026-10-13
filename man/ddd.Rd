@@ -45,9 +45,7 @@ the units eligible for treatment and 0 otherwise. It must be coded 0 and 1.}
 
 \item{xformla}{The formula for the covariates to be included in the model. It should be of the form \code{~ x1 + x2}.
 Default is \code{xformla = ~1} (no covariates). With two periods and panel data, covariates must be time invariant.
-With multiple periods, each ATT(g,t) uses the covariates of the earlier of its two periods for both the
-propensity score and the outcome regression (as in the did package). Under \code{base_period = "universal"},
-a pre-treatment ATT(g,t) with t < g - 1 therefore uses the covariates of period t.}
+With multiple periods, each ATT(g,t) uses the covariates of the earlier of its two periods for both the propensity score and the outcome regression.}
 
 \item{data}{A data frame or data table containing the data.}
 
@@ -67,9 +65,7 @@ If \code{FALSE}, the data is treated as repeated cross-sections (RCS) where each
 For RCS data, \code{idname} can be omitted or set to \code{NULL}, and the function will automatically create unique IDs for each observation.}
 
 \item{allow_unbalanced_panel}{Logical. If \code{TRUE}, allows for unbalanced panel data where units may not be observed in all time periods.
-Default is \code{FALSE}: units that are not observed in every period are dropped with a warning. With two periods and an
-unbalanced panel, \code{TRUE} uses the repeated cross-section estimator, with standard errors that treat the two rows of a
-unit observed in both periods as one unit. This parameter requires \code{panel = TRUE} and a valid \code{idname}.}
+Default is \code{FALSE}: units that are not observed in every period are dropped with a warning.}
 
 \item{weightsname}{The name of the column containing the weights. Default is \code{NULL}. As part of data processing, weights are enforced to be normalized
 and have mean 1 across all observations. Weights must be the same in every period for a given unit.}
@@ -79,7 +75,6 @@ and have mean 1 across all observations. Weights must be the same in every perio
 \item{nboot}{The number of bootstrap samples to be used. Default is \code{NULL}. If \code{boot = TRUE}, the default is \code{nboot = 999}.}
 
 \item{cluster}{The name of the variable to be used for clustering. The maximum number of cluster variables is 1. Default is \code{NULL}.
-Standard errors are always clustered at the unit level (\code{idname}); \code{cluster = idname} is the same as \code{cluster = NULL}.
 If \code{boot = TRUE}, the function computes the bootstrap standard errors clustering at the unit level setting as cluster variable the one in \code{idname}.}
 
 \item{cband}{Logical. If \code{TRUE}, the function computes a uniform confidence band that covers all of the average treatment effects

@@ -8,24 +8,20 @@
 A data frame with 27,575 rows and 29 columns:
 \describe{
 \item{id}{Integer. Row identifier, unique for each row. Each row is a
-different worker, so \code{id} is not a panel identifier.}
+different worker.}
 \item{year}{Integer. Year of the May CPS: 1974 or 1975 (before the
 mandates) and 1977 or 1978 (after).}
 \item{state}{Character. State: IL, NJ or NY (mandate states) or OH, IN,
 CT, MA or NC (comparison states).}
 \item{treatment_starts}{Integer. First treated period: 1976 for IL, NJ
 and NY, whose mandates took effect between July 1976 and January
-1977; 0 for the comparison states (never treated). Plays the role of
-\code{gname} in \code{\link{ddd}}.}
+1977; 0 for the comparison states (never treated).}
 \item{log_wage}{Numeric. Log of \code{hourly_wage}.}
-\item{log_hours}{Numeric. Log of \code{hours_per_week}. \code{NA} in the
-40 rows where hours are missing.}
+\item{log_hours}{Numeric. Log of \code{hours_per_week}.}
 \item{hourly_wage}{Numeric. Hourly wage in 1978 dollars (see Details).}
-\item{hours_per_week}{Numeric. Hours worked per week. \code{NA} in 40
-rows.}
+\item{hours_per_week}{Numeric. Hours worked per week.}
 \item{education}{Numeric. Years of education.}
-\item{experience}{Numeric. Potential experience in years: age minus
-education minus 6, set to 0 if negative.}
+\item{experience}{Numeric. Potential experience in years: age minus education minus 6, set to 0 if negative.}
 \item{nonwhite}{Integer. 1 if the worker is not white, 0 otherwise.}
 \item{union}{Integer. 1 if the worker is a union member, 0 otherwise.}
 \item{treat}{Integer. Same as \code{treat_group}.}
@@ -33,8 +29,7 @@ education minus 6, set to 0 if negative.}
 \item{post}{Integer. Same as \code{post_period}.}
 \item{treat_group}{Integer. 1 if the worker is a married woman (spouse
 present) aged 20 to 40, the pregnancy-relevant group; 0 for the
-comparison group (workers older than 40 and never-married men aged 20
-to 40). Plays the role of \code{pname} in \code{\link{ddd}}.}
+comparison group (workers older than 40 and never-married men aged 20 to 40).}
 \item{exp_state}{Integer. 1 if the state passed a maternity mandate (IL,
 NJ, NY), 0 otherwise.}
 \item{post_period}{Integer. 1 for 1977 and 1978 (after the mandates), 0
@@ -100,20 +95,6 @@ Nominal wages are converted to 1978 dollars with the consumer price index
 The industry columns group 1970 Census industry codes into major
 industries. Agriculture and mining are the omitted groups: a worker with
 all industry columns equal to 0 is in one of these two industries.
-
-The columns \code{treat}, \code{exp} and \code{post} repeat
-\code{treat_group}, \code{exp_state} and \code{post_period} under the names
-used in the original replication code.
-
-To use the data with \code{\link{ddd}}: each row is a different worker, so
-set \code{panel = FALSE} and \code{idname = "id"}. Use
-\code{tname = "year"}, \code{gname = "treatment_starts"} and
-\code{pname = "treat_group"}. All mandate states start treatment in 1976,
-so there is a single treated cohort and no not-yet-treated units; use
-\code{control_group = "nevertreated"}.
-
-Only eight states are in the data. Standard errors clustered by state
-(\code{cluster = "state"}) rest on eight clusters and may be unreliable.
 }
 \examples{
 \dontshow{.old_dt_threads <- data.table::setDTthreads(2)}

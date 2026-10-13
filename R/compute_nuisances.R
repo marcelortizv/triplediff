@@ -144,7 +144,7 @@ compute_outcome_regression <- function(data, condition_subgroup, xformula){
   deltaY_control = y1_control - y0_control
   # covariates (with intercept) and weights from the first row of each unit, i.e. the earlier period of the
   # cell. compute_pscore() and compute_did() use the same rows, so the outcome regression, the propensity
-  # score and the influence function all condition on one covariate period (as in did). Rows are sorted by
+  # score and the influence function all condition on one covariate period. Rows are sorted by
   # (id, period), so these rows are in the same unit order as the post == 1 and post == 0 rows above.
   control_first <- unique(control_data, by = "id")
   cov_control <- stats::model.matrix(as.formula(xformula), data = control_first)

@@ -54,10 +54,7 @@ NULL
 #' treated units, \eqn{P(S = g, Q = 1)}: units first enabled in period \eqn{g}
 #' (the \code{gname} column of [ddd()]) that are also eligible (\code{pname} equal to 1),
 #' as in the event-study parameter of Ortiz-Villavicencio and Sant'Anna (2025).
-#' Ineligible units of a cohort do not count toward its weight. Before version
-#' 0.3.0, cohorts were weighted by \eqn{P(S = g)}, which also counted ineligible
-#' units. The two weightings agree only when every cohort has the same share of
-#' eligible units.
+#' Ineligible units of a cohort do not count toward its weight.
 #'
 #' @return A object (list) of class [`agg_ddd`] that holds the results from the
 #'  aggregation step.
