@@ -17,35 +17,35 @@
 
 # triplediff 0.2.1
 
-- Add asymmetric propensity score trimming for control units with pscore &gt;= 0.995. 
+- Add asymmetric propensity score trimming for control units with pscore >= 0.995.
 - Add partition-specific collinearity detection with two-stage checking.
 - Add comprehensive test suite including Monte Carlo coverage test when trimming.
 
 # triplediff 0.2.2
 
-- Track BMisc (&gt;= 1.4.9) API rename: replaced `makeBalancedPanel` with `make_balanced_panel` and `rhs.vars` with `rhs_vars` in internal preprocessing. No user-visible behavior change. (#34)
+- Track BMisc (>= 1.4.9) API rename: replaced `makeBalancedPanel` with `make_balanced_panel` and `rhs.vars` with `rhs_vars` in internal preprocessing. No user-visible behavior change. (#34)
 - Replaced the remaining deprecated `BMisc::getListElement` call with `BMisc::get_list_element` to silence deprecation warnings (follow-up to #34).
 
 # triplediff 0.2.3
 
 - Added analytical cluster-robust standard errors without the bootstrap in the multiple-period path. Calling `ddd()` with `cluster = <var>` and `boot = FALSE` now returns analytical cluster-robust standard errors (cluster-sum CRVE on the influence function) instead of requiring the bootstrap. The `ddd` object now carries `cluster_vector` and `cluster_var`. Two-period designs still require `boot = TRUE` for clustered inference.
 - Added a `cluster` argument to `agg_ddd()`. Aggregated parameters (simple, event-study, group, and calendar) now report analytical cluster-robust standard errors. If clustering is requested on a different variable than `ddd()` used (or on an object built without clustering), `agg_ddd()` warns and falls back to i.i.d. standard errors instead of silently mis-reporting.
-- Behavior change: the clustered multiplier bootstrap now follows Callaway &amp; Sant'Anna (2021, Remark 10), applying one multiplier per cluster to the influence function aggregated to cluster *sums* rather than cluster *means*. Clustered bootstrap standard errors change for unbalanced clusters and repeated cross-sections; equal-sized clusters are unaffected.
+- Behavior change: the clustered multiplier bootstrap now follows Callaway & Sant'Anna (2021, Remark 10), applying one multiplier per cluster to the influence function aggregated to cluster *sums* rather than cluster *means*. Clustered bootstrap standard errors change for unbalanced clusters and repeated cross-sections; equal-sized clusters are unaffected.
 
 # triplediff 0.2.4
 
 - Resubmission. Simplified the `ddd()` examples by removing the bootstrap-based clustered standard errors example, so the package examples stay within CRAN's limit on the number of cores used during checks. No changes to package functionality.
 
-# triplediff 0.3.0 
+# triplediff 0.3.0
 
 - Added the `gruber1994` dataset with the Gruber (1994) maternity-mandate data. See `?gruber1994`.
 - Added `plot()` methods for `ddd` and `agg_ddd` objects that return a `ggplot` object (requires ggplot2). See `?plot.ddd` and `?plot.agg_ddd`.
 
 ## Bug fixes
 
-- `agg_ddd()`  weights cohorts by P(S = g, Q = 1) in all aggregation types. Aggregates over more than one cohort change. See "Cohort weights" in `?agg_ddd`.
-- With `base_period = "universal"`, pre-treatment ATT(g,t) with t &lt; g - 1 now use the covariates of period t in both nuisance models. 
-- Fixed standard errors  for GMM cells with `control_group = "notyettreated"` in balanced panels. The point estimates of these cells and the aggregates that use them also move slightly.
+- `agg_ddd()` weights cohorts by P(S = g, Q = 1) in all aggregation types. Aggregates over more than one cohort change. See "Cohort weights" in `?agg_ddd`.
+- With `base_period = "universal"`, pre-treatment ATT(g,t) with t < g - 1 now use the covariates of period t in both nuisance models.
+- Fixed standard errors for GMM cells with `control_group = "notyettreated"` in balanced panels. The point estimates of these cells and the aggregates that use them also move slightly.
 - Fixed the overall standard error of `agg_ddd(type = "group")` when cohort effects differ.
 - `agg_ddd()` now uses the `alpha` stored in the `ddd` object, and the default is `alpha = NULL`.
 - Fixed `ddd()` with unsorted or unbalanced two-period panels, which gave false errors or wrong estimates. It now drops units not observed in both periods with a warning.

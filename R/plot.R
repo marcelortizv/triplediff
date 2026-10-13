@@ -186,10 +186,10 @@ ddd_plot_theme <- function(value_axis) {
 #'
 #' In an event study, estimates at event times `e < 0` are pre-treatment and
 #' estimates at `e >= 0` are post-treatment. A dotted vertical line at
-#' `e = -0.5` separates the two; both appear only
+#' `e = -0.5` separates the two. The line appears only
 #' when pre- and post-treatment estimates are present. Group and calendar
 #' aggregations average post-treatment cells only, so all their estimates are
-#' post-treatment and no legend is drawn.
+#' post-treatment.
 #'
 #' The vertical axis always includes zero, with or without `ylim`. Estimates
 #' that are `NA` are not drawn, with a warning.

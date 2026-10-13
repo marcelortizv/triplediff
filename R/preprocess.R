@@ -223,7 +223,7 @@ run_nopreprocess_2periods <- function(yname,
       if (allow_unbalanced_panel) {
         # Treat unbalanced panel as repeated cross-sections
         true_repeated_cross_sections <- TRUE
-        warning("Panel is unbalanced. Treating as repeated cross-sections (allow_unbalanced_panel = TRUE).")
+        warning("Panel is unbalanced.")
       } else {
         # Balance the panel by dropping units
         dta <- BMisc::make_balanced_panel(dta, idname, tname)
@@ -1059,7 +1059,7 @@ run_preprocess_multPeriods <- function(yname,
       if (allow_unbalanced_panel) {
         # Treat unbalanced panel as repeated cross-sections
         true_repeated_cross_sections <- FALSE
-        warning("Panel is unbalanced. Proceeding as such.")
+        warning("Panel is unbalanced.")
       } else {
         warning("Panel is unbalanced but allow_unbalanced_panel = FALSE. Forcing to convert data to balanced panel.")
         # Balance the panel by dropping units

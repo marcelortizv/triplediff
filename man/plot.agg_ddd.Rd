@@ -54,10 +54,10 @@ recompute them with another critical value.
 
 In an event study, estimates at event times \code{e < 0} are pre-treatment and
 estimates at \code{e >= 0} are post-treatment. A dotted vertical line at
-\code{e = -0.5} separates the two; both appear only
+\code{e = -0.5} separates the two. The line appears only
 when pre- and post-treatment estimates are present. Group and calendar
 aggregations average post-treatment cells only, so all their estimates are
-post-treatment and no legend is drawn.
+post-treatment.
 
 The vertical axis always includes zero, with or without \code{ylim}. Estimates
 that are \code{NA} are not drawn, with a warning.

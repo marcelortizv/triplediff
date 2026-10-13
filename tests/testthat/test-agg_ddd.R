@@ -1,13 +1,13 @@
 # agg_ddd(): cohorts are weighted by P(S = g, Q = 1) in the aggregations.
 
-fx_item3_fit <- function() {
+fx_agg_fit <- function() {
   d <- fx_dgp_a(1500, 20261009)
   ddd(yname = "y", tname = "time", idname = "id", gname = "S", pname = "Q", xformla = ~x1 + x2, data = d,
       control_group = "nevertreated", base_period = "varying", est_method = "dr")
 }
 
 test_that("aggregate estimates use the share of treated units as cohort weights", {
-  o <- fx_item3_fit(); fp <- o$first_period_dta
+  o <- fx_agg_fit(); fp <- o$first_period_dta
   pg <- sapply(o$glist, function(g) mean(fp$weights * (fp$first_treat == g & fp$partition == 1)))
   w_of <- function(gs) pg[match(gs, o$glist)]
   G <- o$groups; Tt <- o$periods; A <- o$ATT
@@ -28,7 +28,7 @@ test_that("aggregate estimates use the share of treated units as cohort weights"
 })
 
 test_that("event-study SE uses treated-unit indicators in the weight influence function", {
-  o <- fx_item3_fit(); fp <- o$first_period_dta; n <- o$n
+  o <- fx_agg_fit(); fp <- o$first_period_dta; n <- o$n
   pg <- sapply(o$glist, function(g) mean(fp$weights * (fp$first_treat == g & fp$partition == 1)))
   G <- o$groups; Tt <- o$periods; A <- o$ATT; IF <- as.matrix(o$inf_func_mat)
   Gu <- fp$first_treat * fp$partition
