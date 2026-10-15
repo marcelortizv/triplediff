@@ -24,3 +24,4 @@ test_inffunc.R
 PANELTY_HANDOFF_instructions.md
 /.quarto/
 ..Rcheck/00check.log
+data-raw/
