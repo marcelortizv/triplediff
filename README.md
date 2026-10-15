@@ -543,7 +543,7 @@ If you use triplediff, please cite the paper. In R,
 `citation("triplediff")` prints both references.
 
 ``` bibtex
-@article{ortizvillavicencio2025better,
+@article{OVS2025,
   title   = {Better Understanding Triple Differences Estimators},
   author  = {Ortiz-Villavicencio, Marcelo and Sant'Anna, Pedro H. C.},
   journal = {ArXiv},
@@ -551,10 +551,10 @@ If you use triplediff, please cite the paper. In R,
   url     = {https://arxiv.org/abs/2505.09942}
 }
 
-@misc{ortizvillavicencio2025triplediff,
+@misc{OVS2025triplediff,
   title  = {triplediff: Triple Differences Estimators},
   author = {Ortiz-Villavicencio, Marcelo and Sant'Anna, Pedro H. C.},
-  year   = {2025},
+  year   = {2026},
   note   = {R package version 0.3.0},
   url    = {http://marcelortiz.com/triplediff/}
 }
