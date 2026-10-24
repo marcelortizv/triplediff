@@ -729,8 +729,10 @@ compute_did_rc <- function(data, condition_subgroup, pscores, reg_adjustment, xf
     inf_or_pre <- (asy_lin_rep_ols_pre_treat - asy_lin_rep_ols_pre) %*% mom_pre
 
     # Put all pieces together
-    inf_treat_or <- inf_treat_or_post + inf_treat_or_pre
-    inf_control_or <- inf_control_or_post + inf_control_or_pre
+    # The pre-period terms enter the ATT with a minus sign, so the estimation effect of the
+    # pre-period outcome regression enters with a minus sign too (M1_pre, M3_pre carry their own sign)
+    inf_treat_or <- inf_treat_or_post - inf_treat_or_pre
+    inf_control_or <- inf_control_or_post - inf_control_or_pre
     inf_or <- inf_or_post - inf_or_pre
 
     inf_treat <- inf_treat_post - inf_treat_pre + inf_treat_or

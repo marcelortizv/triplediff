@@ -46,6 +46,7 @@
 - `agg_ddd()` weights cohorts by P(S = g, Q = 1) in all aggregation types. Aggregates over more than one cohort change. See "Cohort weights" in `?agg_ddd`.
 - With `base_period = "universal"`, pre-treatment ATT(g,t) with t < g - 1 now use the covariates of period t in both nuisance models.
 - Fixed standard errors for GMM cells with `control_group = "notyettreated"` in balanced panels. The point estimates of these cells and the aggregates that use them also move slightly.
+- Fixed the standard errors, confidence intervals, bootstrap draws and uniform bands of `ddd()` with `est_method = "dr"` and covariates. This applies to repeated cross-sections (`panel = FALSE`) and unbalanced panels (`allow_unbalanced_panel = TRUE`). The influence function had the wrong sign for the estimation effect of the pre-period outcome regression of the comparison group.
 - Fixed the overall standard error of `agg_ddd(type = "group")` when cohort effects differ.
 - `agg_ddd()` now uses the `alpha` stored in the `ddd` object, and the default is `alpha = NULL`.
 - Fixed `ddd()` with unsorted or unbalanced two-period panels, which gave false errors or wrong estimates. It now drops units not observed in both periods with a warning.
