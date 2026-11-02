@@ -49,7 +49,7 @@ fmt <- function(x) formatC(x, format = "f", digits = 3)
 </p>
 <br/>
 <p align="center">
-  <img src="man/figures/README-hero.svg" width="900" alt="Animation in three steps. Step 1, raw panel: units grouped by enabling period S and eligibility Q over periods 1 to 3; a line sweeps across the periods and the treated cells turn orange. Step 2, ddd(): for each ATT(g,t), only the data it uses stay in view, in periods g minus 1 and t: the enabled eligible units, the ineligible units of the same group, and the groups not yet or never enabled; each estimate joins a coefficient strip. Step 3, agg_ddd(): the event-study points appear, and the links to the ATT(g,t) each point averages appear and disappear.">
+  <img src="man/figures/README-hero.svg" width="900" alt="Animation in three steps. Step 1, raw panel: units grouped by enabling period S and eligibility Q over periods 1 to 3; a line sweeps across the periods and the treated cells turn dark blue. Step 2, ddd(): for each ATT(g,t), only the data it uses stay in view, in periods g minus 1 and t: the enabled eligible units, the ineligible units of the same group, and the groups not yet or never enabled; each estimate joins a coefficient strip. Step 3, agg_ddd(): the event-study points appear, and the links to the ATT(g,t) each point averages appear and disappear.">
 </p>
 <p align="center"><sub>Three steps: understand your data, let <code>ddd()</code> compute each ATT(g,t), and let <code>agg_ddd()</code> average them into an event study. The animation uses the simulated panel of the <a href="#quick-start">Quick start</a> with not-yet-treated comparison groups.</sub></p>
 ```
@@ -135,10 +135,10 @@ status_of <- function(S, Q, t) {
   ifelse(enabled,          "Enabled, not eligible",
   ifelse(S != 0 & Q == 1,  "Eligible, enabled later", "Not enabled")))
 }
-status_colors <- c("Treated: enabled and eligible" = "#E8743B",
-                   "Eligible, enabled later"       = "#E4E8ED",
-                   "Enabled, not eligible"         = "#9AA6B2",
-                   "Not enabled"                   = "#414F5D")
+status_colors <- c("Treated: enabled and eligible" = "#154780",
+                   "Eligible, enabled later"       = "#B3CBE6",
+                   "Enabled, not eligible"         = "#B28C1C",
+                   "Not enabled"                   = "#E3E9E5")
 
 units <- unique(as.data.frame(data)[, c("id", "state", "partition")])
 units <- units[order(match(units$state, c(2, 3, 0)), -units$partition, units$id), ]
@@ -173,7 +173,7 @@ p_heat <- ggplot(cells, aes(x = time, y = row, fill = status)) +
 </details>
 ```
 
-```{r sim-heatmap, echo = FALSE, fig.height = 4.2, fig.alt = "Heatmap with one row per unit and one column per period. Rows are grouped by enabling period S (2, 3, never) and eligibility Q. Eligible units of the S = 2 group are orange from period 2 on, and those of the S = 3 group from period 3 on. Ineligible units of these groups are mid grey once their group enables. Units of the S = never group are dark in all periods."}
+```{r sim-heatmap, echo = FALSE, fig.height = 4.2, fig.alt = "Heatmap with one row per unit and one column per period. Rows are grouped by enabling period S (2, 3, never) and eligibility Q. Eligible units of the S = 2 group are light blue in period 1 and dark blue from period 2 on. Eligible units of the S = 3 group are light blue in periods 1 and 2 and dark blue in period 3. Ineligible units of these groups are pale grey until their group enables and gold after that. Units of the S = never group are pale grey in all periods."}
 p_heat
 ```
 
@@ -192,7 +192,7 @@ att_gt <- ddd(yname = "y", tname = "time", idname = "id", gname = "state",
 summary(att_gt)
 ```
 
-`plot()` draws each ATT(g,t) with its confidence interval. Pre-treatment cells are dark, and post-treatment cells are orange.
+`plot()` draws each ATT(g,t) with its confidence interval. Pre-treatment cells are gold, and post-treatment cells are dark blue.
 
 ```{r sim-attgt, fig.height = 3.4, fig.alt = "Coefficient plot of the six ATT(g,t) estimates with 95% confidence intervals. The pre-treatment cells are at or near zero. The post-treatment cells are between about 10 and 25."}
 plot(att_gt)
@@ -289,12 +289,13 @@ cells_g <- cells_g[order(cells_g$group, cells_g$state, -cells_g$treat_group), ]
 cells_g$row <- paste0(cells_g$state, ", Q = ", cells_g$treat_group)
 cells_g$row <- factor(cells_g$row, levels = rev(unique(cells_g$row)))
 
+# The counts are dark on every cell except the Treated cells, where they are white.
 p_gruber <- ggplot(cells_g, aes(x = factor(year), y = row, fill = status)) +
   geom_tile(colour = "white", linewidth = 0.8) +
   geom_text(aes(label = workers,
-                colour = status %in% c("Eligible, enabled later", "Enabled, not eligible")),
+                colour = status != "Treated: enabled and eligible"),
             size = 3, show.legend = FALSE) +
-  scale_colour_manual(values = c(`TRUE` = "#1F2933", `FALSE` = "white")) +
+  scale_colour_manual(values = c(`TRUE` = "#1E2B27", `FALSE` = "white")) +
   scale_fill_manual(values = status_colors, drop = FALSE, name = NULL) +
   facet_grid(rows = vars(group), scales = "free_y", space = "free_y", switch = "y") +
   labs(x = NULL, y = NULL, title = "Gruber (1994): workers per state, group and year",
@@ -310,7 +311,7 @@ p_gruber <- ggplot(cells_g, aes(x = factor(year), y = row, fill = status)) +
 </details>
 ```
 
-```{r gruber-heatmap, echo = FALSE, fig.height = 5.4, fig.alt = "Heatmap of the number of workers per state, eligibility group and year in the Gruber (1994) data. In the mandate states IL, NJ and NY, eligible workers are pale in 1974 and 1975 and orange in 1977 and 1978. Ineligible workers there are mid grey after the mandates. All cells of the comparison states CT, IN, MA, NC and OH are dark."}
+```{r gruber-heatmap, echo = FALSE, fig.height = 5.4, fig.alt = "Heatmap of the number of workers per state, eligibility group and year in the Gruber (1994) data. In the mandate states IL, NJ and NY, eligible workers are light blue in 1974 and 1975 and dark blue in 1977 and 1978. Ineligible workers there are pale grey in 1974 and 1975 and gold in 1977 and 1978. All cells of the comparison states CT, IN, MA, NC and OH are pale grey."}
 p_gruber
 ```
 
@@ -385,8 +386,16 @@ write_hero_svg <- function(data, fit, es, file, at = NULL) {
   stopifnot(setequal(unique(data$state), c(0, 2, 3)), setequal(unique(data$time), 1:3),
             identical(as.character(fit$call.params$control_group), "notyettreated"),
             identical(as.character(fit$call.params$base_period), "universal"))
-  COL <- c(post = "#E8743B", pre = "#E4E8ED", inel = "#9AA6B2", none = "#414F5D")
-  INK <- "#414F5D"; SUB <- "#5B6670"; BG <- "#FFFFFF"; BOX <- "#1F2933"; POST <- COL[["post"]]
+  COL <- c(post = "#154780", pre = "#B3CBE6", inel = "#B28C1C", none = "#E3E9E5")
+  INK <- "#415D56"; SUB <- "#5C746C"; BG <- "#FFFFFF"; BOX <- "#1E2B27"
+  CHIP <- "#E3E9E5"                        # step chips and the strip behind each ATT(g,t) row
+  POST <- COL[["post"]]; PRE <- "#B28C1C"  # colors of the estimates after and before treatment
+  # Opaque tint of a colour for the interval bars: 60% of the colour over white.
+  tint <- function(col, alpha = 0.6) { m <- grDevices::col2rgb(col) / 255; grDevices::rgb(t(alpha * m + (1 - alpha))) }
+  # Triangle marker of size r at (cx, cy).
+  tri <- function(cx, cy, r, col)
+    sprintf('<polygon points="%.1f,%.1f %.1f,%.1f %.1f,%.1f" fill="%s"/>',
+            cx, cy - r, cx - r * 0.95, cy + r * 0.72, cx + r * 0.95, cy + r * 0.72, col)
   MINUS <- "−"; INF <- "∞"; TIMES <- "×"
   num <- function(x) sub("-", MINUS, sprintf("%.2f", x), fixed = TRUE)
 
@@ -448,7 +457,7 @@ write_hero_svg <- function(data, fit, es, file, at = NULL) {
   chip_lab <- c("1  Raw panel", "2  ddd(): building blocks ATT(g,t)", "3  agg_ddd(): event study")
   chip_x <- c(10, 305, 600); chip_w <- 290; chip_win <- list(c(0, P1), c(P1, P2), c(P2, END))
   for (i in 1:3) {
-    add(c(rect(chip_x[i], 10, chip_w, 26, "#E4E8ED", ' rx="13"'),
+    add(c(rect(chip_x[i], 10, chip_w, 26, CHIP, ' rx="13"'),
           txt(chip_x[i] + chip_w / 2, 27.5, chip_lab[i], 12, INK, extra = ' font-weight="600"')))
     add(c(rect(chip_x[i], 10, chip_w, 26, INK, ' rx="13"'),
           txt(chip_x[i] + chip_w / 2, 27.5, chip_lab[i], 12, BG, extra = ' font-weight="600"')),
@@ -480,8 +489,9 @@ write_hero_svg <- function(data, fit, es, file, at = NULL) {
     for (i in 1:6) for (j in 1:TT) {
       xx <- x0 + (j - 1) * cw
       if (role[i] != "" && j %in% cols) {
-        dark <- status(grp$S[i], grp$Q[i], j) == "none"
-        fr <- c(fr, rect(xx + 1, ry(i) + 1, cw - 2, rh - 2, sprintf("url(#p%s%s)", role[i], if (dark) "w" else "")))
+        # white pattern on treated cells, dark pattern on all other cells
+        on_post <- status(grp$S[i], grp$Q[i], j) == "post"
+        fr <- c(fr, rect(xx + 1, ry(i) + 1, cw - 2, rh - 2, sprintf("url(#p%s%s)", role[i], if (on_post) "w" else "")))
       } else {
         fr <- c(fr, rect(xx, ry(i), cw, rh, BG, ' fill-opacity="0.82"'))
       }
@@ -493,7 +503,7 @@ write_hero_svg <- function(data, fit, es, file, at = NULL) {
                        sprintf(' stroke="%s" stroke-width="2.5" rx="3"', BOX)))
     fr <- c(fr, txt(cx(b), yb + 31, sprintf("g %s 1", MINUS), 11, INK, extra = ' font-weight="600"'))
     if (!ref) fr <- c(fr, txt(cx(t), yb + 31, "t", 11, INK, extra = ' font-weight="600"'))
-    fr <- c(rect(311, ys(k) - 11, 278, 22, "#E4E8ED", ' rx="4"'), fr)
+    fr <- c(rect(311, ys(k) - 11, 278, 22, CHIP, ' rx="4"'), fr)
     add(fr, fs[k], fe[k])
   }
   add(c(txt(mid(2), y0 - 24, "ATT(g,t)", 13, INK, extra = ' font-weight="600"'),
@@ -501,12 +511,12 @@ write_hero_svg <- function(data, fit, es, file, at = NULL) {
         txt(sxs(0), yb + 15, "0", 10)))
   for (k in seq_len(nrow(cells))) {
     g <- cells$g[k]; t <- cells$t[k]; ref <- cells$ref[k]
-    col <- if (ref) SUB else if (t < g) INK else POST
+    col <- if (ref) SUB else if (t < g) PRE else POST
     row <- c(txt(318, ys(k) + 4, sprintf("ATT(%d,%d)", g, t), 11, INK, "start"),
              txt(408, ys(k) + 4, if (ref) "0" else num(cells$att[k]), 11, if (ref) SUB else INK, "end"))
-    if (!ref) row <- c(row, sprintf('<line x1="%.1f" x2="%.1f" y1="%.1f" y2="%.1f" stroke="%s" stroke-width="2"/>',
-                                    sxs(cells$lo[k]), sxs(cells$hi[k]), ys(k), ys(k), col))
-    row <- c(row, sprintf('<circle cx="%.1f" cy="%.1f" r="3.6" fill="%s"/>', sxs(cells$att[k]), ys(k), col))
+    if (!ref) row <- c(row, sprintf('<line x1="%.1f" x2="%.1f" y1="%.1f" y2="%.1f" stroke="%s" stroke-width="4.5"/>',
+                                    sxs(cells$lo[k]), sxs(cells$hi[k]), ys(k), ys(k), tint(col)))
+    row <- c(row, tri(sxs(cells$att[k]), ys(k), 5, col))
     add(row, fs[k] + 0.6, END)
   }
 
@@ -519,7 +529,7 @@ write_hero_svg <- function(data, fit, es, file, at = NULL) {
         txt(mid(3), yb + 31, "event time e", 11)))
   for (j in seq_len(nrow(ev))) {
     e <- ev$e[j]; ks <- which(cells$t - cells$g == e)
-    col <- if (e < 0) INK else POST
+    col <- if (e < 0) PRE else POST
     w <- share[as.character(cells$g[ks])]; w <- w / sum(w)
     stopifnot(abs(sum(w * cells$att[ks]) - ev$att[j]) < 1e-6)
     lk <- character(0)
@@ -533,9 +543,9 @@ write_hero_svg <- function(data, fit, es, file, at = NULL) {
     }
     add(lk, te[j], te[j] + LINK)
     pt <- character(0)
-    if (is.finite(ev$lo[j])) pt <- sprintf('<path d="M%.1f %.1f V%.1f M%.1f %.1f h10 M%.1f %.1f h10" stroke="%s" stroke-width="2" fill="none"/>',
-                                           sxe(e), sye(ev$lo[j]), sye(ev$hi[j]), sxe(e) - 5, sye(ev$lo[j]), sxe(e) - 5, sye(ev$hi[j]), col)
-    add(c(pt, sprintf('<circle cx="%.1f" cy="%.1f" r="4.5" fill="%s"/>', sxe(e), sye(ev$att[j]), col)), te[j], END)
+    if (is.finite(ev$lo[j])) pt <- sprintf('<path d="M%.1f %.1f V%.1f" stroke="%s" stroke-width="5" fill="none"/>',
+                                           sxe(e), sye(ev$lo[j]), sye(ev$hi[j]), tint(col))
+    add(c(pt, tri(sxe(e), sye(ev$att[j]), 6.2, col)), te[j], END)
   }
 
   # ---- legend: names, always visible ----
@@ -614,7 +624,7 @@ write_hero_svg <- function(data, fit, es, file, at = NULL) {
   svg <- c(sprintf('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 %d %d" width="%d" height="%d" role="img" aria-labelledby="t d">', W, H, W, H),
            '<title id="t">How triplediff works: raw panel, ATT(g,t) building blocks, event study</title>',
            paste0('<desc id="d">Step 1: units grouped by enabling period S and eligibility Q over periods 1 to 3; a line sweeps across the periods and ',
-                  'the treated cells turn orange. Step 2: for each ATT(g,t), only the data it uses stay in view, in periods g - 1 and t: ',
+                  'the treated cells turn dark blue. Step 2: for each ATT(g,t), only the data it uses stay in view, in periods g - 1 and t: ',
                   'the enabled eligible units, the ineligible units of the same group, and the groups not yet or never enabled. ',
                   'Each estimate joins a coefficient strip. Step 3: the event-study points appear; the links to the ATT(g,t) each point averages ',
                   'appear and disappear.</desc>'),

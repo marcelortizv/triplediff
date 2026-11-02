@@ -42,10 +42,11 @@ A \code{ggplot} object. It is not printed by the function.
 \description{
 Draws a horizontal coefficient plot of the group-time average treatment
 effects ATT(g,t) estimated by \code{\link[=ddd]{ddd()}}, with one row per ATT(g,t) labelled
-\code{"ATT(g,t)"}. Each estimate is a point with its confidence interval as a
-horizontal line. Pre-treatment cells (\code{t < g}) are dark slate and
-post-treatment cells (\code{t >= g}) are orange. A dashed vertical line marks
-zero. For a two-period fit, the plot has a single row, \code{"ATT"}.
+\code{"ATT(g,t)"}. Each estimate is a triangle with its confidence interval as a
+thick horizontal bar in a lighter tint of the same color. Pre-treatment
+cells (\code{t < g}) are gold and post-treatment cells (\code{t >= g}) are dark blue.
+A dashed vertical line marks zero. For a two-period fit, the plot has a
+single row, \code{"ATT"}.
 }
 \details{
 The intervals are the ones stored in the object: the uniform confidence band
@@ -62,10 +63,12 @@ The horizontal axis always includes zero, with or without \code{xlim}, so the
 zero line is always in view. Estimates that are \code{NA} are not drawn, with a
 warning.
 
-ggplot2 must be installed; it is a suggested package. The result is a
-regular \code{ggplot} object, so it can be changed with \code{+}, for example
-\code{plot(out) + ggplot2::labs(title = "ATT(g,t)")}. To plot an event study,
-group or calendar path, aggregate first with \code{\link[=agg_ddd]{agg_ddd()}} and plot the result.
+ggplot2 version 3.5.0 or later must be installed. It is a suggested package.
+The result is a regular \code{ggplot} object, so it can be changed with \code{+}, for
+example \code{plot(out) + ggplot2::labs(title = "ATT(g,t)")}. A color scale added
+with \code{+} changes the colors of the triangles and of the bars. To plot an
+event study, group or calendar path, aggregate first with \code{\link[=agg_ddd]{agg_ddd()}} and
+plot the result.
 }
 \examples{
 \dontshow{.old_dt_threads <- data.table::setDTthreads(2)}

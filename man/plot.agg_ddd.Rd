@@ -43,9 +43,10 @@ A \code{ggplot} object. It is not printed by the function.
 }
 \description{
 Draws the path of an event-study, group or calendar aggregation computed by
-\code{\link[=agg_ddd]{agg_ddd()}}. Each estimate is a point with its confidence interval as an
-error bar. Pre-treatment estimates are dark slate and post-treatment
-estimates are orange. A dashed horizontal line marks zero.
+\code{\link[=agg_ddd]{agg_ddd()}}. Each estimate is a triangle with its confidence interval as a
+thick bar in a lighter tint of the same color. Pre-treatment estimates are
+gold and post-treatment estimates are dark blue. A dashed horizontal line
+marks zero.
 }
 \details{
 The intervals are the ones stored in the object: the uniform confidence band
@@ -53,18 +54,20 @@ when \code{cband = TRUE} was used, pointwise intervals otherwise. The plot does 
 recompute them with another critical value.
 
 In an event study, estimates at event times \code{e < 0} are pre-treatment and
-estimates at \code{e >= 0} are post-treatment. A dotted vertical line at
+estimates at \code{e >= 0} are post-treatment. A dashed vertical line at
 \code{e = -0.5} separates the two. The line appears only
 when pre- and post-treatment estimates are present. Group and calendar
 aggregations average post-treatment cells only, so all their estimates are
-post-treatment.
+post-treatment. The legend is at the top and appears only when both kinds of
+estimates are present.
 
 The vertical axis always includes zero, with or without \code{ylim}. Estimates
 that are \code{NA} are not drawn, with a warning.
 
-ggplot2 must be installed; it is a suggested package. The result is a
-regular \code{ggplot} object, so it can be changed with \code{+}, for example
-\code{plot(es) + ggplot2::labs(title = "Event study")}.
+ggplot2 version 3.5.0 or later must be installed. It is a suggested package.
+The result is a regular \code{ggplot} object, so it can be changed with \code{+}, for
+example \code{plot(es) + ggplot2::labs(title = "Event study")}. A color scale
+added with \code{+} changes the colors of the triangles and of the bars.
 }
 \examples{
 \dontshow{.old_dt_threads <- data.table::setDTthreads(2)}

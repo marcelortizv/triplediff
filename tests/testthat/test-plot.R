@@ -25,9 +25,16 @@ es  <- agg_ddd(fit_u, type = "eventstudy")
 grp <- agg_ddd(fit_u, type = "group")
 cal <- agg_ddd(fit_u, type = "calendar")
 
-COL_PRE  <- "#414F5D"
-COL_POST <- "#E8743B"
-TOL      <- 1e-10
+COL_PRE   <- "#B28C1C"
+COL_POST  <- "#154780"
+COL_ZERO  <- "#415D56"
+COL_ONSET <- "#93A69F"
+COL_MUTED <- "#5C746C"
+COL_GRID  <- "#E3E9E5"
+COL_INK   <- "#1E2B27"
+TINT_PRE  <- "#D1BA77" # COL_PRE, 60% over white
+TINT_POST <- "#7391B3" # COL_POST, 60% over white
+TOL       <- 1e-10
 
 #-----------------------------------------------------------------------------
 # Helpers
@@ -38,6 +45,12 @@ vrange <- function(p, axis) {
 }
 layer_of <- function(p, geom) ggplot2::layer_data(p, which(geoms(p) == geom))
 legend_pos <- function(p) p$theme$legend.position
+# Resolved theme element of a plot, and whether it is blank.
+theme_el <- function(p, name) ggplot2::calc_element(name, p$theme)
+is_blank <- function(el) inherits(el, "element_blank")
+# Colour mapping of the interval layer, for example
+# "~stage(phase, after_scale = plot_tint(colour))".
+bar_mapping <- function(p) p$layers[[which(geoms(p) == "GeomLinerange")]]$mapping$colour
 # Layer data of a coefficient plot in stored order (first stored cell on top).
 coef_layer <- function(p, geom) {
   ld <- layer_of(p, geom)
@@ -65,15 +78,16 @@ test_that("event-study plot has the right layers, data, colours and labels", {
   a <- es$aggte_ddd
   p <- plot(es)
 
-  expect_identical(unname(geoms(p)), c("GeomHline", "GeomVline", "GeomErrorbar", "GeomPoint"))
-  expect_equal(p$layers[[1]]$aes_params$colour, COL_PRE)
+  expect_identical(unname(geoms(p)), c("GeomVline", "GeomHline", "GeomLinerange", "GeomPoint"))
+  expect_equal(p$layers[[1]]$aes_params$colour, COL_ONSET)
+  expect_equal(p$layers[[2]]$aes_params$colour, COL_ZERO)
 
-  hl <- ggplot2::layer_data(p, 1)
+  hl <- ggplot2::layer_data(p, 2)
   expect_equal(unique(hl$yintercept), 0)
   expect_identical(unique(hl$linetype), "dashed")
-  vl <- ggplot2::layer_data(p, 2)
+  vl <- ggplot2::layer_data(p, 1)
   expect_equal(unique(vl$xintercept), -0.5)
-  expect_identical(unique(vl$linetype), "dotted")
+  expect_identical(unique(vl$linetype), "dashed")
 
   fin <- is.finite(a$att.egt)
   pts <- ggplot2::layer_data(p, 4)
@@ -96,7 +110,7 @@ test_that("event-study plot has the right layers, data, colours and labels", {
 
   expect_equal(ggplot2::layer_scales(p)$x$get_breaks(), sort(unique(a$egt)))
   expect_false(identical(legend_pos(p), "none"))
-  expect_identical(legend_pos(p), "bottom")
+  expect_identical(legend_pos(p), "top")
 })
 
 #-----------------------------------------------------------------------------
@@ -107,7 +121,7 @@ test_that("group and calendar plots are one-colour paths that reach zero", {
                     list(obj = cal, xlab = "Calendar period"))) {
     a <- case$obj$aggte_ddd
     p <- plot(case$obj)
-    expect_identical(unname(geoms(p)), c("GeomHline", "GeomErrorbar", "GeomPoint"))
+    expect_identical(unname(geoms(p)), c("GeomHline", "GeomLinerange", "GeomPoint"))
     pts <- ggplot2::layer_data(p, 3)
     expect_true(all(pts$colour == COL_POST))
     expect_equal(pts$x, as.numeric(a$egt), tolerance = TOL)
@@ -131,7 +145,7 @@ test_that("uniform band uses the stored critical value; cband = FALSE is pointwi
   expect_gt(a$crit.val.egt, stats::qnorm(0.975))
 
   p <- plot(es_b)
-  eb <- ggplot2::layer_data(p, which(geoms(p) == "GeomErrorbar"))
+  eb <- ggplot2::layer_data(p, which(geoms(p) == "GeomLinerange"))
   has_se <- is.finite(a$se.egt)
   m <- match(a$egt[has_se], eb$x)
   expect_equal(eb$ymin[m], a$att.egt[has_se] - a$crit.val.egt * a$se.egt[has_se], tolerance = TOL)
@@ -145,7 +159,7 @@ test_that("uniform band uses the stored critical value; cband = FALSE is pointwi
   pp <- plot(es_p)
   expect_identical(pp$labels$subtitle,
                    "Pointwise 95% confidence intervals (multiplier bootstrap SEs, 199 draws)")
-  ebp <- ggplot2::layer_data(pp, which(geoms(pp) == "GeomErrorbar"))
+  ebp <- ggplot2::layer_data(pp, which(geoms(pp) == "GeomLinerange"))
   has_se <- is.finite(ap$se.egt)
   m <- match(ap$egt[has_se], ebp$x)
   z <- stats::qnorm(0.975)
@@ -174,7 +188,7 @@ test_that("subtitle follows alpha and cluster", {
   a <- es_90$aggte_ddd
   p <- plot(es_90)
   expect_true(startsWith(p$labels$subtitle, "Pointwise 90%"))
-  eb <- ggplot2::layer_data(p, which(geoms(p) == "GeomErrorbar"))
+  eb <- ggplot2::layer_data(p, which(geoms(p) == "GeomLinerange"))
   has_se <- is.finite(a$se.egt)
   m <- match(a$egt[has_se], eb$x)
   z <- stats::qnorm(0.95)
@@ -310,7 +324,7 @@ test_that("plot.ddd draws one row per ATT(g,t) in stored order", {
   xr <- vrange(p, "x")
   expect_true(xr[1] <= 0 && xr[2] >= 0)
   expect_identical(p$labels$subtitle, "Pointwise 95% confidence intervals (analytical SEs)")
-  expect_identical(legend_pos(p), "bottom")
+  expect_identical(legend_pos(p), "top")
 
   ref <- which(is.na(fit_u$se))
   expect_true(length(ref) > 0)
@@ -406,7 +420,7 @@ test_that("more than 20 periods get integer pretty() ticks; up to 20 get every p
   # Thinning the ticks never drops a point or an interval
   pts <- layer_of(p26, "GeomPoint")
   expect_equal(sort(pts$x), e26, tolerance = TOL)
-  expect_equal(nrow(layer_of(p26, "GeomErrorbar")), length(e26))
+  expect_equal(nrow(layer_of(p26, "GeomLinerange")), length(e26))
   expect_identical(pts$colour, ifelse(pts$x < 0, COL_PRE, COL_POST))
 
   # Boundary: exactly 20 periods keep every period as a tick ...
@@ -429,4 +443,179 @@ test_that("more than 20 periods get integer pretty() ticks; up to 20 get every p
   expect_identical(ggplot2::layer_scales(pc)$x$get_labels(),
                    as.character(seq(1990, 2020, by = 5)))
   expect_equal(nrow(layer_of(pc, "GeomPoint")), length(yrs))
+})
+
+#-----------------------------------------------------------------------------
+# T16: design of the marks (triangles, tinted bars, reference lines)
+#-----------------------------------------------------------------------------
+test_that("plot_tint() mixes a colour with white at the bar share", {
+  expect_identical(plot_tint(c(COL_PRE, COL_POST)), c(TINT_PRE, TINT_POST))
+  expect_identical(plot_tint("#000000"), "#666666")
+  expect_identical(plot_tint("white"), "#FFFFFF")
+  expect_identical(plot_tint("#000000", alpha = 1), "#000000")
+  expect_identical(plot_tint("#000000", alpha = 0), "#FFFFFF")
+})
+
+test_that("every estimate is a triangle, in both phases", {
+  for (p in list(es, grp, cal, fit_u, fit_b, fit_2)) {
+    pts <- layer_of(plot(p), "GeomPoint")
+    expect_true(all(pts$shape == 17))
+    expect_equal(unique(pts$size), 2.4, tolerance = TOL)
+  }
+  for (p in list(plot(es), plot(fit_u))) {
+    pts <- layer_of(p, "GeomPoint")
+    expect_setequal(unique(pts$colour), c(COL_PRE, COL_POST))
+    expect_true(all(pts$shape[pts$colour == COL_PRE] == 17))
+    expect_true(all(pts$shape[pts$colour == COL_POST] == 17))
+  }
+})
+
+test_that("interval bars are thick line ranges with no caps", {
+  for (p in list(plot(es), plot(grp), plot(cal), plot(fit_u), plot(fit_2))) {
+    expect_false("GeomErrorbar" %in% geoms(p))
+    bars <- layer_of(p, "GeomLinerange")
+    expect_equal(unique(bars$linewidth), 1.1, tolerance = TOL)
+    expect_false(p$layers[[which(geoms(p) == "GeomLinerange")]]$show.legend)
+  }
+})
+
+test_that("bars are opaque tints of the point colours", {
+  for (p in list(plot(es), plot(grp), plot(cal), plot(fit_u), plot(fit_b), plot(fit_2))) {
+    pts <- layer_of(p, "GeomPoint")
+    bars <- layer_of(p, "GeomLinerange")
+    expect_identical(nrow(bars), nrow(pts))
+    expect_identical(bars$colour, ifelse(pts$colour == COL_PRE, TINT_PRE, TINT_POST))
+    expect_false(any(bars$colour %in% c(COL_PRE, COL_POST)))
+  }
+  # One phase only: every bar has the tint of that phase
+  expect_true(all(layer_of(plot(grp), "GeomLinerange")$colour == TINT_POST))
+})
+
+test_that("the bar colour is mapped with a bare stage() call that after_scale tints", {
+  for (p in list(plot(es), plot(grp), plot(fit_u), plot(fit_2))) {
+    m <- paste(deparse(bar_mapping(p)), collapse = "")
+    expect_match(m, "^~stage\\(phase, after_scale = ")
+    expect_false(grepl("::", m, fixed = TRUE))
+    # ggplot2 3.5 reads after_scale only in a call to the bare name stage(), and
+    # the name must resolve in the layer's environment with ggplot2 not attached
+    env <- environment(bar_mapping(p))
+    expect_identical(get("stage", envir = env, mode = "function"), ggplot2::stage)
+  }
+})
+
+test_that("a colour scale added by the user recolours the points and the bars", {
+  user <- c("Pre-treatment" = "#FF0000", "Post-treatment" = "#0000FF")
+  a <- es$aggte_ddd
+  fin <- is.finite(a$att.egt)
+  p <- suppressMessages(plot(es) + ggplot2::scale_colour_manual(values = user))
+  pts <- layer_of(p, "GeomPoint")
+  bars <- layer_of(p, "GeomLinerange")
+  expect_identical(pts$colour, ifelse(a$egt[fin] < 0, "#FF0000", "#0000FF"))
+  expect_identical(bars$colour, ifelse(a$egt[fin] < 0, "#FF6666", "#6666FF"))
+
+  p <- suppressMessages(plot(fit_u) + ggplot2::scale_colour_manual(values = user))
+  pts <- coef_layer(p, "GeomPoint")
+  bars <- coef_layer(p, "GeomLinerange")
+  pre <- fit_u$periods < fit_u$groups
+  expect_identical(pts$colour, ifelse(pre, "#FF0000", "#0000FF"))
+  expect_identical(bars$colour, ifelse(pre, "#FF6666", "#6666FF"))
+})
+
+test_that("zero line and onset line are thin and dashed, with their own colours", {
+  p <- plot(es)
+  hl <- layer_of(p, "GeomHline")
+  vl <- layer_of(p, "GeomVline")
+  expect_identical(unique(hl$colour), COL_ZERO)
+  expect_identical(unique(hl$linetype), "dashed")
+  expect_equal(unique(hl$linewidth), 0.4, tolerance = TOL)
+  expect_identical(unique(vl$colour), COL_ONSET)
+  expect_identical(unique(vl$linetype), "dashed")
+  expect_equal(unique(vl$linewidth), 0.4, tolerance = TOL)
+
+  # No onset line without both phases: group, calendar and a post-only event study
+  es_post <- agg_ddd(fit_u, type = "eventstudy", min_e = 0)
+  for (q in list(plot(grp), plot(cal), plot(es_post))) {
+    expect_false("GeomVline" %in% geoms(q))
+    expect_identical(unique(layer_of(q, "GeomHline")$colour), COL_ZERO)
+    expect_identical(unique(layer_of(q, "GeomHline")$linetype), "dashed")
+  }
+
+  zl <- layer_of(plot(fit_u), "GeomVline")
+  expect_identical(unique(zl$colour), COL_ZERO)
+  expect_identical(unique(zl$linetype), "dashed")
+  expect_equal(unique(zl$linewidth), 0.4, tolerance = TOL)
+})
+
+#-----------------------------------------------------------------------------
+# T17: theme (axis lines, grid, legend)
+#-----------------------------------------------------------------------------
+test_that("event-study, group and calendar plots have axis lines and no grid or ticks", {
+  for (p in list(plot(es), plot(grp), plot(cal))) {
+    for (nm in c("panel.grid.major.x", "panel.grid.major.y", "panel.grid.minor.x",
+                 "panel.grid.minor.y", "axis.ticks.x", "axis.ticks.y", "panel.border")) {
+      expect_true(is_blank(theme_el(p, nm)), info = nm)
+    }
+    for (nm in c("axis.line.x", "axis.line.y")) {
+      el <- theme_el(p, nm)
+      expect_false(is_blank(el), info = nm)
+      expect_identical(el$colour, COL_MUTED, info = nm)
+      expect_equal(el$linewidth, 0.3, tolerance = TOL, info = nm)
+    }
+    for (nm in c("axis.text.x", "axis.text.y", "axis.title.x", "axis.title.y", "plot.subtitle")) {
+      expect_identical(theme_el(p, nm)$colour, COL_MUTED, info = nm)
+    }
+    expect_equal(theme_el(p, "axis.text.x")$size, 9.5, tolerance = TOL)
+    expect_equal(theme_el(p, "axis.title.x")$size, 10, tolerance = TOL)
+    expect_equal(theme_el(p, "plot.subtitle")$size, 9.5, tolerance = TOL)
+  }
+})
+
+test_that("plot.ddd has vertical grid lines only, no axis lines and no ticks", {
+  for (p in list(plot(fit_u), plot(fit_b), plot(fit_2))) {
+    gx <- theme_el(p, "panel.grid.major.x")
+    expect_false(is_blank(gx))
+    expect_identical(gx$colour, COL_GRID)
+    expect_equal(gx$linewidth, 0.3, tolerance = TOL)
+    for (nm in c("panel.grid.major.y", "panel.grid.minor.x", "panel.grid.minor.y",
+                 "axis.line.x", "axis.line.y", "axis.ticks.x", "axis.ticks.y", "panel.border")) {
+      expect_true(is_blank(theme_el(p, nm)), info = nm)
+    }
+    expect_identical(theme_el(p, "axis.text.y")$colour, COL_INK)
+    expect_identical(theme_el(p, "axis.text.x")$colour, COL_MUTED)
+    expect_equal(theme_el(p, "axis.text.y")$size, 9.5, tolerance = TOL)
+    expect_identical(theme_el(p, "axis.title.x")$colour, COL_MUTED)
+    expect_identical(theme_el(p, "plot.subtitle")$colour, COL_MUTED)
+  }
+})
+
+test_that("the legend is at the top, centred and untitled, and hidden for one phase", {
+  for (p in list(plot(es), plot(fit_u), plot(fit_b))) {
+    expect_identical(legend_pos(p), "top")
+    expect_identical(p$theme$legend.direction, "horizontal")
+    expect_identical(p$theme$legend.justification, "center")
+    expect_true(is_blank(theme_el(p, "legend.title")))
+    expect_true(is_blank(theme_el(p, "legend.key")))
+    expect_equal(as.numeric(p$theme$legend.key.spacing.x), 36, tolerance = TOL)
+    expect_identical(theme_el(p, "legend.text")$colour, COL_INK)
+    expect_equal(theme_el(p, "legend.text")$size, 10.5, tolerance = TOL)
+  }
+  es_post <- agg_ddd(fit_u, type = "eventstudy", min_e = 0)
+  for (p in list(plot(grp), plot(cal), plot(es_post), plot(fit_2))) {
+    expect_identical(legend_pos(p), "none")
+  }
+})
+
+#-----------------------------------------------------------------------------
+# T18: every plot draws on a device
+#-----------------------------------------------------------------------------
+test_that("every kind of plot draws, also with a user colour scale", {
+  grDevices::pdf(NULL)
+  on.exit(grDevices::dev.off())
+  user <- ggplot2::scale_colour_manual(values = c("Pre-treatment" = "#FF0000",
+                                                  "Post-treatment" = "#0000FF"))
+  for (obj in list(es, grp, cal, fit_u, fit_b, fit_2)) {
+    p <- plot(obj)
+    expect_no_error(print(p))
+    expect_no_error(suppressMessages(print(p + user)))
+  }
 })

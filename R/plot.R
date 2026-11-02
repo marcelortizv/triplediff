@@ -2,26 +2,39 @@
 NULL
 
 # Columns of the internal plotting data frames, mapped inside ggplot2::aes().
-utils::globalVariables(c("xval", "est", "lo", "hi", "phase", "label"))
+# `colour` is the scaled colour column that after_scale reads in plot_bar_aes().
+utils::globalVariables(c("xval", "est", "lo", "hi", "phase", "label", "colour"))
 
 #-----------------------------------------------------------------------------
-# Constants: legend labels and the panelty palette
+# Constants: legend labels, colours and sizes
 #-----------------------------------------------------------------------------
 PLOT_LAB_PRE  <- "Pre-treatment"
 PLOT_LAB_POST <- "Post-treatment"
 
-PLOT_COL_POST    <- "#E8743B" # post-treatment points and intervals
-PLOT_COL_PRE     <- "#414F5D" # pre-treatment points and intervals
-PLOT_COL_REF     <- "#414F5D" # zero line, e = -0.5 line, axis lines and ticks
-PLOT_COL_GRID    <- "#E4E8ED" # value-axis grid lines
-PLOT_COL_SUBTEXT <- "#555555" # subtitle text
+PLOT_COL_POST  <- "#154780" # post-treatment points and bars
+PLOT_COL_PRE   <- "#B28C1C" # pre-treatment points and bars
+PLOT_COL_ZERO  <- "#415D56" # zero line
+PLOT_COL_ONSET <- "#93A69F" # event-study line at e = -0.5
+PLOT_COL_MUTED <- "#5C746C" # axis lines, axis text, axis titles and subtitle
+PLOT_COL_GRID  <- "#E3E9E5" # vertical grid lines of plot.ddd()
+PLOT_COL_INK   <- "#1E2B27" # legend text and row labels of plot.ddd()
 
-PLOT_REF_LINEWIDTH  <- 0.4  # reference lines, axis lines, ticks and grid
-PLOT_BAR_LINEWIDTH  <- 0.6  # error bars and interval lines
-PLOT_BAR_WIDTH      <- 0.15 # error-bar cap width (agg plots), in x units
-PLOT_POINT_SIZE     <- 2.4
-PLOT_BASE_SIZE      <- 11
-PLOT_SUBTITLE_REL   <- 0.85
+PLOT_BAR_ALPHA        <- 0.6  # share of the colour in the bar tint, over white
+PLOT_BAR_LINEWIDTH    <- 1.1  # interval bars, thick lines with no caps
+PLOT_POINT_SIZE       <- 2.4
+PLOT_POINT_SHAPE      <- 17   # triangle, in both phases
+PLOT_REF_LINEWIDTH    <- 0.4  # zero line and event-study line
+PLOT_THIN_LINEWIDTH   <- 0.3  # axis lines and grid lines
+PLOT_BASE_SIZE        <- 11
+PLOT_AXIS_TEXT_SIZE   <- 9.5
+PLOT_AXIS_TITLE_SIZE  <- 10
+PLOT_SUBTITLE_SIZE    <- 9.5
+PLOT_LEGEND_TEXT_SIZE <- 10.5
+PLOT_TEXT_GAP         <- 4    # pt, below the subtitle and between a legend key and its label
+PLOT_LEGEND_KEY_WIDTH <- 10   # pt
+PLOT_LEGEND_KEY_GAP   <- 36   # pt between two legend entries
+PLOT_LEGEND_BOX_GAP   <- 9    # pt between the legend and the panel
+
 PLOT_ES_SEPARATOR   <- -0.5 # event-study line between pre and post periods
 PLOT_X_EXPAND_ADD   <- 0.5  # additive x expansion of agg plots
 PLOT_MAX_ALL_BREAKS <- 20   # up to this many periods, every period gets a tick
@@ -123,30 +136,64 @@ plot_phase_scale <- function() {
   )
 }
 
-# Shared theme; value_axis is the axis that carries the estimates.
+# Opaque tint of a colour: the share `alpha` of the colour over white. The bars
+# are opaque, so they hide the zero line and the grid lines behind them.
+plot_tint <- function(col, alpha = PLOT_BAR_ALPHA) {
+  m <- grDevices::col2rgb(col) / 255
+  grDevices::rgb(t(alpha * m + (1 - alpha)))
+}
+
+# Mapping of the interval bars: the colour of the phase, tinted after the scale.
+# The scale still sees `phase`, so a colour scale added by the user also recolours
+# the bars. ggplot2 3.5 reads after_scale only in a call to the bare name stage(),
+# so bind that name here. A call written ggplot2::stage() is not read in that version.
+plot_bar_aes <- function(...) {
+  stage <- ggplot2::stage
+  ggplot2::aes(..., colour = stage(phase, after_scale = plot_tint(colour)))
+}
+
+# Shared theme. value_axis is the axis that carries the estimates. Event study,
+# group and calendar plots (value_axis = "y") have axis lines and no grid. The
+# coefficient plot (value_axis = "x") has vertical grid lines and no axis lines.
 ddd_plot_theme <- function(value_axis) {
   th <- ggplot2::theme_minimal(base_size = PLOT_BASE_SIZE) +
     ggplot2::theme(
-      panel.grid.minor    = ggplot2::element_blank(),
-      axis.line           = ggplot2::element_line(colour = PLOT_COL_REF,
-                                                  linewidth = PLOT_REF_LINEWIDTH),
-      axis.ticks          = ggplot2::element_line(colour = PLOT_COL_REF,
-                                                  linewidth = PLOT_REF_LINEWIDTH),
-      plot.title.position = "plot",
-      plot.subtitle       = ggplot2::element_text(colour = PLOT_COL_SUBTEXT,
-                                                  size = ggplot2::rel(PLOT_SUBTITLE_REL)),
-      legend.position     = "bottom",
-      legend.title        = ggplot2::element_blank(),
-      plot.background     = ggplot2::element_rect(fill = "white", colour = NA),
-      panel.background    = ggplot2::element_rect(fill = "white", colour = NA)
+      plot.background      = ggplot2::element_rect(fill = "white", colour = NA),
+      panel.background     = ggplot2::element_rect(fill = "white", colour = NA),
+      panel.grid.major     = ggplot2::element_blank(),
+      panel.grid.minor     = ggplot2::element_blank(),
+      panel.border         = ggplot2::element_blank(),
+      axis.ticks           = ggplot2::element_blank(),
+      axis.text            = ggplot2::element_text(colour = PLOT_COL_MUTED,
+                                                   size = PLOT_AXIS_TEXT_SIZE),
+      axis.title           = ggplot2::element_text(colour = PLOT_COL_MUTED,
+                                                   size = PLOT_AXIS_TITLE_SIZE),
+      plot.title.position  = "plot",
+      plot.subtitle        = ggplot2::element_text(colour = PLOT_COL_MUTED,
+                                                   size = PLOT_SUBTITLE_SIZE,
+                                                   margin = ggplot2::margin(b = PLOT_TEXT_GAP)),
+      legend.position      = "top",
+      legend.direction     = "horizontal",
+      legend.justification = "center",
+      legend.title         = ggplot2::element_blank(),
+      legend.text          = ggplot2::element_text(colour = PLOT_COL_INK,
+                                                   size = PLOT_LEGEND_TEXT_SIZE,
+                                                   margin = ggplot2::margin(l = PLOT_TEXT_GAP)),
+      legend.key           = ggplot2::element_blank(),
+      legend.key.width     = ggplot2::unit(PLOT_LEGEND_KEY_WIDTH, "pt"),
+      legend.key.spacing.x = ggplot2::unit(PLOT_LEGEND_KEY_GAP, "pt"),
+      legend.margin        = ggplot2::margin(0, 0, 0, 0),
+      legend.box.spacing   = ggplot2::unit(PLOT_LEGEND_BOX_GAP, "pt")
     )
-  grid_line <- ggplot2::element_line(colour = PLOT_COL_GRID, linewidth = PLOT_REF_LINEWIDTH)
   if (value_axis == "y") {
-    th + ggplot2::theme(panel.grid.major.x = ggplot2::element_blank(),
-                        panel.grid.major.y = grid_line)
+    th + ggplot2::theme(axis.line = ggplot2::element_line(colour = PLOT_COL_MUTED,
+                                                          linewidth = PLOT_THIN_LINEWIDTH,
+                                                          lineend = "square"))
   } else {
-    th + ggplot2::theme(panel.grid.major.y = ggplot2::element_blank(),
-                        panel.grid.major.x = grid_line)
+    th + ggplot2::theme(panel.grid.major.x = ggplot2::element_line(colour = PLOT_COL_GRID,
+                                                                   linewidth = PLOT_THIN_LINEWIDTH),
+                        axis.text.y        = ggplot2::element_text(colour = PLOT_COL_INK,
+                                                                   size = PLOT_AXIS_TEXT_SIZE))
   }
 }
 
@@ -158,9 +205,10 @@ ddd_plot_theme <- function(value_axis) {
 #'
 #' @description
 #' Draws the path of an event-study, group or calendar aggregation computed by
-#' [agg_ddd()]. Each estimate is a point with its confidence interval as an
-#' error bar. Pre-treatment estimates are dark slate and post-treatment
-#' estimates are orange. A dashed horizontal line marks zero.
+#' [agg_ddd()]. Each estimate is a triangle with its confidence interval as a
+#' thick bar in a lighter tint of the same color. Pre-treatment estimates are
+#' gold and post-treatment estimates are dark blue. A dashed horizontal line
+#' marks zero.
 #'
 #' @param x An `agg_ddd` object returned by [agg_ddd()] with
 #'   `type = "eventstudy"`, `"group"` or `"calendar"`.
@@ -185,18 +233,20 @@ ddd_plot_theme <- function(value_axis) {
 #' recompute them with another critical value.
 #'
 #' In an event study, estimates at event times `e < 0` are pre-treatment and
-#' estimates at `e >= 0` are post-treatment. A dotted vertical line at
+#' estimates at `e >= 0` are post-treatment. A dashed vertical line at
 #' `e = -0.5` separates the two. The line appears only
 #' when pre- and post-treatment estimates are present. Group and calendar
 #' aggregations average post-treatment cells only, so all their estimates are
-#' post-treatment.
+#' post-treatment. The legend is at the top and appears only when both kinds of
+#' estimates are present.
 #'
 #' The vertical axis always includes zero, with or without `ylim`. Estimates
 #' that are `NA` are not drawn, with a warning.
 #'
-#' ggplot2 must be installed; it is a suggested package. The result is a
-#' regular `ggplot` object, so it can be changed with `+`, for example
-#' `plot(es) + ggplot2::labs(title = "Event study")`.
+#' ggplot2 version 3.5.0 or later must be installed. It is a suggested package.
+#' The result is a regular `ggplot` object, so it can be changed with `+`, for
+#' example `plot(es) + ggplot2::labs(title = "Event study")`. A color scale
+#' added with `+` changes the colors of the triangles and of the bars.
 #'
 #' @return A `ggplot` object. It is not printed by the function.
 #'
@@ -271,17 +321,19 @@ plot.agg_ddd <- function(x, ylim = NULL, xlab = NULL, ylab = "Estimate", title =
 
   b <- period_breaks(df$xval)
 
-  p <- ggplot2::ggplot(df, ggplot2::aes(x = xval, y = est, colour = phase)) +
-    ggplot2::geom_hline(yintercept = 0, colour = PLOT_COL_REF,
-                        linewidth = PLOT_REF_LINEWIDTH, linetype = "dashed")
+  # The event-study line comes first, so the zero line is drawn over it where they cross.
+  p <- ggplot2::ggplot(df, ggplot2::aes(x = xval, y = est, colour = phase))
   if (is_es && two_phases) {
-    p <- p + ggplot2::geom_vline(xintercept = PLOT_ES_SEPARATOR, colour = PLOT_COL_REF,
-                                 linewidth = PLOT_REF_LINEWIDTH, linetype = "dotted")
+    p <- p + ggplot2::geom_vline(xintercept = PLOT_ES_SEPARATOR, colour = PLOT_COL_ONSET,
+                                 linewidth = PLOT_REF_LINEWIDTH, linetype = "dashed")
   }
   p <- p +
-    ggplot2::geom_errorbar(ggplot2::aes(ymin = lo, ymax = hi), width = PLOT_BAR_WIDTH,
-                           linewidth = PLOT_BAR_LINEWIDTH, na.rm = TRUE) +
-    ggplot2::geom_point(size = PLOT_POINT_SIZE) +
+    ggplot2::geom_hline(yintercept = 0, colour = PLOT_COL_ZERO,
+                        linewidth = PLOT_REF_LINEWIDTH, linetype = "dashed") +
+    ggplot2::geom_linerange(plot_bar_aes(ymin = lo, ymax = hi),
+                            linewidth = PLOT_BAR_LINEWIDTH, lineend = "butt",
+                            na.rm = TRUE, show.legend = FALSE) +
+    ggplot2::geom_point(shape = PLOT_POINT_SHAPE, size = PLOT_POINT_SIZE) +
     plot_phase_scale() +
     ggplot2::scale_x_continuous(breaks = b,
                                 labels = format(b, trim = TRUE, scientific = FALSE),
@@ -307,10 +359,11 @@ plot.agg_ddd <- function(x, ylim = NULL, xlab = NULL, ylab = "Estimate", title =
 #' @description
 #' Draws a horizontal coefficient plot of the group-time average treatment
 #' effects ATT(g,t) estimated by [ddd()], with one row per ATT(g,t) labelled
-#' `"ATT(g,t)"`. Each estimate is a point with its confidence interval as a
-#' horizontal line. Pre-treatment cells (`t < g`) are dark slate and
-#' post-treatment cells (`t >= g`) are orange. A dashed vertical line marks
-#' zero. For a two-period fit, the plot has a single row, `"ATT"`.
+#' `"ATT(g,t)"`. Each estimate is a triangle with its confidence interval as a
+#' thick horizontal bar in a lighter tint of the same color. Pre-treatment
+#' cells (`t < g`) are gold and post-treatment cells (`t >= g`) are dark blue.
+#' A dashed vertical line marks zero. For a two-period fit, the plot has a
+#' single row, `"ATT"`.
 #'
 #' @param x A `ddd` object returned by [ddd()].
 #' @param xlim `NULL` (default) or a numeric vector of length 2 with finite
@@ -342,10 +395,12 @@ plot.agg_ddd <- function(x, ylim = NULL, xlab = NULL, ylab = "Estimate", title =
 #' zero line is always in view. Estimates that are `NA` are not drawn, with a
 #' warning.
 #'
-#' ggplot2 must be installed; it is a suggested package. The result is a
-#' regular `ggplot` object, so it can be changed with `+`, for example
-#' `plot(out) + ggplot2::labs(title = "ATT(g,t)")`. To plot an event study,
-#' group or calendar path, aggregate first with [agg_ddd()] and plot the result.
+#' ggplot2 version 3.5.0 or later must be installed. It is a suggested package.
+#' The result is a regular `ggplot` object, so it can be changed with `+`, for
+#' example `plot(out) + ggplot2::labs(title = "ATT(g,t)")`. A color scale added
+#' with `+` changes the colors of the triangles and of the bars. To plot an
+#' event study, group or calendar path, aggregate first with [agg_ddd()] and
+#' plot the result.
 #'
 #' @return A `ggplot` object. It is not printed by the function.
 #'
@@ -407,11 +462,12 @@ plot.ddd <- function(x, xlim = NULL, xlab = "Estimate", ylab = NULL, title = NUL
   two_phases <- length(unique(df$phase)) == 2
 
   p <- ggplot2::ggplot(df, ggplot2::aes(x = est, y = label, colour = phase)) +
-    ggplot2::geom_vline(xintercept = 0, colour = PLOT_COL_REF,
+    ggplot2::geom_vline(xintercept = 0, colour = PLOT_COL_ZERO,
                         linewidth = PLOT_REF_LINEWIDTH, linetype = "dashed") +
-    ggplot2::geom_linerange(ggplot2::aes(xmin = lo, xmax = hi), orientation = "y",
-                            linewidth = PLOT_BAR_LINEWIDTH, na.rm = TRUE) +
-    ggplot2::geom_point(size = PLOT_POINT_SIZE) +
+    ggplot2::geom_linerange(plot_bar_aes(xmin = lo, xmax = hi), orientation = "y",
+                            linewidth = PLOT_BAR_LINEWIDTH, lineend = "butt",
+                            na.rm = TRUE, show.legend = FALSE) +
+    ggplot2::geom_point(shape = PLOT_POINT_SHAPE, size = PLOT_POINT_SIZE) +
     plot_phase_scale()
   if (!is.null(xlim)) {
     p <- p + ggplot2::coord_cartesian(xlim = range(c(xlim, 0)))

@@ -26,7 +26,7 @@
 </p>
 <br/>
 <p align="center">
-  <img src="man/figures/README-hero.svg" width="900" alt="Animation in three steps. Step 1, raw panel: units grouped by enabling period S and eligibility Q over periods 1 to 3; a line sweeps across the periods and the treated cells turn orange. Step 2, ddd(): for each ATT(g,t), only the data it uses stay in view, in periods g minus 1 and t: the enabled eligible units, the ineligible units of the same group, and the groups not yet or never enabled; each estimate joins a coefficient strip. Step 3, agg_ddd(): the event-study points appear, and the links to the ATT(g,t) each point averages appear and disappear.">
+  <img src="man/figures/README-hero.svg" width="900" alt="Animation in three steps. Step 1, raw panel: units grouped by enabling period S and eligibility Q over periods 1 to 3; a line sweeps across the periods and the treated cells turn dark blue. Step 2, ddd(): for each ATT(g,t), only the data it uses stay in view, in periods g minus 1 and t: the enabled eligible units, the ineligible units of the same group, and the groups not yet or never enabled; each estimate joins a coefficient strip. Step 3, agg_ddd(): the event-study points appear, and the links to the ATT(g,t) each point averages appear and disappear.">
 </p>
 <p align="center"><sub>Three steps: understand your data, let <code>ddd()</code> compute each ATT(g,t), and let <code>agg_ddd()</code> average them into an event study. The animation uses the simulated panel of the <a href="#quick-start">Quick start</a> with not-yet-treated comparison groups.</sub></p>
 
@@ -162,10 +162,10 @@ status_of <- function(S, Q, t) {
   ifelse(enabled,          "Enabled, not eligible",
   ifelse(S != 0 & Q == 1,  "Eligible, enabled later", "Not enabled")))
 }
-status_colors <- c("Treated: enabled and eligible" = "#E8743B",
-                   "Eligible, enabled later"       = "#E4E8ED",
-                   "Enabled, not eligible"         = "#9AA6B2",
-                   "Not enabled"                   = "#414F5D")
+status_colors <- c("Treated: enabled and eligible" = "#154780",
+                   "Eligible, enabled later"       = "#B3CBE6",
+                   "Enabled, not eligible"         = "#B28C1C",
+                   "Not enabled"                   = "#E3E9E5")
 
 units <- unique(as.data.frame(data)[, c("id", "state", "partition")])
 units <- units[order(match(units$state, c(2, 3, 0)), -units$partition, units$id), ]
@@ -198,7 +198,7 @@ p_heat <- ggplot(cells, aes(x = time, y = row, fill = status)) +
 
 </details>
 
-<img src="man/figures/README-sim-heatmap-1.png" alt="Heatmap with one row per unit and one column per period. Rows are grouped by enabling period S (2, 3, never) and eligibility Q. Eligible units of the S = 2 group are orange from period 2 on, and those of the S = 3 group from period 3 on. Ineligible units of these groups are mid grey once their group enables. Units of the S = never group are dark in all periods." width="100%" />
+<img src="man/figures/README-sim-heatmap-1.png" alt="Heatmap with one row per unit and one column per period. Rows are grouped by enabling period S (2, 3, never) and eligibility Q. Eligible units of the S = 2 group are light blue in period 1 and dark blue from period 2 on. Eligible units of the S = 3 group are light blue in periods 1 and 2 and dark blue in period 3. Ineligible units of these groups are pale grey until their group enables and gold after that. Units of the S = never group are pale grey in all periods." width="100%" />
 
 DDD compares the treated cells with three comparison groups. For
 ATT(2,2) with `control_group = "nevertreated"`, these are the ineligible
@@ -254,8 +254,7 @@ summary(att_gt)
 #>  See Ortiz-Villavicencio and Sant'Anna (2025) for details.
 ```
 
-`plot()` draws each ATT(g,t) with its confidence interval. Pre-treatment
-cells are dark, and post-treatment cells are orange.
+`plot()` draws each ATT(g,t) with its confidence interval. Pre-treatment cells are gold, and post-treatment cells are dark blue.
 
 ``` r
 plot(att_gt)
@@ -471,12 +470,13 @@ cells_g <- cells_g[order(cells_g$group, cells_g$state, -cells_g$treat_group), ]
 cells_g$row <- paste0(cells_g$state, ", Q = ", cells_g$treat_group)
 cells_g$row <- factor(cells_g$row, levels = rev(unique(cells_g$row)))
 
+# The counts are dark on every cell except the Treated cells, where they are white.
 p_gruber <- ggplot(cells_g, aes(x = factor(year), y = row, fill = status)) +
   geom_tile(colour = "white", linewidth = 0.8) +
   geom_text(aes(label = workers,
-                colour = status %in% c("Eligible, enabled later", "Enabled, not eligible")),
+                colour = status != "Treated: enabled and eligible"),
             size = 3, show.legend = FALSE) +
-  scale_colour_manual(values = c(`TRUE` = "#1F2933", `FALSE` = "white")) +
+  scale_colour_manual(values = c(`TRUE` = "#1E2B27", `FALSE` = "white")) +
   scale_fill_manual(values = status_colors, drop = FALSE, name = NULL) +
   facet_grid(rows = vars(group), scales = "free_y", space = "free_y", switch = "y") +
   labs(x = NULL, y = NULL, title = "Gruber (1994): workers per state, group and year",
@@ -490,7 +490,7 @@ p_gruber <- ggplot(cells_g, aes(x = factor(year), y = row, fill = status)) +
 
 </details>
 
-<img src="man/figures/README-gruber-heatmap-1.png" alt="Heatmap of the number of workers per state, eligibility group and year in the Gruber (1994) data. In the mandate states IL, NJ and NY, eligible workers are pale in 1974 and 1975 and orange in 1977 and 1978. Ineligible workers there are mid grey after the mandates. All cells of the comparison states CT, IN, MA, NC and OH are dark." width="100%" />
+<img src="man/figures/README-gruber-heatmap-1.png" alt="Heatmap of the number of workers per state, eligibility group and year in the Gruber (1994) data. In the mandate states IL, NJ and NY, eligible workers are light blue in 1974 and 1975 and dark blue in 1977 and 1978. Ineligible workers there are pale grey in 1974 and 1975 and gold in 1977 and 1978. All cells of the comparison states CT, IN, MA, NC and OH are pale grey." width="100%" />
 
 Reference: Gruber, J. (1994). The Incidence of Mandated Maternity
 Benefits. *American Economic Review*, 84(3), 622-641.
