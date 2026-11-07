@@ -49,25 +49,32 @@ ddd(
 
 - idname:
 
-  The name of the column containing the unit id.
+  The name of the column containing the unit id. Each (idname, tname)
+  pair must appear at most once.
 
 - gname:
 
   The name of the column containing the first period when a particular
   observation is treated. It is a positive number for treated units and
   defines which group the unit belongs to. It takes value 0 or Inf for
-  untreated units.
+  untreated units. In two-period designs, never-treated units must be
+  coded 0 or Inf; any other code stops with an error.
 
 - pname:
 
   The name of the column containing the partition variable (e.g., the
   subgroup identifier). This is an indicator variable that is 1 for the
-  units eligible for treatment and 0 otherwise.
+  units eligible for treatment and 0 otherwise. It must be coded 0 and
+  1.
 
 - xformla:
 
   The formula for the covariates to be included in the model. It should
   be of the form `~ x1 + x2`. Default is `xformla = ~1` (no covariates).
+  With two periods and panel data, covariates must be time invariant.
+  With multiple periods, each ATT(g,t) uses the covariates of the
+  earlier of its two periods for both the propensity score and the
+  outcome regression.
 
 - data:
 
@@ -113,14 +120,15 @@ ddd(
 - allow_unbalanced_panel:
 
   Logical. If `TRUE`, allows for unbalanced panel data where units may
-  not be observed in all time periods. Default is `FALSE`. Note: This
-  parameter requires `panel = TRUE` and a valid `idname`.
+  not be observed in all time periods. Default is `FALSE`: units that
+  are not observed in every period are dropped with a warning.
 
 - weightsname:
 
   The name of the column containing the weights. Default is `NULL`. As
   part of data processing, weights are enforced to be normalized and
-  have mean 1 across all observations.
+  have mean 1 across all observations. Weights must be the same in every
+  period for a given unit.
 
 - boot:
 
@@ -144,7 +152,8 @@ ddd(
   Logical. If `TRUE`, the function computes a uniform confidence band
   that covers all of the average treatment effects with fixed
   probability `1-alpha`. In order to compute uniform confidence bands,
-  `boot` must also be set to `TRUE`. The default is `FALSE`.
+  `boot` must also be set to `TRUE`; with `boot = FALSE`, `ddd()` warns
+  and sets `cband = FALSE`. The default is `FALSE`.
 
 - alpha:
 

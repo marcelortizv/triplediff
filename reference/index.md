@@ -13,3 +13,9 @@
 - [`gen_dgp_mult_periods()`](http://marcelortiz.com/triplediff/reference/gen_dgp_mult_periods.md)
   : Generate panel data with staggered treatment adoption (three
   periods)
+- [`gruber1994`](http://marcelortiz.com/triplediff/reference/gruber1994.md)
+  : Gruber (1994) maternity mandates data
+- [`plot(`*`<agg_ddd>`*`)`](http://marcelortiz.com/triplediff/reference/plot.agg_ddd.md)
+  : Plot aggregated DDD effects
+- [`plot(`*`<ddd>`*`)`](http://marcelortiz.com/triplediff/reference/plot.ddd.md)
+  : Plot group-time DDD effects

@@ -20,7 +20,7 @@ agg_ddd(
   boot = NULL,
   nboot = NULL,
   cband = NULL,
-  alpha = 0.05
+  alpha = NULL
 )
 ```
 
@@ -35,17 +35,19 @@ agg_ddd(
 - type:
 
   Which type of aggregated treatment effect parameter to compute.
-  `"simple"` just computes a weighted average of all group-time average
-  treatment effects with weights proportional to group size.
-  `"eventstudy"` computes average effects across different lengths of
-  exposure to the treatment (event times). Here the overall effect
-  averages the effect of the treatment across the positive lengths of
-  exposure. This is the default option; `"group"` computes average
-  treatment effects across different groups/cohorts; here the overall
-  effect averages the effect across different groups using group size as
-  weights; `"calendar"` computes average treatment effects across
-  different time periods, with weights proportional to the group size;
-  here the overall effect averages the effect across each time period.
+  `"simple"` computes a weighted average of all post-treatment
+  group-time average treatment effects, with cohort weights proportional
+  to the share of treated units in each cohort. `"eventstudy"` computes
+  average effects across different lengths of exposure to the treatment
+  (event times). Here the overall effect averages the effect of the
+  treatment across the positive lengths of exposure. This is the default
+  option; `"group"` computes average treatment effects across different
+  groups/cohorts; here the overall effect averages the effect across
+  different groups, with weights proportional to the share of treated
+  units in each cohort; `"calendar"` computes average treatment effects
+  across different time periods, with cohort weights proportional to the
+  share of treated units; here the overall effect averages the effect
+  across each time period. See Details for the cohort weights.
 
 - cluster:
 
@@ -93,20 +95,31 @@ agg_ddd(
 - cband:
 
   Boolean for whether or not to compute a uniform confidence band that
-  covers all of the group-time average treatment effects with fixed
-  probability `0.95`. In order to compute uniform confidence bands,
-  `boot` must also be set to `TRUE`. The default is the value set in the
-  ddd object
+  covers all of the aggregated treatment effects with fixed probability
+  `1 - alpha`. In order to compute uniform confidence bands, `boot` must
+  also be set to `TRUE`. The default is the value set in the ddd object.
 
 - alpha:
 
-  The level of confidence for the confidence intervals. The default is
-  0.05. Otherwise, it will use the value set in the ddd object.
+  The significance level for the confidence intervals and bands. The
+  default, `NULL`, uses the level stored in the `ddd` object (the
+  `alpha` passed to
+  [`ddd()`](http://marcelortiz.com/triplediff/reference/ddd.md)).
 
 ## Value
 
 A object (list) of class `agg_ddd` that holds the results from the
 aggregation step.
+
+## Details
+
+Cohort weights. Every aggregation weights cohort \\g\\ by its share of
+treated units, \\P(S = g, Q = 1)\\: units first enabled in period \\g\\
+(the `gname` column of
+[`ddd()`](http://marcelortiz.com/triplediff/reference/ddd.md)) that are
+also eligible (`pname` equal to 1), as in the event-study parameter of
+Ortiz-Villavicencio and Sant'Anna (2025). Ineligible units of a cohort
+do not count toward its weight.
 
 ## Examples
 
@@ -128,7 +141,7 @@ agg_ddd(out, type = "simple", alpha = 0.10)
 #> ========================= DDD Aggregation ============================
 #>  Overall ATT:
 #>      ATT    Std. Error     [ 90%  Conf. Int.]  
-#>  18.6383        0.3347    18.0878     19.1888 *
+#>  18.9116        0.3987    18.2557     19.5674 *
 #> 
 #>  Note: * indicates that the confidence interval does not contain zero.
 #>  --------------------------- Data Info   -----------------------------
@@ -148,12 +161,12 @@ agg_ddd(out, type = "eventstudy", alpha = 0.10)
 #> ========================= DDD Aggregation ============================
 #>  Overall summary of ATT's based on event-study/dynamic aggregation: 
 #>      ATT    Std. Error     [ 90%  Conf. Int.]  
-#>  18.9605        0.3254    18.4253     19.4956 *
+#>  19.1735        0.3614    18.5791     19.7679 *
 #> 
 #>  Event Study:
 #>  Event time Estimate Std. Error [90% Ptwise.  Conf. Band]  
 #>          -1  -0.1004     0.4030       -0.7633      0.5625  
-#>           0  18.0946     0.4280       17.3907     18.7986 *
+#>           0  18.5208     0.5344       17.6419     19.3998 *
 #>           1  19.8263     0.3742       19.2108     20.4417 *
 #> 
 #>  Note: * indicates that the confidence interval does not contain zero.
@@ -174,7 +187,7 @@ agg_ddd(out, type = "group", alpha = 0.10)
 #> ========================= DDD Aggregation ============================
 #>  Overall summary of ATT's based on group/cohort aggregation: 
 #>      ATT    Std. Error     [ 90%  Conf. Int.]  
-#>  20.2332        0.2551    19.8135     20.6528 *
+#>  20.5175        0.4096    19.8438     21.1912 *
 #> 
 #>  Group Effects:
 #>  Group Estimate Std. Error [90% Ptwise.  Conf. Band]  
@@ -199,12 +212,12 @@ agg_ddd(out, type = "calendar", alpha = 0.10)
 #> ========================= DDD Aggregation ============================
 #>  Overall summary of ATT's based on calendar time aggregation: 
 #>      ATT    Std. Error     [ 90%  Conf. Int.]  
-#>  16.4255        0.2721    15.9779      16.873 *
+#>  16.4967        0.2745    16.0452     16.9482 *
 #> 
 #>  Calendar Effects:
 #>  Time Estimate Std. Error [90% Ptwise.  Conf. Band]  
 #>     2  10.4792     0.4294        9.7729     11.1855 *
-#>     3  22.3717     0.3237       21.8393     22.9041 *
+#>     3  22.5142     0.3424       21.9509     23.0774 *
 #> 
 #>  Note: * indicates that the confidence interval does not contain zero.
 #>  --------------------------- Data Info   -----------------------------

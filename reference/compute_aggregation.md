@@ -32,17 +32,19 @@ compute_aggregation(
 - type:
 
   Which type of aggregated treatment effect parameter to compute.
-  `"simple"` just computes a weighted average of all group-time average
-  treatment effects with weights proportional to group size.
-  `"eventstudy"` computes average effects across different lengths of
-  exposure to the treatment (event times). Here the overall effect
-  averages the effect of the treatment across the positive lengths of
-  exposure. This is the default option; `"group"` computes average
-  treatment effects across different groups/cohorts; here the overall
-  effect averages the effect across different groups using group size as
-  weights; `"calendar"` computes average treatment effects across
-  different time periods, with weights proportional to the group size;
-  here the overall effect averages the effect across each time period.
+  `"simple"` computes a weighted average of all post-treatment
+  group-time average treatment effects, with cohort weights proportional
+  to the share of treated units in each cohort. `"eventstudy"` computes
+  average effects across different lengths of exposure to the treatment
+  (event times). Here the overall effect averages the effect of the
+  treatment across the positive lengths of exposure. This is the default
+  option; `"group"` computes average treatment effects across different
+  groups/cohorts; here the overall effect averages the effect across
+  different groups, with weights proportional to the share of treated
+  units in each cohort; `"calendar"` computes average treatment effects
+  across different time periods, with cohort weights proportional to the
+  share of treated units; here the overall effect averages the effect
+  across each time period. See Details for the cohort weights.
 
 - cluster:
 

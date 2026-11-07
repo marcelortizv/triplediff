@@ -76,8 +76,84 @@ CRAN release: 2026-01-16
 
 ## triplediff 0.2.4
 
+CRAN release: 2026-06-13
+
 - Resubmission. Simplified the
   [`ddd()`](http://marcelortiz.com/triplediff/reference/ddd.md) examples
   by removing the bootstrap-based clustered standard errors example, so
   the package examples stay within CRAN’s limit on the number of cores
   used during checks. No changes to package functionality.
+
+## triplediff 0.3.0
+
+- Added the `gruber1994` dataset with the Gruber (1994)
+  maternity-mandate data. See
+  [`?gruber1994`](http://marcelortiz.com/triplediff/reference/gruber1994.md).
+- Added [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods
+  for `ddd` and `agg_ddd` objects that return a `ggplot` object
+  (requires ggplot2). See
+  [`?plot.ddd`](http://marcelortiz.com/triplediff/reference/plot.ddd.md)
+  and
+  [`?plot.agg_ddd`](http://marcelortiz.com/triplediff/reference/plot.agg_ddd.md).
+
+### Bug fixes
+
+- [`agg_ddd()`](http://marcelortiz.com/triplediff/reference/agg_ddd.md)
+  weights cohorts by P(S = g, Q = 1) in all aggregation types.
+  Aggregates over more than one cohort change. See “Cohort weights” in
+  [`?agg_ddd`](http://marcelortiz.com/triplediff/reference/agg_ddd.md).
+- With `base_period = "universal"`, pre-treatment ATT(g,t) with t \< g -
+  1 now use the covariates of period t in both nuisance models.
+- Fixed standard errors for GMM cells with
+  `control_group = "notyettreated"` in balanced panels. The point
+  estimates of these cells and the aggregates that use them also move
+  slightly.
+- Fixed the standard errors, confidence intervals, bootstrap draws and
+  uniform bands of
+  [`ddd()`](http://marcelortiz.com/triplediff/reference/ddd.md) with
+  `est_method = "dr"` and covariates. This applies to repeated
+  cross-sections (`panel = FALSE`) and unbalanced panels
+  (`allow_unbalanced_panel = TRUE`). The influence function had the
+  wrong sign for the estimation effect of the pre-period outcome
+  regression of the comparison group.
+- Fixed the overall standard error of `agg_ddd(type = "group")` when
+  cohort effects differ.
+- [`agg_ddd()`](http://marcelortiz.com/triplediff/reference/agg_ddd.md)
+  now uses the `alpha` stored in the `ddd` object, and the default is
+  `alpha = NULL`.
+- Fixed [`ddd()`](http://marcelortiz.com/triplediff/reference/ddd.md)
+  with unsorted or unbalanced two-period panels, which gave false errors
+  or wrong estimates. It now drops units not observed in both periods
+  with a warning.
+- [`ddd()`](http://marcelortiz.com/triplediff/reference/ddd.md) now
+  stops when a unit has more than one row in the same period.
+- [`ddd()`](http://marcelortiz.com/triplediff/reference/ddd.md) now
+  requires `pname` to be coded 0 and 1, which fixes `est_method = "ipw"`
+  returning NaN.
+- With two periods,
+  [`ddd()`](http://marcelortiz.com/triplediff/reference/ddd.md) now
+  requires `gname = Inf` for never-treated units and stops on any other
+  never-treated code, which fixes a flipped sign of the estimate.
+- `cluster = idname` now works and equals `cluster = NULL`.
+  `cluster = c(idname, "x")` now equals `cluster = "x"`, and
+  [`agg_ddd()`](http://marcelortiz.com/triplediff/reference/agg_ddd.md)
+  then clusters on `x`.
+- With multiple periods,
+  [`ddd()`](http://marcelortiz.com/triplediff/reference/ddd.md) now
+  requires sampling weights to be the same in every period for each
+  unit.
+- Fixed [`ddd()`](http://marcelortiz.com/triplediff/reference/ddd.md)
+  with `cluster` for multiple-period repeated cross-sections without an
+  id (`panel = FALSE`, `idname = NULL`).
+- Fixed [`ddd()`](http://marcelortiz.com/triplediff/reference/ddd.md)
+  without a never-treated group when some units are treated in the first
+  period. It now drops only those units and keeps the last-treated
+  cohort as the comparison group.
+- `ddd(cband = TRUE, boot = FALSE)` now warns and sets `cband = FALSE`,
+  so later
+  [`agg_ddd()`](http://marcelortiz.com/triplediff/reference/agg_ddd.md)
+  calls no longer stop.
+- With two periods, `panel = FALSE` and `idname = NULL`,
+  [`ddd()`](http://marcelortiz.com/triplediff/reference/ddd.md) no
+  longer adds a `.row_id` column to a `data.table` passed as `data` and
+  now runs with `skip_data_checks = TRUE`.
