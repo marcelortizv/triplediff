@@ -22,3 +22,5 @@
 ^.*\.claude$
 ^test_inffunc\.R$
 ^test_phase_b2\.R$
+^data-raw$
+^PANELTY_HANDOFF_instructions\.md$

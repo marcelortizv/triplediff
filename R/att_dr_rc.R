@@ -93,6 +93,15 @@ att_dr_rc <- function(did_preprocessed) {
   # rescaling influence function (still at observation level)
   inf_func = w3*dr_att_inf_func_3$inf_func + w2*dr_att_inf_func_2$inf_func - w1*dr_att_inf_func_1$inf_func
 
+  # Two-period unbalanced panel (allow_unbalanced_panel = TRUE): a unit observed in both periods has two
+  # rows. Sum the influence function by unit, as the multiple-period path does, so that standard errors
+  # and the bootstrap are at the unit level. (att_gt() never sets this flag.)
+  if (isTRUE(did_preprocessed$unit_level_if)) {
+    n_units <- data.table::uniqueN(data$id)
+    inf_func <- (n_units / n) * rowsum(inf_func, data$id, reorder = TRUE)[, 1]
+    n <- n_units
+  }
+
   #-----------------------------------------------------------------------------
   # compute confidence intervals / bands
   #-----------------------------------------------------------------------------

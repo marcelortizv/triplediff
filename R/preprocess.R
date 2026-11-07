@@ -125,11 +125,15 @@ run_nopreprocess_2periods <- function(yname,
   }
 
   # Flags for cluster variable
-  if (!is.null(cluster)) {
-    # dropping idname from cluster
-    if (idname %in% cluster) {
-      cluster <- setdiff(cluster, idname)
+  # Clustering at the unit level (cluster = idname) is the default: drop idname from cluster
+  if (!is.null(cluster) && (idname %in% cluster)) {
+    cluster <- setdiff(cluster, idname)
+    if (length(cluster) == 0) {
+      cluster <- NULL
     }
+    args$cluster <- cluster
+  }
+  if (!is.null(cluster)) {
 
     # flag if cluster variable is in dataset
     if (!is.element(cluster, base::colnames(dta))) {
@@ -168,26 +172,35 @@ run_nopreprocess_2periods <- function(yname,
     xformla <- ~1
   }
 
+  # Two-period gname coding: Inf marks never-treated units; recode it to 0 (on a copy)
+  if (is.numeric(dta[[gname]]) && any(dta[[gname]] == Inf, na.rm = TRUE)) {
+    dta <- data.table::copy(dta)
+    dta[get(gname) == Inf, (gname) := 0]
+  }
+
   # Creating a post dummy variable based on tlist[2] (second period = post treatment)
   tlist <- dta[, sort(unique(get(tname)))]
   glist <- dta[, sort(unique(get(gname)))] # this has to be [0, G], second position in treated group.
   dta[, post := as.numeric(get(tname) == tlist[2])]
 
-  # sort data based on idnam and tname
-  data.table::setorderv(dta, c(idname, tname), c(1,1))
-
   #-------------------------------------
   # Handle RCS ID creation
   #-------------------------------------
 
-  # If idname is the placeholder, create the actual ID column
+  # If idname is the placeholder, create the actual ID column before the sort below uses it,
+  # in the user's row order (as run_preprocess_2Periods() does).
+  # Work on a copy so that the user's data are not modified by reference.
   if (idname == ".row_id") {
     if (".row_id" %in% names(dta)) {
       stop("Column '.row_id' already exists in data. Please rename it or provide a different idname.")
     }
+    dta <- data.table::copy(dta)
     # Create unique row IDs for RCS data
     dta[, .row_id := .I]
   }
+
+  # sort data based on idnam and tname
+  data.table::setorderv(dta, c(idname, tname), c(1,1))
 
   # -----------------------------------------------------------------------
   # Panel balance detection and handling
@@ -210,7 +223,7 @@ run_nopreprocess_2periods <- function(yname,
       if (allow_unbalanced_panel) {
         # Treat unbalanced panel as repeated cross-sections
         true_repeated_cross_sections <- TRUE
-        warning("Panel is unbalanced. Treating as repeated cross-sections (allow_unbalanced_panel = TRUE).")
+        warning("Panel is unbalanced.")
       } else {
         # Balance the panel by dropping units
         dta <- BMisc::make_balanced_panel(dta, idname, tname)
@@ -231,19 +244,6 @@ run_nopreprocess_2periods <- function(yname,
   } else {
     # panel = FALSE: treat as repeated cross-sections
     true_repeated_cross_sections <- TRUE
-  }
-
-  #-------------------------------------
-  # Handle RCS ID creation
-  #-------------------------------------
-
-  # If idname is the placeholder, create the actual ID column in dta
-  if (idname == ".row_id") {
-    if (".row_id" %chin% names(dta)) {
-      stop("Column '.row_id' already exists in data. Please rename it or provide a different idname.")
-    }
-    # Create unique row IDs for RCS data
-    dta[, (idname) := .I]
   }
 
   #-------------------------------------
@@ -365,7 +365,8 @@ run_nopreprocess_2periods <- function(yname,
               subgroup_counts = subgroup_counts,
               panel = panel,
               allow_unbalanced_panel = allow_unbalanced_panel,
-              true_repeated_cross_sections = true_repeated_cross_sections)
+              true_repeated_cross_sections = true_repeated_cross_sections,
+              unit_level_if = panel && allow_unbalanced_panel && true_repeated_cross_sections)
 
   return(out)
 
@@ -437,24 +438,37 @@ run_preprocess_2Periods <- function(yname,
   # Handle RCS ID creation
   #-------------------------------------
 
-  # If idname is the placeholder, create the actual ID column
+  # If idname is the placeholder, create the actual ID column.
+  # Work on a copy so that the user's data are not modified by reference.
   if (idname == ".row_id") {
     if (".row_id" %in% names(dta)) {
       stop("Column '.row_id' is an internal name. Please rename it or provide a different idname.")
     }
+    dta <- data.table::copy(dta)
     # Create unique row IDs for RCS data
     dta[, .row_id := .I]
+  }
+
+  # Two-period gname coding: Inf marks never-treated units; recode it to 0 (as the multi-period path does).
+  # Work on a copy so that the user's data are not modified.
+  if (gname %in% names(dta) && is.numeric(dta[[gname]]) && any(dta[[gname]] == Inf, na.rm = TRUE)) {
+    dta <- data.table::copy(dta)
+    dta[get(gname) == Inf, (gname) := 0]
   }
 
   # Run argument checks
   validate_args_2Periods(args, dta)
 
   # Flags for cluster variable
-  if (!is.null(cluster)) {
-    # dropping idname from cluster
-    if (idname %in% cluster) {
-      cluster <- setdiff(cluster, idname)
+  # Clustering at the unit level (cluster = idname) is the default: drop idname from cluster
+  if (!is.null(cluster) && (idname %in% cluster)) {
+    cluster <- setdiff(cluster, idname)
+    if (length(cluster) == 0) {
+      cluster <- NULL
     }
+    args$cluster <- cluster
+  }
+  if (!is.null(cluster)) {
 
     # flag if cluster variable is in dataset
     if (!is.element(cluster, base::colnames(dta))) {
@@ -537,19 +551,7 @@ run_preprocess_2Periods <- function(yname,
   glist <- dta[, sort(unique(get(gname)))] # this has to be [0, G], second position in treated group.
   dta[, post := as.numeric(get(tname) == tlist[2])]
 
-  # Checking if covariates are time invariant in panel data case
-  # Only check for panel data (not RCS)
-  if (panel) {
-    # Create the model matrix
-    cov_pre <- model.matrix(as.formula(xformla), data = dta[dta[["post"]] == 0])
-    cov_post <- model.matrix(as.formula(xformla), data = dta[dta[["post"]] == 1])
-    # Check if covariates are time invariant
-    if (!all(cov_pre == cov_post)) {
-      stop("Covariates are not time invariant. Please check xformla")
-    }
-  }
-
-  # sort data based on idnam and tname
+  # sort data based on idname and tname (before any step that pairs the two rows of a unit)
   data.table::setorderv(dta, c(idname, tname), c(1,1))
 
   # -----------------------------------------------------------------------
@@ -571,9 +573,9 @@ run_preprocess_2Periods <- function(yname,
   if (panel) {
     if (!is_balanced) {
       if (allow_unbalanced_panel) {
-        # Treat unbalanced panel as repeated cross-sections
+        # Unbalanced panel with allow_unbalanced_panel = TRUE
         true_repeated_cross_sections <- TRUE
-        warning("Panel is unbalanced. Proceeding as such.")
+        warning("Panel is unbalanced.")
       } else {
         # Balance the panel by dropping units
         dta <- BMisc::make_balanced_panel(dta, idname, tname)
@@ -594,6 +596,16 @@ run_preprocess_2Periods <- function(yname,
   } else {
     # panel = FALSE: treat as repeated cross-sections
     true_repeated_cross_sections <- TRUE
+  }
+
+  # Checking if covariates are time invariant, only for data used as a balanced panel.
+  # Rows are sorted by (idname, tname) and balanced here, so the two periods are paired unit by unit.
+  if (panel && !true_repeated_cross_sections) {
+    cov_pre <- model.matrix(as.formula(xformla), data = dta[dta[["post"]] == 0, ])
+    cov_post <- model.matrix(as.formula(xformla), data = dta[dta[["post"]] == 1, ])
+    if (!all(cov_pre == cov_post)) {
+      stop("Covariates are not time invariant. Please check xformla")
+    }
   }
 
   #-------------------------------------
@@ -750,7 +762,8 @@ run_preprocess_2Periods <- function(yname,
               subgroup_counts = subgroup_counts,
               panel = panel,
               allow_unbalanced_panel = allow_unbalanced_panel,
-              true_repeated_cross_sections = true_repeated_cross_sections)
+              true_repeated_cross_sections = true_repeated_cross_sections,
+              unit_level_if = panel && allow_unbalanced_panel && true_repeated_cross_sections)
 
   return(out)
 }
@@ -800,6 +813,16 @@ run_preprocess_multPeriods <- function(yname,
     }
   }
 
+  # Create the internal row id for RCS data without an id BEFORE any check that uses the id.
+  # Work on a copy so that the user's data are not modified by reference.
+  if (idname == ".row_id") {
+    if (".row_id" %in% names(dta)) {
+      stop("Column '.row_id' already exists in data. Please rename it or provide a different idname.")
+    }
+    dta <- data.table::copy(dta)
+    dta[, .row_id := .I]
+  }
+
   #-------------------------------------
   # Error checking
   #-------------------------------------
@@ -837,11 +860,15 @@ run_preprocess_multPeriods <- function(yname,
   validate_args_multPeriods(args, dta)
 
   # Flags for cluster variable
-  if (!is.null(cluster)) {
-    # dropping idname from cluster
-    if (idname %in% cluster) {
-      cluster <- setdiff(cluster, idname)
+  # Clustering at the unit level (cluster = idname) is the default: drop idname from cluster
+  if (!is.null(cluster) && (idname %in% cluster)) {
+    cluster <- setdiff(cluster, idname)
+    if (length(cluster) == 0) {
+      cluster <- NULL
     }
+    args$cluster <- cluster
+  }
+  if (!is.null(cluster)) {
 
     # flag if cluster variable is in dataset
     if (!is.element(cluster, base::colnames(dta))) {
@@ -879,13 +906,8 @@ run_preprocess_multPeriods <- function(yname,
     xformla <- ~1
   }
 
-  # keep relevant columns in data
-  # For RCS placeholder, exclude idname from initial column selection (will be created later)
-  if (idname == ".row_id") {
-    cols_to_keep <- c(tname, yname, gname, pname, weightsname, cluster)
-  } else {
-    cols_to_keep <- c(idname, tname, yname, gname, pname, weightsname, cluster)
-  }
+  # keep relevant columns in data (for RCS without an id, idname is the internal '.row_id' created above)
+  cols_to_keep <- c(idname, tname, yname, gname, pname, weightsname, cluster)
 
   model_frame <- model.frame(xformla, data = dta, na.action = na.pass)
   # Subset the data.table to keep only relevant columns
@@ -908,6 +930,9 @@ run_preprocess_multPeriods <- function(yname,
   # enforcing normalization of weights. At this point we already drop any missing values in weights.
   weights <- weights/mean(weights)
   dta$weights <- weights
+
+  # Check if weights are unique by idname (as in the two-period path)
+  checkWeightsUniqueness(dta, idname)
 
   # get a list of dates from min to max
   tlist <- dta[, sort(unique(get(tname)))]
@@ -972,14 +997,13 @@ run_preprocess_multPeriods <- function(yname,
   # handle units treated in the first period
   if (nfirstperiod > 0) {
     warning(paste0("Dropped ", nfirstperiod, " units that were already treated in the first period."))
-    dta <- dta[get(gname) %in% c(0, glist)]
+    # drop only the units treated in the first period; keep all other units, including a last-treated
+    # cohort that serves only as a comparison group when there is no never-treated group
+    dta <- dta[treated_first_period == FALSE]
 
-    # update tlist and glist
+    # update tlist and the list of treated cohorts (glist is filtered, not rebuilt from the data, so a
+    # comparison-only cohort does not re-enter it)
     tlist <- dta[, sort(unique(get(tname)))]
-    glist <- dta[, sort(unique(get(gname)))]
-    glist <- glist[glist > 0]
-
-    # Drop groups treated in the first period or before
     first_period <- tlist[1]
     #glist <- glist[glist > first_period + anticipation]
     glist <- glist[glist > first_period]
@@ -1035,7 +1059,7 @@ run_preprocess_multPeriods <- function(yname,
       if (allow_unbalanced_panel) {
         # Treat unbalanced panel as repeated cross-sections
         true_repeated_cross_sections <- FALSE
-        warning("Panel is unbalanced. Proceeding as such.")
+        warning("Panel is unbalanced.")
       } else {
         warning("Panel is unbalanced but allow_unbalanced_panel = FALSE. Forcing to convert data to balanced panel.")
         # Balance the panel by dropping units
@@ -1057,19 +1081,6 @@ run_preprocess_multPeriods <- function(yname,
   } else {
     # panel = FALSE: treat as repeated cross-sections
     true_repeated_cross_sections <- TRUE
-  }
-
-  #-------------------------------------
-  # Handle RCS ID creation
-  #-------------------------------------
-
-  # If idname is the placeholder, create the actual ID column in dta
-  if (idname == ".row_id") {
-    if (".row_id" %in% names(dta)) {
-      stop("Column '.row_id' already exists in data. Please rename it or provide a different idname.")
-    }
-    # Create unique row IDs for RCS data
-    dta[, .row_id := .I]
   }
 
   #-------------------------------------

@@ -234,8 +234,8 @@ att_gt <- function(did_preprocessed){
             ddd_out <- triplediff::att_dr(did_preprocessed)
 
             # computing the aggregate influence function for every g'>t: RIF_{g,g',t}
-            # adjust influence function (rescale + recentered)
-            ddd_out$inf_func <- ((size_gt/size_gt_ctrl)*ddd_out$inf_func) #+ 1*ddd_out$ATT
+            # rescale to the full sample (n / size of this comparison) and place on this comparison's units
+            ddd_out$inf_func <- ((n/size_gt_ctrl)*ddd_out$inf_func) #+ 1*ddd_out$ATT
 
             # Save the ddd output in the local list using the control state as name.
             ddd_over_controls_res[[as.character(ctrl)]] <- ddd_out
@@ -243,7 +243,7 @@ att_gt <- function(did_preprocessed){
             # recover influence function
             inff <- rep(0, n)
             # avoid repetition in index
-            inff[index_units_in_gt_ctrl[seq(1, length(index_units_in_gt_ctrl), by = 2)]] <- ddd_out$inf_func
+            inff[which(index_units_in_gt[seq(1, length(index_units_in_gt), by = 2)])[index_units_in_gt_ctrl[seq(1, length(index_units_in_gt_ctrl), by = 2)]]] <- ddd_out$inf_func
 
             # Append this vector as a new column in the local matrix.
             if (is.null(inf_mat_local)) {

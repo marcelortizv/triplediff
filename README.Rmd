@@ -2,31 +2,59 @@
 output: github_document
 ---
 
-```{r, echo = FALSE}
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r setup, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
-  fig.path = "man/figures/README-"
+  fig.path = "man/figures/README-",
+  dev = "ragg_png",
+  dpi = 144,
+  fig.width = 7,
+  fig.height = 4,
+  out.width = "100%"
 )
+library(triplediff)
+# Render with the version in DESCRIPTION, not with an older installed copy.
+stopifnot(identical(as.character(utils::packageVersion("triplediff")),
+                    unname(read.dcf("DESCRIPTION", fields = "Version")[1, 1])))
+ver <- as.character(utils::packageVersion("triplediff"))
+fmt <- function(x) formatC(x, format = "f", digits = 3)
 ```
 
-```{r, echo=FALSE, results="hide", warning=FALSE, message=FALSE}
-#library(triplediff)
-devtools::load_all()
+```{=html}
+<p align="center">
+  <img src="man/figures/triplediff-logo.png" alt="triplediff hex logo" width="160">
+</p>
+<h1 align="center">Triple Differences Estimators</h1>
+<p align="center">
+  Average treatment effects and event studies for triple-difference designs (DDD).<br/>
+</p>
+<p align="center">
+  <a href="https://CRAN.R-project.org/package=triplediff"><img src="https://www.r-pkg.org/badges/version/triplediff" alt="CRAN status" height="20"></a>
+  <a href="https://CRAN.R-project.org/package=triplediff"><img src="https://cranlogs.r-pkg.org/badges/grand-total/triplediff" alt="CRAN downloads" height="20"></a>
+  <a href="https://lifecycle.r-lib.org/articles/stages.html#experimental"><img src="https://img.shields.io/badge/lifecycle-experimental-orange.svg" alt="Lifecycle: experimental" height="20"></a>
+  <a href="https://github.com/marcelortizv/triplediff"><img src="https://img.shields.io/badge/devel%20version-`r ver`-blue.svg" alt="Development version" height="20"></a>
+  <a href="https://doi.org/10.48550/arXiv.2505.09942"><img src="https://img.shields.io/badge/DOI-10.48550%2FarXiv.2505.09942-b31b1b.svg" alt="DOI 10.48550/arXiv.2505.09942" height="20"></a>
+</p>
+<p align="center">
+  <a href="https://marcelortiz.com/triplediff/">Website</a> &middot;
+  <a href="https://marcelortiz.com/triplediff/reference/index.html">Reference</a> &middot;
+  <a href="https://marcelortiz.com/triplediff/news/index.html">Changelog</a> &middot;
+  <a href="https://marcelortiz.com/assets/pdf/DDD_OVS.pdf">Paper (PDF)</a> &middot;
+  <a href="https://arxiv.org/abs/2505.09942">arXiv</a> &middot;
+  <a href="#citation">Cite</a> &middot;
+  <a href="https://github.com/marcelortizv/triplediff/issues">Report a bug</a>
+</p>
+<br/>
+<p align="center">
+  <img src="man/figures/README-hero.svg" width="900" alt="Animation in three steps. Step 1, raw panel: units grouped by enabling period S and eligibility Q over periods 1 to 3; a line sweeps across the periods and the treated cells turn dark blue. Step 2, ddd(): for each ATT(g,t), only the data it uses stay in view, in periods g minus 1 and t: the enabled eligible units, the ineligible units of the same group, and the groups not yet or never enabled; each estimate joins a coefficient strip. Step 3, agg_ddd(): the event-study points appear, and the links to the ATT(g,t) each point averages appear and disappear.">
+</p>
+<p align="center"><sub>Three steps: understand your data, let <code>ddd()</code> compute each ATT(g,t), and let <code>agg_ddd()</code> average them into an event study. The animation uses the simulated panel of the <a href="#quick-start">Quick start</a> with not-yet-treated comparison groups.</sub></p>
 ```
 
-# Triple Differences Estimators <img src="man/figures/triplediff-logo.png" align="right" alt="" width="155" />
-
-```{r echo=FALSE, results='asis', message=FALSE, warning=FALSE}
-cat(
-  badger::badge_custom("release lifecycle", "alpha", "orange"),
-  badger::badge_devel("marcelortizv/triplediff", "blue"),
-  # badger::badge_last_commit("marcelortizv/triplediff"),
-  badger::badge_doi("10.48550/arXiv.2505.09942", "yellow")
-)
-```
-
-<!-- README.md is generated from README.Rmd. Please edit that file -->
+## What triplediff does
 
 **triplediff** is an R package for computing average treatment effects in Triple Differences Designs (also known as Difference-in-Differences-in-Differences or DDD). DDD designs are widely used in empirical work to relax parallel
 trends assumptions in Difference-in-Differences settings. This package provides functions to estimate group-time average treatment effect and event-study type estimands associated with DDD designs. The setups allowed are:
@@ -39,23 +67,28 @@ The `triplediff` package implements the framework proposed in:
 
 * [Ortiz-Villavicencio, Marcelo and Pedro H.C. Sant'Anna. \"Better Understanding Triple Differences Estimators\", 2025.](https://arxiv.org/abs/2505.09942)
 
-
 ## Installation
 
-You can install the latest *development* version of  `triplediff` from Github with:
+Install the released version from CRAN:
 
-```{r gh-installation, eval = FALSE}
-# install.packages("devtools")
-devtools::install_github("marcelortizv/triplediff")
-
-library(triplediff)
+```{r install-cran, eval = FALSE}
+install.packages("triplediff")
 ```
 
-## Quick Start: How to use `triplediff`
+Or install the development version from GitHub:
+
+```{r install-github, eval = FALSE}
+# install.packages("devtools")
+devtools::install_github("marcelortizv/triplediff")
+```
+
+This README uses version `r ver`.
+
+## Quick start
 
 We provide a quick start example to illustrate the main features of the package. The UX is designed to be similar to the `did` package, so users familiar with it should feel comfortable using `triplediff`.
 
-`ddd` is the main function for computing the DDD estimators proposed in [Ortiz-Villavicencio and Sant'Anna (2025)](https://arxiv.org/abs/2505.09942). At its core, `ddd` employs regression adjustment, inverse probability weighing, and doubly robust estimators that are valid under conditional DDD parallel trends.
+`ddd` is the main function for computing the DDD estimators proposed in [Ortiz-Villavicencio and Sant'Anna (2025)](https://arxiv.org/abs/2505.09942). At its core, `ddd` employs regression adjustment, inverse probability weighting, and doubly robust estimators that are valid under conditional DDD parallel trends.
 
 To use `ddd`, the minimal data requirements include:
 
@@ -69,42 +102,15 @@ To use `ddd`, the minimal data requirements include:
 
 - `partition`: This is an indicator variable that is 1 for the units eligible for treatment and 0 otherwise. Its column name is associated with parameter `pname`.
 
-The following are two simplified examples of how to use the `ddd` function. The first one is for a two-period DDD setup, while the second one is for a multiple-period DDD setup with staggered treatment adoption.
+Below, S is the period in which a unit's group enables treatment (the `gname` column), and Q is eligibility (the `pname` column). A unit is treated in period t when t ≥ S and Q = 1. A group with S = 0 or `Inf` never enables treatment. We write this as S = ∞.
 
-#### Case: Two-Periods DDD with covariates
+The following are two simplified examples of how to use the `ddd` function. The first one is a multiple-period DDD setup with staggered treatment adoption. It goes from the raw data to an event study. The second one is a two-period DDD setup.
 
-First, we simulate some data with a built-in function `gen_dgp_2periods` that generates a two-period DDD setup with a single treatment date. This function receives the number of units and the type of DGP design to generate. The `gen_dgp_2periods` function returns a data frame with the required columns for the `ddd` function with 4 covariates.
+### Multiple periods with staggered adoption: from the data to an event study
 
-```{r}
-set.seed(1234) # Set seed for reproducibility
-# Simulate data for a two-periods DDD setup
-df <- gen_dgp_2periods(
-  size = 5000, # Number of units
-  dgp_type = 1 # Type of DGP design
-)$data
+First, we can simulate some data with a built-in function `gen_dgp_mult_periods` that generates a multiple-period DDD setup with staggered treatment adoption. This function receives the number of units and the type of DGP design to generate. The `gen_dgp_mult_periods` function returns a data frame with the required columns for the `ddd` function with 4 covariates.
 
-head(df)
-
-```
-Now we can estimate the average treatment effect on the treated (ATT) using the `ddd` function. 
-
-```{r}
-# Estimate the average treatment effect on the treated, ATT(2,2)
-
-att_22 <- ddd(yname = "y", tname = "time", idname = "id", gname = "state",
-             pname = "partition", xformla = ~cov1 + cov2 + cov3 + cov4,
-             data = df, control_group = "nevertreated", est_method = "dr")
-
-summary(att_22)
-
-```
-
-
-#### Case: Multiple Periods DDD with staggered treatment adoption
-
-Next, we can simulate some data with a built-in function `gen_dgp_mult_periods` that generates a multiple-period DDD setup with staggered treatment adoption. This function receives the number of units and the type of DGP design to generate. The `gen_dgp_mult_periods` function returns a data frame with the required columns for the `ddd` function with 4 covariates.
-
-```{r}
+```{r sim-data}
 set.seed(1234) # Set seed for reproducibility
 # Simulate data for a multiple-period DDD setup with staggered treatment adoption
 data <- gen_dgp_mult_periods(size = 500, dgp_type = 1)$data
@@ -112,9 +118,70 @@ data <- gen_dgp_mult_periods(size = 500, dgp_type = 1)$data
 head(data)
 ```
 
-Now we can estimate the group-time average treatment effect on the treated using the `ddd` function. 
+**Step 1: look at the data.** Each unit belongs to one of six groups: its enabling period S (2, 3 or ∞) and its eligibility Q (1 or 0). The heatmap draws one row per unit and one column per period. Only the eligible units of a group that has enabled treatment are treated.
 
-```{r}
+```{=html}
+<details><summary>Show the ggplot2 code for this figure</summary>
+```
+
+```{r sim-heatmap-code, warning = FALSE, message = FALSE}
+library(ggplot2)
+
+# Status of each unit in each period. S is the enabling period (`state`,
+# 0 = never), Q is eligibility (`partition`), t is the period (`time`).
+status_of <- function(S, Q, t) {
+  enabled <- S != 0 & t >= S
+  ifelse(enabled & Q == 1, "Treated: enabled and eligible",
+  ifelse(enabled,          "Enabled, not eligible",
+  ifelse(S != 0 & Q == 1,  "Eligible, enabled later", "Not enabled")))
+}
+status_colors <- c("Treated: enabled and eligible" = "#154780",
+                   "Eligible, enabled later"       = "#B3CBE6",
+                   "Enabled, not eligible"         = "#B28C1C",
+                   "Not enabled"                   = "#E3E9E5")
+
+units <- unique(as.data.frame(data)[, c("id", "state", "partition")])
+units <- units[order(match(units$state, c(2, 3, 0)), -units$partition, units$id), ]
+block <- paste(match(units$state, c(2, 3, 0)), 1 - units$partition)  # one block per (S, Q)
+units$row <- seq_len(nrow(units)) + 8 * (match(block, unique(block)) - 1)  # gaps between blocks
+
+cells <- merge(as.data.frame(data), units[, c("id", "row")], by = "id")
+cells$status <- factor(status_of(cells$state, cells$partition, cells$time),
+                       levels = names(status_colors))
+labels <- aggregate(row ~ state + partition, data = units,
+                    FUN = function(r) c(mid = mean(r), n = length(r)))
+labels <- data.frame(labels[1:2], labels$row)
+labels$text <- sprintf("S = %s, Q = %d (%d units)",
+                       ifelse(labels$state == 0, "∞", labels$state),
+                       labels$partition, labels$n)
+
+p_heat <- ggplot(cells, aes(x = time, y = row, fill = status)) +
+  geom_tile(width = 0.97, height = 1) +
+  scale_fill_manual(values = status_colors, drop = FALSE, name = NULL) +
+  scale_y_reverse(breaks = labels$mid, labels = labels$text, expand = c(0.01, 0)) +
+  scale_x_continuous(breaks = 1:3, labels = paste("t =", 1:3), expand = c(0, 0)) +
+  labs(x = NULL, y = NULL,
+       title = "Who is treated, and when",
+       subtitle = "One row per unit, grouped by enabling period S and eligibility Q") +
+  theme_minimal(base_size = 11) +
+  theme(panel.grid = element_blank(), legend.position = "bottom",
+        plot.title.position = "plot") +
+  guides(fill = guide_legend(nrow = 2, byrow = TRUE))
+```
+
+```{=html}
+</details>
+```
+
+```{r sim-heatmap, echo = FALSE, fig.height = 4.2, fig.alt = "Heatmap with one row per unit and one column per period. Rows are grouped by enabling period S (2, 3, never) and eligibility Q. Eligible units of the S = 2 group are light blue in period 1 and dark blue from period 2 on. Eligible units of the S = 3 group are light blue in periods 1 and 2 and dark blue in period 3. Ineligible units of these groups are pale grey until their group enables and gold after that. Units of the S = never group are pale grey in all periods."}
+p_heat
+```
+
+DDD compares the treated cells with three comparison groups. For ATT(2,2) with `control_group = "nevertreated"`, these are the ineligible units of the S = 2 group, and the eligible and the ineligible units of the S = ∞ group. 
+
+**Step 2: estimate the group-time effects.** Now we can estimate the group-time average treatment effect on the treated using the `ddd` function.
+
+```{r sim-ddd}
 # Estimate the group-time average treatment effect in DDD
 
 att_gt <- ddd(yname = "y", tname = "time", idname = "id", gname = "state", 
@@ -125,56 +192,31 @@ att_gt <- ddd(yname = "y", tname = "time", idname = "id", gname = "state",
 summary(att_gt)
 ```
 
-Then, we can aggregate the group-time average treatment effect on the treated to obtain the event-study type estimates. The `agg_ddd` function allows us to aggregate the results from the `ddd` function.
-```{r}
+`plot()` draws each ATT(g,t) with its confidence interval. Pre-treatment cells are gold, and post-treatment cells are dark blue.
+
+```{r sim-attgt, fig.height = 3.4, fig.alt = "Coefficient plot of the six ATT(g,t) estimates with 95% confidence intervals. The pre-treatment cells are at or near zero. The post-treatment cells are between about 10 and 25."}
+plot(att_gt)
+```
+
+**Step 3: aggregate to an event study.** Then, we can aggregate the group-time average treatment effect on the treated to obtain the event-study type estimates. The `agg_ddd` function allows us to aggregate the results from the `ddd` function.
+
+```{r sim-agg}
 es_e <- agg_ddd(att_gt, type = "eventstudy")
 
 summary(es_e)
 ```
 
-From these event-study type estimates, we can plot the results using the `ggplot` library to create crisp visualizations.
-```{r, echo=FALSE, results="hide", warning=FALSE, message=FALSE}
-library(ggplot2)
-library(dplyr)
+`plot()` draws the event study. It returns a ggplot object, so you can change it with `+`.
+
+```{r sim-eventstudy, fig.height = 3.8, fig.alt = "Event-study plot. The estimates at event times -2 and -1 are at or near zero. The estimates at event times 0 and 1 are about 18 and 21, with narrow confidence intervals."}
+plot(es_e)
 ```
 
-```{r}
-es_df <- with(es_e$aggte_ddd, {
-    tibble::tibble(period   = egt,
-                   estimate = att.egt,
-                   ci_lower = estimate - crit.val.egt * se.egt,
-                   ci_upper = estimate + crit.val.egt * se.egt)
-  })
+### Not-yet-treated units as comparison group (GMM)
 
+We can also estimate the group-time average treatment effect using a GMM-based estimator with not-yet-treated units as comparison group. This is done by setting the `control_group` parameter to `"notyettreated"` in the `ddd` function.
 
-all_per <- sort(unique(es_df$period))
-
-p <- ggplot(es_df, aes(period, estimate)) +
-    geom_errorbar(aes(ymin = ci_lower, ymax = ci_upper),
-                  width = .15,
-                  position = position_dodge(width = .3)) +
-    geom_point(size = 2.2,
-               position = position_dodge(width = .3)) +
-    geom_hline(yintercept = 0, linewidth = .3) +
-    geom_vline(xintercept = -1, linetype = "dashed",
-               linewidth = .3) +
-    scale_x_continuous(
-      breaks = all_per
-    ) +
-         labs(title = "",
-         x = "Event Time",
-         y = "Treatment Effect") +
-    theme_bw(base_size = 12) +
-    theme(plot.title   = element_text(hjust = .25),
-          legend.position = "right")
-  
-  p
-
-```
-
-Finally, we can also estimate the group-time average treatment effect using a GMM-based estimator with not-yet-treated units as comparison group. This is done by setting the `control_group` parameter to `"notyettreated"` in the `ddd` function. 
-
-```{r}
+```{r sim-nyt}
 # do the same but using GMM-based notyettreated
 att_gt_nyt <- ddd(yname = "y", tname = "time", idname = "id", gname = "state", 
               pname = "partition", xformla = ~cov1 + cov2 + cov3 + cov4,
@@ -184,32 +226,414 @@ att_gt_nyt <- ddd(yname = "y", tname = "time", idname = "id", gname = "state",
 summary(att_gt_nyt)
 ```
 
-From this result, we can observe the standard errors for $ATT(2,2)$ are lower than the ones obtained with the `control_group = "nevertreated"` 
-option since we leverage the additional information from the not-yet-treated units in the estimation.
+```{r sim-nyt-check, include = FALSE}
+se22 <- function(fit) fit$se[fit$groups == 2 & fit$periods == 2]
+# The sentence below claims a smaller standard error; stop if that is not true.
+stopifnot(se22(att_gt_nyt) < se22(att_gt))
+```
+
+From this result, we can observe that the standard error of ATT(2,2) is `r fmt(se22(att_gt_nyt))`, lower than `r fmt(se22(att_gt))` with `control_group = "nevertreated"`, since we leverage the additional information from the not-yet-treated units in the estimation.
 
  -  ⚠️ We recommend users to read our paper for further details on the GMM-based procedure and its difference with other estimators relying in not-yet-treated units as comparison group.
 
-## Release Note 📢
+
+### Two periods, with covariates
+
+First, we simulate some data with a built-in function `gen_dgp_2periods` that generates a two-period DDD setup with a single treatment date. This function receives the number of units and the type of DGP design to generate. The `gen_dgp_2periods` function returns a data frame with the required columns for the `ddd` function with 4 covariates.
+
+```{r two-data}
+set.seed(1234) # Set seed for reproducibility
+# Simulate data for a two-periods DDD setup
+df <- gen_dgp_2periods(
+  size = 5000, # Number of units
+  dgp_type = 1 # Type of DGP design
+)$data
+
+head(df)
+
+```
+
+Now we can estimate the average treatment effect on the treated (ATT) using the `ddd` function.
+
+```{r two-ddd}
+# Estimate the average treatment effect on the treated, ATT(2,2)
+
+att_22 <- ddd(yname = "y", tname = "time", idname = "id", gname = "state",
+             pname = "partition", xformla = ~cov1 + cov2 + cov3 + cov4,
+             data = df, control_group = "nevertreated", est_method = "dr")
+
+summary(att_22)
+
+```
+
+## Real data: Gruber (1994)
+
+`gruber1994` holds the data of Gruber (1994), a classic DDD application. Three states (IL, NJ and NY) passed laws that required health insurance to cover maternity. The laws took effect between July 1976 and January 1977, so `treatment_starts` is 1976 for these states. The eligible group (Q = 1) is married women aged 20 to 40. The data are repeated cross-sections: each row is a different worker. The heatmap counts the workers in each state, group and year.
+
+```{=html}
+<details><summary>Show the ggplot2 code for this figure</summary>
+```
+
+```{r gruber-heatmap-code}
+cells_g <- aggregate(id ~ state + treat_group + year + treatment_starts,
+                     data = gruber1994, FUN = length)
+names(cells_g)[names(cells_g) == "id"] <- "workers"
+cells_g$status <- factor(status_of(cells_g$treatment_starts, cells_g$treat_group, cells_g$year),
+                         levels = names(status_colors))
+cells_g$group <- factor(ifelse(cells_g$treatment_starts == 0,
+                               "Comparison states\n(never enable)",
+                               "Mandate states\n(enable in 1976)"),
+                        levels = c("Mandate states\n(enable in 1976)",
+                                   "Comparison states\n(never enable)"))
+cells_g <- cells_g[order(cells_g$group, cells_g$state, -cells_g$treat_group), ]
+cells_g$row <- paste0(cells_g$state, ", Q = ", cells_g$treat_group)
+cells_g$row <- factor(cells_g$row, levels = rev(unique(cells_g$row)))
+
+# The counts are dark on every cell except the Treated cells, where they are white.
+p_gruber <- ggplot(cells_g, aes(x = factor(year), y = row, fill = status)) +
+  geom_tile(colour = "white", linewidth = 0.8) +
+  geom_text(aes(label = workers,
+                colour = status != "Treated: enabled and eligible"),
+            size = 3, show.legend = FALSE) +
+  scale_colour_manual(values = c(`TRUE` = "#1E2B27", `FALSE` = "white")) +
+  scale_fill_manual(values = status_colors, drop = FALSE, name = NULL) +
+  facet_grid(rows = vars(group), scales = "free_y", space = "free_y", switch = "y") +
+  labs(x = NULL, y = NULL, title = "Gruber (1994): workers per state, group and year",
+       subtitle = "Q = 1: married women aged 20 to 40. Mandates took effect from July 1976 to January 1977.") +
+  theme_minimal(base_size = 11) +
+  theme(panel.grid = element_blank(), legend.position = "bottom",
+        strip.placement = "outside", strip.text.y.left = element_text(angle = 0),
+        plot.title.position = "plot") +
+  guides(fill = guide_legend(nrow = 2, byrow = TRUE))
+```
+
+```{=html}
+</details>
+```
+
+```{r gruber-heatmap, echo = FALSE, fig.height = 5.4, fig.alt = "Heatmap of the number of workers per state, eligibility group and year in the Gruber (1994) data. In the mandate states IL, NJ and NY, eligible workers are light blue in 1974 and 1975 and dark blue in 1977 and 1978. Ineligible workers there are pale grey in 1974 and 1975 and gold in 1977 and 1978. All cells of the comparison states CT, IN, MA, NC and OH are pale grey."}
+p_gruber
+```
+
+
+
+Reference: Gruber, J. (1994). The Incidence of Mandated Maternity Benefits. *American Economic Review*, 84(3), 622-641.
+
+## Release note
 
 The current version is released in an **alpha** stage: the core features are implemented and made available so users can try them out and provide feedback. Please, be aware that it remains under active development, so long-term stability is not guaranteed---APIs may evolve, adding more features and/or breaking changes can occur at any time, without a deprecation cycle.
 
 Use [GitHub Issues](https://github.com/marcelortizv/triplediff/issues) to report bugs, request features or provide feedback.
 
-### 🚀 Currently Supported
+### 🚀 Currently supported
 
-- ️✅ Two-period DDD with single treatment date.
-- ️✅ Multiple-period DDD with single treatment date.
-- ️✅ DDD with staggered treatment adoption (i.e., more than two periods and variation in treatment timing).
-- ️✅ Aggregations procedures (e.g., event-study type estimates).
-- ️✅ GMM-based estimations with not-yet-treated units as comparison group.
+- ✅ Two-period DDD with single treatment date.
+- ✅ Multiple-period DDD with single treatment date.
+- ✅ DDD with staggered treatment adoption (i.e., more than two periods and variation in treatment timing).
+- ✅ Aggregations procedures (e.g., event-study type estimates).
+- ✅ GMM-based estimations with not-yet-treated units as comparison group.
 - ✅ Repeated cross-sectional data.
 - ✅ Unbalanced panel data.
+- ✅ Built-in plots: `plot()` for `ddd()` and `agg_ddd()` results (needs the ggplot2 package).
+- ✅ Example data: `gruber1994`, the Gruber (1994) maternity-mandate data.
 
-### ⚠️ Not Yet Supported
+### ⚠️ Not yet supported
 
-- 🔲 Built-in plotting capabilities for visualizing results.
-  - This can be done easily by users. E.g., event-study type estimates can be plotted using `ggplot2`. See the quick start example.
 - 🔲 User-specified data-driven models for estimations of nuisance parameters.
 
+## Documentation
 
+- [Website](https://marcelortiz.com/triplediff/)
+- [Function reference](https://marcelortiz.com/triplediff/reference/index.html)
+- [Changelog](https://marcelortiz.com/triplediff/news/index.html)
+- The paper: [PDF](https://marcelortiz.com/assets/pdf/DDD_OVS.pdf) and [arXiv:2505.09942](https://arxiv.org/abs/2505.09942)
 
+## Citation
+
+If you use triplediff, please cite the paper. In R, `citation("triplediff")` prints both references.
+
+```bibtex
+@article{OVS2025,
+  title   = {Better Understanding Triple Differences Estimators},
+  author  = {Ortiz-Villavicencio, Marcelo and Sant'Anna, Pedro H. C.},
+  journal = {ArXiv},
+  year    = {2025},
+  url     = {https://arxiv.org/abs/2505.09942}
+}
+
+@misc{OVS2025triplediff,
+  title  = {triplediff: Triple Differences Estimators},
+  author = {Ortiz-Villavicencio, Marcelo and Sant'Anna, Pedro H. C.},
+  year   = {2026},
+  note   = {R package version `r ver`},
+  url    = {http://marcelortiz.com/triplediff/}
+}
+```
+
+## License
+
+MIT.
+
+```{r hero, include = FALSE}
+# Writes man/figures/README-hero.svg, the animation at the top of this README.
+# It uses `data` and the not-yet-treated fit `att_gt_nyt` from the examples above.
+write_hero_svg <- function(data, fit, es, file, at = NULL) {
+  # data: gen_dgp_mult_periods(size = 500, dgp_type = 1)$data (seed 1234)
+  # fit:  ddd(..., control_group = "notyettreated", base_period = "universal")
+  # es:   agg_ddd(fit, type = "eventstudy")
+  # at:   NULL writes the animation; a time in seconds writes a still of that moment.
+  data <- as.data.frame(data)
+  stopifnot(setequal(unique(data$state), c(0, 2, 3)), setequal(unique(data$time), 1:3),
+            identical(as.character(fit$call.params$control_group), "notyettreated"),
+            identical(as.character(fit$call.params$base_period), "universal"))
+  COL <- c(post = "#154780", pre = "#B3CBE6", inel = "#B28C1C", none = "#E3E9E5")
+  INK <- "#415D56"; SUB <- "#5C746C"; BG <- "#FFFFFF"; BOX <- "#1E2B27"
+  CHIP <- "#E3E9E5"                        # step chips and the strip behind each ATT(g,t) row
+  POST <- COL[["post"]]; PRE <- "#B28C1C"  # colors of the estimates after and before treatment
+  # Opaque tint of a colour for the interval bars: 60% of the colour over white.
+  tint <- function(col, alpha = 0.6) { m <- grDevices::col2rgb(col) / 255; grDevices::rgb(t(alpha * m + (1 - alpha))) }
+  # Triangle marker of size r at (cx, cy).
+  tri <- function(cx, cy, r, col)
+    sprintf('<polygon points="%.1f,%.1f %.1f,%.1f %.1f,%.1f" fill="%s"/>',
+            cx, cy - r, cx - r * 0.95, cy + r * 0.72, cx + r * 0.95, cy + r * 0.72, col)
+  MINUS <- "−"; INF <- "∞"; TIMES <- "×"
+  num <- function(x) sub("-", MINUS, sprintf("%.2f", x), fixed = TRUE)
+
+  # ---- example ----
+  grp <- data.frame(S = c(2, 2, 3, 3, 0, 0), Q = c(1, 0, 1, 0, 1, 0))
+  u <- unique(data[, c("id", "state", "partition")])
+  grp$n <- mapply(function(s, q) sum(u$state == s & u$partition == q), grp$S, grp$Q)
+  cohorts <- c(2, 3); TT <- 3
+  status <- function(S, Q, t) {
+    en <- S != 0 && t >= S
+    if (en && Q == 1) "post" else if (en) "inel" else if (S != 0 && Q == 1) "pre" else "none"
+  }
+  cells <- data.frame(g = fit$groups, t = fit$periods, att = fit$ATT, lo = fit$lci, hi = fit$uci)
+  cells$base <- cells$g - 1
+  cells$ref <- cells$t == cells$base
+  stopifnot(all(cells$att[cells$ref] == 0))
+  a <- es$aggte_ddd
+  ev <- data.frame(e = a$egt, att = a$att.egt,
+                   lo = a$att.egt - a$crit.val.egt * a$se.egt, hi = a$att.egt + a$crit.val.egt * a$se.egt)
+  share <- setNames(grp$n[grp$Q == 1 & grp$S != 0], grp$S[grp$Q == 1 & grp$S != 0])
+
+  # ---- geometry (px); three panel areas under the three step chips ----
+  W <- 900; H <- 340
+  PX <- list(c(10, 300), c(305, 595), c(600, 890)); mid <- function(p) sum(PX[[p]]) / 2
+  x0 <- 122; cw <- 58; y0 <- 88; rh <- 24; gap <- 7     # grid 122-296: first version's cells, shifted left
+  ry <- function(i) y0 + (i - 1) * rh + ((i - 1) %/% 2) * gap
+  yb <- ry(6) + rh
+  cx <- function(t) x0 + (t - 0.5) * cw
+  ys <- function(k) y0 + 12 + (k - 1) * (yb - y0 - 24) / (nrow(cells) - 1)
+  s0 <- 425; s1 <- 585
+  sr <- range(c(0, cells$lo, cells$hi), na.rm = TRUE); sr <- sr + c(-1, 1) * 0.05 * diff(sr)
+  sxs <- function(v) s0 + (v - sr[1]) / diff(sr) * (s1 - s0)
+  ex0 <- 610; ex1 <- 880
+  er <- range(c(0, ev$lo, ev$hi), na.rm = TRUE); er <- er + c(-1, 1) * 0.08 * diff(er)
+  sxe <- function(e) ex0 + 16 + (e - min(ev$e)) / diff(range(ev$e)) * (ex1 - ex0 - 32)
+  sye <- function(v) yb - 6 - (v - er[1]) / diff(er) * (yb - y0 - 12)
+
+  # ---- timeline (s) ----
+  L <- 27; FADE <- 0.25; END <- 26.4; TF <- 26.0          # TF: the still shown without motion
+  flip <- function(j) 0.9 + (j - 1)                        # first version: cells of column j change at 0.9, 1.9, 2.9 s
+  SW <- c(0.6, 0.8, 3.6, 3.8)                              # first version: sweep shows, starts, ends, hides
+  P1 <- 5.0
+  dur <- ifelse(cells$ref, 1.6, 2.6)
+  fs <- P1 + c(0, cumsum(dur))[seq_len(nrow(cells))]; fe <- fs + dur
+  P2 <- max(fe)
+  te <- P2 + 0.4 + 1.6 * (seq_len(nrow(ev)) - 1)            # event-study points
+  LINK <- 1.4                                              # links stay this long, then disappear
+
+  items <- list()
+  add <- function(svg, a = 0, b = L) items[[length(items) + 1]] <<- list(kind = "win", svg = svg, a = a, b = b)
+  txt <- function(x, y, label, size = 11, fill = SUB, anchor = "middle", extra = "")
+    sprintf('<text x="%s" y="%s" text-anchor="%s" font-size="%s" fill="%s"%s>%s</text>',
+            round(x, 1), round(y, 1), anchor, size, fill, extra, label)
+  rect <- function(x, y, w, h, fill, extra = "")
+    sprintf('<rect x="%s" y="%s" width="%s" height="%s" fill="%s"%s/>', round(x, 1), round(y, 1), round(w, 1), round(h, 1), fill, extra)
+  pct <- function(s) sprintf("%.2f%%", 100 * s / L)
+
+  # ---- step chips ----
+  chip_lab <- c("1  Raw panel", "2  ddd(): building blocks ATT(g,t)", "3  agg_ddd(): event study")
+  chip_x <- c(10, 305, 600); chip_w <- 290; chip_win <- list(c(0, P1), c(P1, P2), c(P2, END))
+  for (i in 1:3) {
+    add(c(rect(chip_x[i], 10, chip_w, 26, CHIP, ' rx="13"'),
+          txt(chip_x[i] + chip_w / 2, 27.5, chip_lab[i], 12, INK, extra = ' font-weight="600"')))
+    add(c(rect(chip_x[i], 10, chip_w, 26, INK, ' rx="13"'),
+          txt(chip_x[i] + chip_w / 2, 27.5, chip_lab[i], 12, BG, extra = ' font-weight="600"')),
+        chip_win[[i]][1], chip_win[[i]][2])
+  }
+
+  # ---- step 1: the first version's panel ----
+  title_l <- txt(mid(1), y0 - 24, "Who is treated, and when", 13, INK, extra = ' font-weight="600"')
+  add(title_l, 0, P1); add(title_l, P2, END)
+  for (i in 1:6) for (j in 1:TT)
+    items[[length(items) + 1]] <- list(kind = "cell", x = x0 + (j - 1) * cw, y = ry(i), j = j,
+                                       st = status(grp$S[i], grp$Q[i], j))
+  for (i in 1:6) {
+    s_lab <- if (grp$S[i] == 0) INF else grp$S[i]
+    add(sprintf('<text x="%s" y="%s" text-anchor="end" font-size="11" fill="%s">S = %s, Q = %d <tspan font-size="10" fill="%s">(%d)</tspan></text>',
+                x0 - 8, ry(i) + rh / 2 + 4, INK, s_lab, grp$Q[i], SUB, grp$n[i]))
+  }
+  for (j in 1:TT) add(txt(cx(j), yb + 15, paste("t =", j)))
+  items[[length(items) + 1]] <- list(kind = "sweep")
+
+  # ---- step 2: one frame per ATT(g,t) ----
+  comp_of <- function(g, t) c(cohorts[cohorts > max(g, t) & cohorts != g], 0)
+  for (k in seq_len(nrow(cells))) {
+    g <- cells$g[k]; t <- cells$t[k]; b <- cells$base[k]; ref <- cells$ref[k]
+    comp <- if (ref) numeric(0) else comp_of(g, t)
+    role <- ifelse(grp$S == g & grp$Q == 1, "A", ifelse(grp$S == g, "B", ifelse(grp$S %in% comp, "C", "")))
+    cols <- unique(c(b, t))
+    fr <- txt(mid(1), y0 - 24, sprintf("ATT(%d,%d)", g, t), 13, INK, extra = ' font-weight="600"')
+    for (i in 1:6) for (j in 1:TT) {
+      xx <- x0 + (j - 1) * cw
+      if (role[i] != "" && j %in% cols) {
+        # white pattern on treated cells, dark pattern on all other cells
+        on_post <- status(grp$S[i], grp$Q[i], j) == "post"
+        fr <- c(fr, rect(xx + 1, ry(i) + 1, cw - 2, rh - 2, sprintf("url(#p%s%s)", role[i], if (on_post) "w" else "")))
+      } else {
+        fr <- c(fr, rect(xx, ry(i), cw, rh, BG, ' fill-opacity="0.82"'))
+      }
+    }
+    used <- which(role != "")
+    runs <- split(used, cumsum(c(1, diff(used) != 1)))
+    for (j in cols) for (r in runs)
+      fr <- c(fr, rect(x0 + (j - 1) * cw - 2, ry(min(r)) - 2, cw + 4, ry(max(r)) + rh - ry(min(r)) + 4, "none",
+                       sprintf(' stroke="%s" stroke-width="2.5" rx="3"', BOX)))
+    fr <- c(fr, txt(cx(b), yb + 31, sprintf("g %s 1", MINUS), 11, INK, extra = ' font-weight="600"'))
+    if (!ref) fr <- c(fr, txt(cx(t), yb + 31, "t", 11, INK, extra = ' font-weight="600"'))
+    fr <- c(rect(311, ys(k) - 11, 278, 22, CHIP, ' rx="4"'), fr)
+    add(fr, fs[k], fe[k])
+  }
+  add(c(txt(mid(2), y0 - 24, "ATT(g,t)", 13, INK, extra = ' font-weight="600"'),
+        sprintf('<line x1="%.1f" x2="%.1f" y1="%s" y2="%s" stroke="%s" stroke-width="1" stroke-dasharray="3 3"/>', sxs(0), sxs(0), y0, yb, INK),
+        txt(sxs(0), yb + 15, "0", 10)))
+  for (k in seq_len(nrow(cells))) {
+    g <- cells$g[k]; t <- cells$t[k]; ref <- cells$ref[k]
+    col <- if (ref) SUB else if (t < g) PRE else POST
+    row <- c(txt(318, ys(k) + 4, sprintf("ATT(%d,%d)", g, t), 11, INK, "start"),
+             txt(408, ys(k) + 4, if (ref) "0" else num(cells$att[k]), 11, if (ref) SUB else INK, "end"))
+    if (!ref) row <- c(row, sprintf('<line x1="%.1f" x2="%.1f" y1="%.1f" y2="%.1f" stroke="%s" stroke-width="4.5"/>',
+                                    sxs(cells$lo[k]), sxs(cells$hi[k]), ys(k), ys(k), tint(col)))
+    row <- c(row, tri(sxs(cells$att[k]), ys(k), 5, col))
+    add(row, fs[k] + 0.6, END)
+  }
+
+  # ---- step 3: event study; links appear, are highlighted, and disappear ----
+  add(c(txt(mid(3), y0 - 24, "Event study", 13, INK, extra = ' font-weight="600"'),
+        sprintf('<line x1="%s" x2="%s" y1="%s" y2="%s" stroke="%s" stroke-width="1"/>', ex0, ex1, yb, yb, INK),
+        sprintf('<line x1="%s" x2="%s" y1="%.1f" y2="%.1f" stroke="%s" stroke-width="1" stroke-dasharray="4 3"/>', ex0, ex1, sye(0), sye(0), INK),
+        sprintf('<line x1="%.1f" x2="%.1f" y1="%s" y2="%s" stroke="%s" stroke-width="1" stroke-dasharray="1 3"/>', (sxe(-1) + sxe(0)) / 2, (sxe(-1) + sxe(0)) / 2, y0, yb, INK),
+        vapply(ev$e, function(e) txt(sxe(e), yb + 15, sub("-", MINUS, e, fixed = TRUE)), ""),
+        txt(mid(3), yb + 31, "event time e", 11)))
+  for (j in seq_len(nrow(ev))) {
+    e <- ev$e[j]; ks <- which(cells$t - cells$g == e)
+    col <- if (e < 0) PRE else POST
+    w <- share[as.character(cells$g[ks])]; w <- w / sum(w)
+    stopifnot(abs(sum(w * cells$att[ks]) - ev$att[j]) < 1e-6)
+    lk <- character(0)
+    for (m in seq_along(ks)) {
+      k <- ks[m]; xa <- 589; ya <- ys(k); xb <- sxe(e) - 6; yb2 <- sye(ev$att[j])
+      lk <- c(lk, rect(311, ya - 11, 278, 22, "none", sprintf(' stroke="%s" stroke-width="1.8" rx="4"', col)),
+              sprintf('<path d="M%s %.1f C%.1f %.1f %.1f %.1f %.1f %.1f" fill="none" stroke="%s" stroke-width="2"%s/>',
+                      xa, ya, xa + 30, ya, xb - 30, yb2, xb, yb2, col, if (all(cells$ref[ks])) ' stroke-dasharray="3 3"' else ""))
+      if (length(ks) > 1 && !all(cells$ref[ks]))
+        lk <- c(lk, txt(586, ya - 13.5, sprintf("%s %.2f", TIMES, w[m]), 10, INK, "end"))
+    }
+    add(lk, te[j], te[j] + LINK)
+    pt <- character(0)
+    if (is.finite(ev$lo[j])) pt <- sprintf('<path d="M%.1f %.1f V%.1f" stroke="%s" stroke-width="5" fill="none"/>',
+                                           sxe(e), sye(ev$lo[j]), sye(ev$hi[j]), tint(col))
+    add(c(pt, tri(sxe(e), sye(ev$att[j]), 6.2, col)), te[j], END)
+  }
+
+  # ---- legend: names, always visible ----
+  sw <- function(x, y, fill, pat = NULL) c(rect(x, y - 9, 22, 12, fill, sprintf(' stroke="%s" stroke-width="0.8"', INK)),
+                                          if (!is.null(pat)) rect(x, y - 9, 22, 12, sprintf("url(#%s)", pat)))
+  # The block spans x = 40 (first swatch) to 418 + 117.6 (end of "not yet or never enabled",
+  # Helvetica 11 px); shift it so its center sits at W / 2.
+  leg_dx <- round(W / 2 - (40 + 418 + 117.6) / 2, 1)
+  add(c(sprintf('<g transform="translate(%s 0)">', leg_dx),
+        sw(40, 304, POST), txt(68, 304, "treated", 11, INK, "start"),
+        rect(160, 295, 8, 12, COL[["pre"]]), rect(168, 295, 7, 12, COL[["inel"]]), rect(175, 295, 7, 12, COL[["none"]]),
+        rect(160, 295, 22, 12, "none", sprintf(' stroke="%s" stroke-width="0.8"', INK)),
+        txt(190, 304, "not treated", 11, INK, "start"),
+        rect(300, 294, 22, 14, "none", sprintf(' stroke="%s" stroke-width="2.5" rx="3"', BOX)),
+        txt(330, 304, "data used for one ATT(g,t)", 11, INK, "start"),
+        sw(40, 326, COL[["pre"]], "pA"), txt(68, 326, "enabled, eligible", 11, INK, "start"),
+        sw(200, 326, COL[["pre"]], "pB"), txt(228, 326, "same group, ineligible", 11, INK, "start"),
+        sw(390, 326, COL[["pre"]], "pC"), txt(418, 326, "not yet or never enabled", 11, INK, "start"), "</g>"))
+
+  # ---- assemble ----
+  pat <- function(id, col, body, w = 6, h = 6, tr = "")
+    sprintf('<pattern id="%s" width="%s" height="%s" patternUnits="userSpaceOnUse"%s>%s</pattern>', id, w, h, tr, sprintf(body, col))
+  defs <- c(pat("pA", INK, '<rect width="2" height="6" fill="%s"/>', tr = ' patternTransform="rotate(45)"'),
+            pat("pAw", BG, '<rect width="2" height="6" fill="%s"/>', tr = ' patternTransform="rotate(45)"'),
+            pat("pB", INK, '<rect y="2" width="6" height="1.6" fill="%s"/>', h = 5),
+            pat("pBw", BG, '<rect y="2" width="6" height="1.6" fill="%s"/>', h = 5),
+            pat("pC", INK, '<circle cx="3" cy="3" r="1.4" fill="%s"/>'),
+            pat("pCw", BG, '<circle cx="3" cy="3" r="1.4" fill="%s"/>'))
+  sweep_rect <- function(dx, cls = "") sprintf('<rect%s x="%s" y="%s" width="3" height="%s" fill="%s"%s/>', cls, x0 - 1.5, y0 - 4, yb - y0 + 8, POST,
+                                               if (dx != 0) sprintf(' transform="translate(%.1f 0)"', dx) else "")
+  cell_rect <- function(it, fill, cls = "") sprintf('<rect%s x="%s" y="%s" width="%s" height="%s" fill="%s" stroke="%s" stroke-width="2"/>',
+                                                    cls, it$x, it$y, cw, rh, fill, BG)
+  full <- function(it) it$a <= 0 && it$b >= L
+  body <- character(0); css <- character(0)
+  if (!is.null(at)) {
+    for (it in items) {
+      if (it$kind == "cell") {
+        on <- it$st != "none" && at >= flip(it$j) + 0.1 && at < END + 0.25
+        body <- c(body, cell_rect(it, COL[[if (on) it$st else "none"]]))
+      } else if (it$kind == "sweep") {
+        if (at >= SW[1] && at < SW[4]) body <- c(body, sweep_rect(TT * cw * min(1, max(0, (at - SW[2]) / (SW[3] - SW[2])))))
+      } else if (full(it) || (it$a <= at && at < it$b)) body <- c(body, it$svg)
+    }
+  } else {
+    key <- vapply(items, function(it) if (it$kind != "win" || full(it)) "" else sprintf("%.2f %.2f", it$a, it$b), "")
+    wins <- unique(key[key != ""])
+    for (w in seq_along(wins)) {
+      ab <- as.numeric(strsplit(wins[w], " ")[[1]]); a0 <- ab[1]; b0 <- ab[2]
+      kf <- if (a0 <= 0) sprintf("0%%,%s{opacity:1}%s,100%%{opacity:0}", pct(b0), pct(min(b0 + FADE, L)))
+            else sprintf("0%%,%s{opacity:0}%s,%s{opacity:1}%s,100%%{opacity:0}", pct(a0), pct(a0 + FADE), pct(b0), pct(min(b0 + FADE, L)))
+      css <- c(css, sprintf(".w%d{animation-name:w%d}@keyframes w%d{%s}", w, w, w, kf))
+    }
+    nc <- 0
+    for (r in seq_along(items)) {
+      it <- items[[r]]
+      if (it$kind == "cell") {
+        if (it$st == "none") { body <- c(body, cell_rect(it, COL[["none"]])); next }
+        nc <- nc + 1; f <- flip(it$j)
+        css <- c(css, sprintf(".c%d{animation-name:c%d}@keyframes c%d{0%%,%s{fill:%s}%s,%s{fill:%s}%s,100%%{fill:%s}}",
+                              nc, nc, nc, pct(f), COL[["none"]], pct(f + 0.2), pct(END), COL[[it$st]], pct(END + 0.5), COL[["none"]]))
+        body <- c(body, cell_rect(it, COL[[it$st]], sprintf(' class="a e c%d"', nc)))
+      } else if (it$kind == "sweep") {
+        css <- c(css, sprintf(".sw{animation-name:sw}@keyframes sw{0%%,%s{opacity:0;transform:translateX(0)}%s{opacity:1;transform:translateX(0)}%s{opacity:1;transform:translateX(%spx)}%s,100%%{opacity:0;transform:translateX(%spx)}}",
+                              pct(SW[1]), pct(SW[2]), pct(SW[3]), TT * cw, pct(SW[4]), TT * cw))
+        body <- c(body, sweep_rect(0, ' class="a sw off"'))
+      } else if (key[r] == "") {
+        body <- c(body, it$svg)
+      } else {
+        on <- it$a <= TF && TF < it$b
+        body <- c(body, sprintf('<g class="a w%d%s">', match(key[r], wins), if (on) "" else " off"), it$svg, "</g>")
+      }
+    }
+    css <- c(sprintf(".a{animation-duration:%ss;animation-iteration-count:infinite;animation-timing-function:linear}.e{animation-timing-function:ease-out}.off{opacity:0}", L),
+             css, "@media (prefers-reduced-motion:reduce){.a{animation:none!important}}")
+  }
+  svg <- c(sprintf('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 %d %d" width="%d" height="%d" role="img" aria-labelledby="t d">', W, H, W, H),
+           '<title id="t">How triplediff works: raw panel, ATT(g,t) building blocks, event study</title>',
+           paste0('<desc id="d">Step 1: units grouped by enabling period S and eligibility Q over periods 1 to 3; a line sweeps across the periods and ',
+                  'the treated cells turn dark blue. Step 2: for each ATT(g,t), only the data it uses stay in view, in periods g - 1 and t: ',
+                  'the enabled eligible units, the ineligible units of the same group, and the groups not yet or never enabled. ',
+                  'Each estimate joins a coefficient strip. Step 3: the event-study points appear; the links to the ATT(g,t) each point averages ',
+                  'appear and disappear.</desc>'),
+           "<defs>", defs, if (length(css)) c("<style>", css, "</style>"), "</defs>",
+           rect(0, 0, W, H, BG, ' rx="10"'),
+           '<g font-family="-apple-system,BlinkMacSystemFont,\'Segoe UI\',Helvetica,Arial,sans-serif">', body, "</g>", "</svg>")
+  writeLines(enc2utf8(svg), file, useBytes = TRUE)
+  invisible(file)
+}
+es_nyt <- agg_ddd(att_gt_nyt, type = "eventstudy")
+write_hero_svg(data, att_gt_nyt, es_nyt, "man/figures/README-hero.svg")
+```

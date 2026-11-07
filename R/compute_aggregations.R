@@ -116,17 +116,18 @@ compute_se_agg <- function(influence_function, boot=FALSE, boot_std_errors = NA,
 
 #' @param ddd_obj a ddd object (i.e., the results of the [ddd()] function)
 #' @param type Which type of aggregated treatment effect parameter to compute.
-#'   \code{"simple"} just computes a weighted average of all
-#'   group-time average treatment effects with weights proportional to group
-#'   size.
+#'   \code{"simple"} computes a weighted average of all post-treatment
+#'   group-time average treatment effects, with cohort weights proportional to
+#'   the share of treated units in each cohort.
 #'   \code{"eventstudy"} computes average effects across
 #'   different lengths of exposure to the treatment (event times). Here the overall effect averages the effect of the
 #'   treatment across the positive lengths of exposure. This is the default option;
 #'   \code{"group"} computes average treatment effects across different groups/cohorts; here
-#'   the overall effect averages the effect across different groups using group size as weights;
+#'   the overall effect averages the effect across different groups, with weights proportional
+#'   to the share of treated units in each cohort;
 #'   \code{"calendar"} computes average treatment effects across different
-#'   time periods, with weights proportional to the group size; here the overall effect averages the effect across each
-#'   time period.
+#'   time periods, with cohort weights proportional to the share of treated units; here the overall
+#'   effect averages the effect across each time period. See Details for the cohort weights.
 #' @param cluster The name of the variable to be used for clustering. The maximum number of cluster variables is 1. Default is \code{NULL}.
 #' @param balance_e If set (and if one computes event study), it balances
 #'  the sample with respect to event time.  For example, if `balance_e=2`,
@@ -342,8 +343,8 @@ compute_aggregation <- function(ddd_obj,
 
   weights = dta[["weights"]]
 
-  # compute probability of belonging of each group in glist
-  pg <- sapply(orig_glist, function(g) mean(weights*(dta[["first_treat"]]==g)))
+  # share of treated units of each cohort in glist: P(S = g, Q = 1) (enabled in g and eligible)
+  pg <- sapply(orig_glist, function(g) mean(weights*((dta[["first_treat"]]*dta[["partition"]])==g)))
   pgg <- pg
 
   # making pg have the same length of ATT(g,t)
@@ -352,8 +353,8 @@ compute_aggregation <- function(ddd_obj,
   # which group time average treatment effects are post-treatment
   keepers <- which(group <= t & t <= (group + max_e))
 
-  # n x 1 vector of group variable
-  G <-  unlist(lapply(dta[["first_treat"]], orig2t))
+  # n x 1 vector of treated cohort (0 for never-enabled or ineligible units)
+  G <-  unlist(lapply(dta[["first_treat"]]*dta[["partition"]], orig2t))
 
   #-----------------------------------------------------------------------------
   # Compute the simple ATT summary
@@ -479,7 +480,7 @@ compute_aggregation <- function(ddd_obj,
                                           pg=pgg,
                                           weights=weights,
                                           G=G,
-                                          group=group)
+                                          group=glist)
 
     # get overall influence function
     selective.inf.func <- get_agg_inf_func(att=selective.att.g,

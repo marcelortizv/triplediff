@@ -1,6 +1,6 @@
 Package: triplediff
 Title: Triple-Difference Estimators
-Version: 0.2.4
+Version: 0.3.0
 Authors@R: c(person("Marcelo", "Ortiz-Villavicencio", email = "marcelo.ortiz@emory.edu", role = c("aut", "cre")),
               person("Pedro H. C.", "Sant'Anna", email = "pedro.santanna@emory.edu", role = c("aut"))
             )
@@ -13,6 +13,7 @@ Description: Implements triple-difference (DDD) estimators for both average
               Sant'Anna (2025) <doi:10.48550/arXiv.2505.09942>.
 License: MIT + file LICENSE
 Encoding: UTF-8
+LazyData: true
 Depends:
     R (>= 4.3)
 Roxygen: list(markdown = TRUE)
@@ -26,7 +27,8 @@ Imports:
     Rcpp (>= 1.0.12)
 LinkingTo: 
     Rcpp (>= 1.0.12)
-Suggests: 
+Suggests:
+    ggplot2 (>= 3.5.0),
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
 URL: http://marcelortiz.com/triplediff/

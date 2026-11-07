@@ -9,13 +9,15 @@ NULL
 #' Furthermore, this package supports the application of machine learning methods for the estimation of the nuisance parameters.
 #' @param yname The name of the outcome variable.
 #' @param tname The name of the column containing the time periods.
-#' @param idname The name of the column containing the unit id.
+#' @param idname The name of the column containing the unit id. Each (idname, tname) pair must appear at most once.
 #' @param gname The name of the column containing the first period when a particular observation is treated. It is a positive number
 #' for treated units and defines which group the unit belongs to. It takes value 0 or Inf for untreated units.
+#' In two-period designs, never-treated units must be coded 0 or Inf; any other code stops with an error.
 #' @param pname The name of the column containing the partition variable (e.g., the subgroup identifier). This is an indicator variable that is 1 for
-#' the units eligible for treatment and 0 otherwise.
+#' the units eligible for treatment and 0 otherwise. It must be coded 0 and 1.
 #' @param xformla The formula for the covariates to be included in the model. It should be of the form \code{~ x1 + x2}.
-#' Default is \code{xformla = ~1} (no covariates).
+#' Default is \code{xformla = ~1} (no covariates). With two periods and panel data, covariates must be time invariant.
+#' With multiple periods, each ATT(g,t) uses the covariates of the earlier of its two periods for both the propensity score and the outcome regression.
 #' @param data A data frame or data table containing the data.
 #' @param control_group Valid for multiple periods only. The control group to be used in the estimation. Default is \code{control_group = "notyettreated"} which sets as control group the units that have not yet participated in the treatment.
 #' The alternative is \code{control_group = "nevertreated"} which sets as control group the units that never participate in the treatment and does not change across groups or time periods.
@@ -29,15 +31,16 @@ NULL
 #' If \code{FALSE}, the data is treated as repeated cross-sections (RCS) where each observation may represent a different unit.
 #' For RCS data, \code{idname} can be omitted or set to \code{NULL}, and the function will automatically create unique IDs for each observation.
 #' @param allow_unbalanced_panel Logical. If \code{TRUE}, allows for unbalanced panel data where units may not be observed in all time periods.
-#' Default is \code{FALSE}. Note: This parameter requires \code{panel = TRUE} and a valid \code{idname}.
+#' Default is \code{FALSE}: units that are not observed in every period are dropped with a warning.
 #' @param weightsname The name of the column containing the weights. Default is \code{NULL}. As part of data processing, weights are enforced to be normalized
-#' and have mean 1 across all observations.
+#' and have mean 1 across all observations. Weights must be the same in every period for a given unit.
 #' @param boot Logical. If \code{TRUE}, the function computes standard errors using the multiplier bootstrap. Default is \code{FALSE}.
 #' @param nboot The number of bootstrap samples to be used. Default is \code{NULL}. If \code{boot = TRUE}, the default is \code{nboot = 999}.
 #' @param cluster The name of the variable to be used for clustering. The maximum number of cluster variables is 1. Default is \code{NULL}.
 #' If \code{boot = TRUE}, the function computes the bootstrap standard errors clustering at the unit level setting as cluster variable the one in \code{idname}.
 #' @param cband Logical. If \code{TRUE}, the function computes a uniform confidence band that covers all of the average treatment effects
-#' with fixed probability \code{1-alpha}.  In order to compute uniform confidence bands, \code{boot} must also be set to `TRUE`.  The default is `FALSE`.
+#' with fixed probability \code{1-alpha}.  In order to compute uniform confidence bands, \code{boot} must also be set to `TRUE`;
+#' with \code{boot = FALSE}, \code{ddd()} warns and sets \code{cband = FALSE}.  The default is `FALSE`.
 #' @param alpha The level of significance for the confidence intervals.  Default is \code{0.05}.
 #' @param use_parallel Logical. If \code{TRUE}, the function runs in parallel processing. Valid only when \code{boot = TRUE}. Default is \code{FALSE}.
 #' @param cores The number of cores to be used in the parallel processing. Default is \code{cores = 1}.
@@ -294,6 +297,12 @@ ddd <- function(yname,
       #                               inffunc = inffunc)}
   }
 
+  # Uniform confidence bands need the multiplier bootstrap: handle cband = TRUE with boot = FALSE up front
+  if (isTRUE(dp$cband) && !isTRUE(dp$boot)) {
+    warning("cband = TRUE requires boot = TRUE. Setting cband = FALSE: confidence intervals are pointwise.")
+    dp$cband <- FALSE
+  }
+
   #------------------------------------------
   # Run the estimation
   #------------------------------------------
@@ -315,11 +324,11 @@ ddd <- function(yname,
         # att_dml <- att_dml(dp)
       stop("DML estimation method is not yet supported.")
     } else {
-      if (panel){
+      if (panel && !isTRUE(dp$true_repeated_cross_sections)){
         # RUN DR for 2 time periods (balanced panel only)
         att_dr <- att_dr(dp)
       } else {
-        # RUN DR for RCS 2 time periods (true RCS or unbalanced panel)
+        # RUN DR for RCS 2 time periods (true RCS, or unbalanced panel with allow_unbalanced_panel = TRUE)
         att_dr <- att_dr_rc(dp)
       }
     }
@@ -347,7 +356,7 @@ ddd <- function(yname,
     panel = args$panel, # getting from args because it could change in the pre process
     allow_unbalanced_panel = args$allow_unbalanced_panel, # getting from args because it could change in the pre process
     cband = dp$cband, # getting from dp because it could change in the pre process
-    cluster = args$cluster,
+    cluster = dp$cluster, # getting from dp: idname is dropped from cluster in the pre process
     boot = dp$boot, # getting from dp because it could change in the pre process
     alpha = dp$alpha, # getting from dp because it could change in the pre process
     nboot = dp$nboot, # getting from dp because it could change in the pre process

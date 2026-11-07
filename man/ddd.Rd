@@ -34,16 +34,18 @@ ddd(
 
 \item{tname}{The name of the column containing the time periods.}
 
-\item{idname}{The name of the column containing the unit id.}
+\item{idname}{The name of the column containing the unit id. Each (idname, tname) pair must appear at most once.}
 
 \item{gname}{The name of the column containing the first period when a particular observation is treated. It is a positive number
-for treated units and defines which group the unit belongs to. It takes value 0 or Inf for untreated units.}
+for treated units and defines which group the unit belongs to. It takes value 0 or Inf for untreated units.
+In two-period designs, never-treated units must be coded 0 or Inf; any other code stops with an error.}
 
 \item{pname}{The name of the column containing the partition variable (e.g., the subgroup identifier). This is an indicator variable that is 1 for
-the units eligible for treatment and 0 otherwise.}
+the units eligible for treatment and 0 otherwise. It must be coded 0 and 1.}
 
 \item{xformla}{The formula for the covariates to be included in the model. It should be of the form \code{~ x1 + x2}.
-Default is \code{xformla = ~1} (no covariates).}
+Default is \code{xformla = ~1} (no covariates). With two periods and panel data, covariates must be time invariant.
+With multiple periods, each ATT(g,t) uses the covariates of the earlier of its two periods for both the propensity score and the outcome regression.}
 
 \item{data}{A data frame or data table containing the data.}
 
@@ -63,10 +65,10 @@ If \code{FALSE}, the data is treated as repeated cross-sections (RCS) where each
 For RCS data, \code{idname} can be omitted or set to \code{NULL}, and the function will automatically create unique IDs for each observation.}
 
 \item{allow_unbalanced_panel}{Logical. If \code{TRUE}, allows for unbalanced panel data where units may not be observed in all time periods.
-Default is \code{FALSE}. Note: This parameter requires \code{panel = TRUE} and a valid \code{idname}.}
+Default is \code{FALSE}: units that are not observed in every period are dropped with a warning.}
 
 \item{weightsname}{The name of the column containing the weights. Default is \code{NULL}. As part of data processing, weights are enforced to be normalized
-and have mean 1 across all observations.}
+and have mean 1 across all observations. Weights must be the same in every period for a given unit.}
 
 \item{boot}{Logical. If \code{TRUE}, the function computes standard errors using the multiplier bootstrap. Default is \code{FALSE}.}
 
@@ -76,7 +78,8 @@ and have mean 1 across all observations.}
 If \code{boot = TRUE}, the function computes the bootstrap standard errors clustering at the unit level setting as cluster variable the one in \code{idname}.}
 
 \item{cband}{Logical. If \code{TRUE}, the function computes a uniform confidence band that covers all of the average treatment effects
-with fixed probability \code{1-alpha}.  In order to compute uniform confidence bands, \code{boot} must also be set to \code{TRUE}.  The default is \code{FALSE}.}
+with fixed probability \code{1-alpha}.  In order to compute uniform confidence bands, \code{boot} must also be set to \code{TRUE};
+with \code{boot = FALSE}, \code{ddd()} warns and sets \code{cband = FALSE}.  The default is \code{FALSE}.}
 
 \item{alpha}{The level of significance for the confidence intervals.  Default is \code{0.05}.}
 

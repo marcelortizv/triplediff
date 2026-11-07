@@ -22,17 +22,18 @@ compute_aggregation(
 \item{ddd_obj}{a ddd object (i.e., the results of the \code{\link[=ddd]{ddd()}} function)}
 
 \item{type}{Which type of aggregated treatment effect parameter to compute.
-\code{"simple"} just computes a weighted average of all
-group-time average treatment effects with weights proportional to group
-size.
+\code{"simple"} computes a weighted average of all post-treatment
+group-time average treatment effects, with cohort weights proportional to
+the share of treated units in each cohort.
 \code{"eventstudy"} computes average effects across
 different lengths of exposure to the treatment (event times). Here the overall effect averages the effect of the
 treatment across the positive lengths of exposure. This is the default option;
 \code{"group"} computes average treatment effects across different groups/cohorts; here
-the overall effect averages the effect across different groups using group size as weights;
+the overall effect averages the effect across different groups, with weights proportional
+to the share of treated units in each cohort;
 \code{"calendar"} computes average treatment effects across different
-time periods, with weights proportional to the group size; here the overall effect averages the effect across each
-time period.}
+time periods, with cohort weights proportional to the share of treated units; here the overall
+effect averages the effect across each time period. See Details for the cohort weights.}
 
 \item{cluster}{The name of the variable to be used for clustering. The maximum number of cluster variables is 1. Default is \code{NULL}.}
 

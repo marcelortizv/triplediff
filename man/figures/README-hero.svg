@@ -1,0 +1,361 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 340" width="900" height="340" role="img" aria-labelledby="t d">
+<title id="t">How triplediff works: raw panel, ATT(g,t) building blocks, event study</title>
+<desc id="d">Step 1: units grouped by enabling period S and eligibility Q over periods 1 to 3; a line sweeps across the periods and the treated cells turn dark blue. Step 2: for each ATT(g,t), only the data it uses stay in view, in periods g - 1 and t: the enabled eligible units, the ineligible units of the same group, and the groups not yet or never enabled. Each estimate joins a coefficient strip. Step 3: the event-study points appear; the links to the ATT(g,t) each point averages appear and disappear.</desc>
+<defs>
+<pattern id="pA" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="2" height="6" fill="#415D56"/></pattern>
+<pattern id="pAw" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="2" height="6" fill="#FFFFFF"/></pattern>
+<pattern id="pB" width="6" height="5" patternUnits="userSpaceOnUse"><rect y="2" width="6" height="1.6" fill="#415D56"/></pattern>
+<pattern id="pBw" width="6" height="5" patternUnits="userSpaceOnUse"><rect y="2" width="6" height="1.6" fill="#FFFFFF"/></pattern>
+<pattern id="pC" width="6" height="6" patternUnits="userSpaceOnUse"><circle cx="3" cy="3" r="1.4" fill="#415D56"/></pattern>
+<pattern id="pCw" width="6" height="6" patternUnits="userSpaceOnUse"><circle cx="3" cy="3" r="1.4" fill="#FFFFFF"/></pattern>
+<style>
+.a{animation-duration:27s;animation-iteration-count:infinite;animation-timing-function:linear}.e{animation-timing-function:ease-out}.off{opacity:0}
+.w1{animation-name:w1}@keyframes w1{0%,18.52%{opacity:1}19.44%,100%{opacity:0}}
+.w2{animation-name:w2}@keyframes w2{0%,18.52%{opacity:0}19.44%,68.89%{opacity:1}69.81%,100%{opacity:0}}
+.w3{animation-name:w3}@keyframes w3{0%,68.89%{opacity:0}69.81%,97.78%{opacity:1}98.70%,100%{opacity:0}}
+.w4{animation-name:w4}@keyframes w4{0%,18.52%{opacity:0}19.44%,24.44%{opacity:1}25.37%,100%{opacity:0}}
+.w5{animation-name:w5}@keyframes w5{0%,24.44%{opacity:0}25.37%,34.07%{opacity:1}35.00%,100%{opacity:0}}
+.w6{animation-name:w6}@keyframes w6{0%,34.07%{opacity:0}35.00%,43.70%{opacity:1}44.63%,100%{opacity:0}}
+.w7{animation-name:w7}@keyframes w7{0%,43.70%{opacity:0}44.63%,53.33%{opacity:1}54.26%,100%{opacity:0}}
+.w8{animation-name:w8}@keyframes w8{0%,53.33%{opacity:0}54.26%,59.26%{opacity:1}60.19%,100%{opacity:0}}
+.w9{animation-name:w9}@keyframes w9{0%,59.26%{opacity:0}60.19%,68.89%{opacity:1}69.81%,100%{opacity:0}}
+.w10{animation-name:w10}@keyframes w10{0%,20.74%{opacity:0}21.67%,97.78%{opacity:1}98.70%,100%{opacity:0}}
+.w11{animation-name:w11}@keyframes w11{0%,26.67%{opacity:0}27.59%,97.78%{opacity:1}98.70%,100%{opacity:0}}
+.w12{animation-name:w12}@keyframes w12{0%,36.30%{opacity:0}37.22%,97.78%{opacity:1}98.70%,100%{opacity:0}}
+.w13{animation-name:w13}@keyframes w13{0%,45.93%{opacity:0}46.85%,97.78%{opacity:1}98.70%,100%{opacity:0}}
+.w14{animation-name:w14}@keyframes w14{0%,55.56%{opacity:0}56.48%,97.78%{opacity:1}98.70%,100%{opacity:0}}
+.w15{animation-name:w15}@keyframes w15{0%,61.48%{opacity:0}62.41%,97.78%{opacity:1}98.70%,100%{opacity:0}}
+.w16{animation-name:w16}@keyframes w16{0%,70.37%{opacity:0}71.30%,75.56%{opacity:1}76.48%,100%{opacity:0}}
+.w17{animation-name:w17}@keyframes w17{0%,70.37%{opacity:0}71.30%,97.78%{opacity:1}98.70%,100%{opacity:0}}
+.w18{animation-name:w18}@keyframes w18{0%,76.30%{opacity:0}77.22%,81.48%{opacity:1}82.41%,100%{opacity:0}}
+.w19{animation-name:w19}@keyframes w19{0%,76.30%{opacity:0}77.22%,97.78%{opacity:1}98.70%,100%{opacity:0}}
+.w20{animation-name:w20}@keyframes w20{0%,82.22%{opacity:0}83.15%,87.41%{opacity:1}88.33%,100%{opacity:0}}
+.w21{animation-name:w21}@keyframes w21{0%,82.22%{opacity:0}83.15%,97.78%{opacity:1}98.70%,100%{opacity:0}}
+.w22{animation-name:w22}@keyframes w22{0%,88.15%{opacity:0}89.07%,93.33%{opacity:1}94.26%,100%{opacity:0}}
+.w23{animation-name:w23}@keyframes w23{0%,88.15%{opacity:0}89.07%,97.78%{opacity:1}98.70%,100%{opacity:0}}
+.c1{animation-name:c1}@keyframes c1{0%,3.33%{fill:#E3E9E5}4.07%,97.78%{fill:#B3CBE6}99.63%,100%{fill:#E3E9E5}}
+.c2{animation-name:c2}@keyframes c2{0%,7.04%{fill:#E3E9E5}7.78%,97.78%{fill:#154780}99.63%,100%{fill:#E3E9E5}}
+.c3{animation-name:c3}@keyframes c3{0%,10.74%{fill:#E3E9E5}11.48%,97.78%{fill:#154780}99.63%,100%{fill:#E3E9E5}}
+.c4{animation-name:c4}@keyframes c4{0%,7.04%{fill:#E3E9E5}7.78%,97.78%{fill:#B28C1C}99.63%,100%{fill:#E3E9E5}}
+.c5{animation-name:c5}@keyframes c5{0%,10.74%{fill:#E3E9E5}11.48%,97.78%{fill:#B28C1C}99.63%,100%{fill:#E3E9E5}}
+.c6{animation-name:c6}@keyframes c6{0%,3.33%{fill:#E3E9E5}4.07%,97.78%{fill:#B3CBE6}99.63%,100%{fill:#E3E9E5}}
+.c7{animation-name:c7}@keyframes c7{0%,7.04%{fill:#E3E9E5}7.78%,97.78%{fill:#B3CBE6}99.63%,100%{fill:#E3E9E5}}
+.c8{animation-name:c8}@keyframes c8{0%,10.74%{fill:#E3E9E5}11.48%,97.78%{fill:#154780}99.63%,100%{fill:#E3E9E5}}
+.c9{animation-name:c9}@keyframes c9{0%,10.74%{fill:#E3E9E5}11.48%,97.78%{fill:#B28C1C}99.63%,100%{fill:#E3E9E5}}
+.sw{animation-name:sw}@keyframes sw{0%,2.22%{opacity:0;transform:translateX(0)}2.96%{opacity:1;transform:translateX(0)}13.33%{opacity:1;transform:translateX(174px)}14.07%,100%{opacity:0;transform:translateX(174px)}}
+@media (prefers-reduced-motion:reduce){.a{animation:none!important}}
+</style>
+</defs>
+<rect x="0" y="0" width="900" height="340" fill="#FFFFFF" rx="10"/>
+<g font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif">
+<rect x="10" y="10" width="290" height="26" fill="#E3E9E5" rx="13"/>
+<text x="155" y="27.5" text-anchor="middle" font-size="12" fill="#415D56" font-weight="600">1  Raw panel</text>
+<g class="a w1 off">
+<rect x="10" y="10" width="290" height="26" fill="#415D56" rx="13"/>
+<text x="155" y="27.5" text-anchor="middle" font-size="12" fill="#FFFFFF" font-weight="600">1  Raw panel</text>
+</g>
+<rect x="305" y="10" width="290" height="26" fill="#E3E9E5" rx="13"/>
+<text x="450" y="27.5" text-anchor="middle" font-size="12" fill="#415D56" font-weight="600">2  ddd(): building blocks ATT(g,t)</text>
+<g class="a w2 off">
+<rect x="305" y="10" width="290" height="26" fill="#415D56" rx="13"/>
+<text x="450" y="27.5" text-anchor="middle" font-size="12" fill="#FFFFFF" font-weight="600">2  ddd(): building blocks ATT(g,t)</text>
+</g>
+<rect x="600" y="10" width="290" height="26" fill="#E3E9E5" rx="13"/>
+<text x="745" y="27.5" text-anchor="middle" font-size="12" fill="#415D56" font-weight="600">3  agg_ddd(): event study</text>
+<g class="a w3">
+<rect x="600" y="10" width="290" height="26" fill="#415D56" rx="13"/>
+<text x="745" y="27.5" text-anchor="middle" font-size="12" fill="#FFFFFF" font-weight="600">3  agg_ddd(): event study</text>
+</g>
+<g class="a w1 off">
+<text x="155" y="64" text-anchor="middle" font-size="13" fill="#415D56" font-weight="600">Who is treated, and when</text>
+</g>
+<g class="a w3">
+<text x="155" y="64" text-anchor="middle" font-size="13" fill="#415D56" font-weight="600">Who is treated, and when</text>
+</g>
+<rect class="a e c1" x="122" y="88" width="58" height="24" fill="#B3CBE6" stroke="#FFFFFF" stroke-width="2"/>
+<rect class="a e c2" x="180" y="88" width="58" height="24" fill="#154780" stroke="#FFFFFF" stroke-width="2"/>
+<rect class="a e c3" x="238" y="88" width="58" height="24" fill="#154780" stroke="#FFFFFF" stroke-width="2"/>
+<rect x="122" y="112" width="58" height="24" fill="#E3E9E5" stroke="#FFFFFF" stroke-width="2"/>
+<rect class="a e c4" x="180" y="112" width="58" height="24" fill="#B28C1C" stroke="#FFFFFF" stroke-width="2"/>
+<rect class="a e c5" x="238" y="112" width="58" height="24" fill="#B28C1C" stroke="#FFFFFF" stroke-width="2"/>
+<rect class="a e c6" x="122" y="143" width="58" height="24" fill="#B3CBE6" stroke="#FFFFFF" stroke-width="2"/>
+<rect class="a e c7" x="180" y="143" width="58" height="24" fill="#B3CBE6" stroke="#FFFFFF" stroke-width="2"/>
+<rect class="a e c8" x="238" y="143" width="58" height="24" fill="#154780" stroke="#FFFFFF" stroke-width="2"/>
+<rect x="122" y="167" width="58" height="24" fill="#E3E9E5" stroke="#FFFFFF" stroke-width="2"/>
+<rect x="180" y="167" width="58" height="24" fill="#E3E9E5" stroke="#FFFFFF" stroke-width="2"/>
+<rect class="a e c9" x="238" y="167" width="58" height="24" fill="#B28C1C" stroke="#FFFFFF" stroke-width="2"/>
+<rect x="122" y="198" width="58" height="24" fill="#E3E9E5" stroke="#FFFFFF" stroke-width="2"/>
+<rect x="180" y="198" width="58" height="24" fill="#E3E9E5" stroke="#FFFFFF" stroke-width="2"/>
+<rect x="238" y="198" width="58" height="24" fill="#E3E9E5" stroke="#FFFFFF" stroke-width="2"/>
+<rect x="122" y="222" width="58" height="24" fill="#E3E9E5" stroke="#FFFFFF" stroke-width="2"/>
+<rect x="180" y="222" width="58" height="24" fill="#E3E9E5" stroke="#FFFFFF" stroke-width="2"/>
+<rect x="238" y="222" width="58" height="24" fill="#E3E9E5" stroke="#FFFFFF" stroke-width="2"/>
+<text x="114" y="104" text-anchor="end" font-size="11" fill="#415D56">S = 2, Q = 1 <tspan font-size="10" fill="#5C746C">(98)</tspan></text>
+<text x="114" y="128" text-anchor="end" font-size="11" fill="#415D56">S = 2, Q = 0 <tspan font-size="10" fill="#5C746C">(97)</tspan></text>
+<text x="114" y="159" text-anchor="end" font-size="11" fill="#415D56">S = 3, Q = 1 <tspan font-size="10" fill="#5C746C">(118)</tspan></text>
+<text x="114" y="183" text-anchor="end" font-size="11" fill="#415D56">S = 3, Q = 0 <tspan font-size="10" fill="#5C746C">(80)</tspan></text>
+<text x="114" y="214" text-anchor="end" font-size="11" fill="#415D56">S = ∞, Q = 1 <tspan font-size="10" fill="#5C746C">(54)</tspan></text>
+<text x="114" y="238" text-anchor="end" font-size="11" fill="#415D56">S = ∞, Q = 0 <tspan font-size="10" fill="#5C746C">(53)</tspan></text>
+<text x="151" y="261" text-anchor="middle" font-size="11" fill="#5C746C">t = 1</text>
+<text x="209" y="261" text-anchor="middle" font-size="11" fill="#5C746C">t = 2</text>
+<text x="267" y="261" text-anchor="middle" font-size="11" fill="#5C746C">t = 3</text>
+<rect class="a sw off" x="120.5" y="84" width="3" height="166" fill="#154780"/>
+<g class="a w4 off">
+<rect x="311" y="89" width="278" height="22" fill="#E3E9E5" rx="4"/>
+<text x="155" y="64" text-anchor="middle" font-size="13" fill="#415D56" font-weight="600">ATT(2,1)</text>
+<rect x="123" y="89" width="56" height="22" fill="url(#pA)"/>
+<rect x="180" y="88" width="58" height="24" fill="#FFFFFF" fill-opacity="0.82"/>
+<rect x="238" y="88" width="58" height="24" fill="#FFFFFF" fill-opacity="0.82"/>
+<rect x="123" y="113" width="56" height="22" fill="url(#pB)"/>
+<rect x="180" y="112" width="58" height="24" fill="#FFFFFF" fill-opacity="0.82"/>
+<rect x="238" y="112" width="58" height="24" fill="#FFFFFF" fill-opacity="0.82"/>
+<rect x="122" y="143" width="58" height="24" fill="#FFFFFF" fill-opacity="0.82"/>
+<rect x="180" y="143" width="58" height="24" fill="#FFFFFF" fill-opacity="0.82"/>
+<rect x="238" y="143" width="58" height="24" fill="#FFFFFF" fill-opacity="0.82"/>
+<rect x="122" y="167" width="58" height="24" fill="#FFFFFF" fill-opacity="0.82"/>
+<rect x="180" y="167" width="58" height="24" fill="#FFFFFF" fill-opacity="0.82"/>
+<rect x="238" y="167" width="58" height="24" fill="#FFFFFF" fill-opacity="0.82"/>
+<rect x="122" y="198" width="58" height="24" fill="#FFFFFF" fill-opacity="0.82"/>
+<rect x="180" y="198" width="58" height="24" fill="#FFFFFF" fill-opacity="0.82"/>
+<rect x="238" y="198" width="58" height="24" fill="#FFFFFF" fill-opacity="0.82"/>
+<rect x="122" y="222" width="58" height="24" fill="#FFFFFF" fill-opacity="0.82"/>
+<rect x="180" y="222" width="58" height="24" fill="#FFFFFF" fill-opacity="0.82"/>
+<rect x="238" y="222" width="58" height="24" fill="#FFFFFF" fill-opacity="0.82"/>
+<rect x="120" y="86" width="62" height="52" fill="none" stroke="#1E2B27" stroke-width="2.5" rx="3"/>
+<text x="151" y="277" text-anchor="middle" font-size="11" fill="#415D56" font-weight="600">g − 1</text>
+</g>
+<g class="a w5 off">
+<rect x="311" y="115.8" width="278" height="22" fill="#E3E9E5" rx="4"/>
+<text x="155" y="64" text-anchor="middle" font-size="13" fill="#415D56" font-weight="600">ATT(2,2)</text>
+<rect x="123" y="89" width="56" height="22" fill="url(#pA)"/>
+<rect x="181" y="89" width="56" height="22" fill="url(#pAw)"/>
+<rect x="238" y="88" width="58" height="24" fill="#FFFFFF" fill-opacity="0.82"/>
+<rect x="123" y="113" width="56" height="22" fill="url(#pB)"/>
+<rect x="181" y="113" width="56" height="22" fill="url(#pB)"/>
+<rect x="238" y="112" width="58" height="24" fill="#FFFFFF" fill-opacity="0.82"/>
+<rect x="123" y="144" width="56" height="22" fill="url(#pC)"/>
+<rect x="181" y="144" width="56" height="22" fill="url(#pC)"/>
+<rect x="238" y="143" width="58" height="24" fill="#FFFFFF" fill-opacity="0.82"/>
+<rect x="123" y="168" width="56" height="22" fill="url(#pC)"/>
+<rect x="181" y="168" width="56" height="22" fill="url(#pC)"/>
+<rect x="238" y="167" width="58" height="24" fill="#FFFFFF" fill-opacity="0.82"/>
+<rect x="123" y="199" width="56" height="22" fill="url(#pC)"/>
+<rect x="181" y="199" width="56" height="22" fill="url(#pC)"/>
+<rect x="238" y="198" width="58" height="24" fill="#FFFFFF" fill-opacity="0.82"/>
+<rect x="123" y="223" width="56" height="22" fill="url(#pC)"/>
+<rect x="181" y="223" width="56" height="22" fill="url(#pC)"/>
+<rect x="238" y="222" width="58" height="24" fill="#FFFFFF" fill-opacity="0.82"/>
+<rect x="120" y="86" width="62" height="162" fill="none" stroke="#1E2B27" stroke-width="2.5" rx="3"/>
+<rect x="178" y="86" width="62" height="162" fill="none" stroke="#1E2B27" stroke-width="2.5" rx="3"/>
+<text x="151" y="277" text-anchor="middle" font-size="11" fill="#415D56" font-weight="600">g − 1</text>
+<text x="209" y="277" text-anchor="middle" font-size="11" fill="#415D56" font-weight="600">t</text>
+</g>
+<g class="a w6 off">
+<rect x="311" y="142.6" width="278" height="22" fill="#E3E9E5" rx="4"/>
+<text x="155" y="64" text-anchor="middle" font-size="13" fill="#415D56" font-weight="600">ATT(2,3)</text>
+<rect x="123" y="89" width="56" height="22" fill="url(#pA)"/>
+<rect x="180" y="88" width="58" height="24" fill="#FFFFFF" fill-opacity="0.82"/>
+<rect x="239" y="89" width="56" height="22" fill="url(#pAw)"/>
+<rect x="123" y="113" width="56" height="22" fill="url(#pB)"/>
+<rect x="180" y="112" width="58" height="24" fill="#FFFFFF" fill-opacity="0.82"/>
+<rect x="239" y="113" width="56" height="22" fill="url(#pB)"/>
+<rect x="122" y="143" width="58" height="24" fill="#FFFFFF" fill-opacity="0.82"/>
+<rect x="180" y="143" width="58" height="24" fill="#FFFFFF" fill-opacity="0.82"/>
+<rect x="238" y="143" width="58" height="24" fill="#FFFFFF" fill-opacity="0.82"/>
+<rect x="122" y="167" width="58" height="24" fill="#FFFFFF" fill-opacity="0.82"/>
+<rect x="180" y="167" width="58" height="24" fill="#FFFFFF" fill-opacity="0.82"/>
+<rect x="238" y="167" width="58" height="24" fill="#FFFFFF" fill-opacity="0.82"/>
+<rect x="123" y="199" width="56" height="22" fill="url(#pC)"/>
+<rect x="180" y="198" width="58" height="24" fill="#FFFFFF" fill-opacity="0.82"/>
+<rect x="239" y="199" width="56" height="22" fill="url(#pC)"/>
+<rect x="123" y="223" width="56" height="22" fill="url(#pC)"/>
+<rect x="180" y="222" width="58" height="24" fill="#FFFFFF" fill-opacity="0.82"/>
+<rect x="239" y="223" width="56" height="22" fill="url(#pC)"/>
+<rect x="120" y="86" width="62" height="52" fill="none" stroke="#1E2B27" stroke-width="2.5" rx="3"/>
+<rect x="120" y="196" width="62" height="52" fill="none" stroke="#1E2B27" stroke-width="2.5" rx="3"/>
+<rect x="236" y="86" width="62" height="52" fill="none" stroke="#1E2B27" stroke-width="2.5" rx="3"/>
+<rect x="236" y="196" width="62" height="52" fill="none" stroke="#1E2B27" stroke-width="2.5" rx="3"/>
+<text x="151" y="277" text-anchor="middle" font-size="11" fill="#415D56" font-weight="600">g − 1</text>
+<text x="267" y="277" text-anchor="middle" font-size="11" fill="#415D56" font-weight="600">t</text>
+</g>
+<g class="a w7 off">
+<rect x="311" y="169.4" width="278" height="22" fill="#E3E9E5" rx="4"/>
+<text x="155" y="64" text-anchor="middle" font-size="13" fill="#415D56" font-weight="600">ATT(3,1)</text>
+<rect x="122" y="88" width="58" height="24" fill="#FFFFFF" fill-opacity="0.82"/>
+<rect x="180" y="88" width="58" height="24" fill="#FFFFFF" fill-opacity="0.82"/>
+<rect x="238" y="88" width="58" height="24" fill="#FFFFFF" fill-opacity="0.82"/>
+<rect x="122" y="112" width="58" height="24" fill="#FFFFFF" fill-opacity="0.82"/>
+<rect x="180" y="112" width="58" height="24" fill="#FFFFFF" fill-opacity="0.82"/>
+<rect x="238" y="112" width="58" height="24" fill="#FFFFFF" fill-opacity="0.82"/>
+<rect x="123" y="144" width="56" height="22" fill="url(#pA)"/>
+<rect x="181" y="144" width="56" height="22" fill="url(#pA)"/>
+<rect x="238" y="143" width="58" height="24" fill="#FFFFFF" fill-opacity="0.82"/>
+<rect x="123" y="168" width="56" height="22" fill="url(#pB)"/>
+<rect x="181" y="168" width="56" height="22" fill="url(#pB)"/>
+<rect x="238" y="167" width="58" height="24" fill="#FFFFFF" fill-opacity="0.82"/>
+<rect x="123" y="199" width="56" height="22" fill="url(#pC)"/>
+<rect x="181" y="199" width="56" height="22" fill="url(#pC)"/>
+<rect x="238" y="198" width="58" height="24" fill="#FFFFFF" fill-opacity="0.82"/>
+<rect x="123" y="223" width="56" height="22" fill="url(#pC)"/>
+<rect x="181" y="223" width="56" height="22" fill="url(#pC)"/>
+<rect x="238" y="222" width="58" height="24" fill="#FFFFFF" fill-opacity="0.82"/>
+<rect x="178" y="141" width="62" height="107" fill="none" stroke="#1E2B27" stroke-width="2.5" rx="3"/>
+<rect x="120" y="141" width="62" height="107" fill="none" stroke="#1E2B27" stroke-width="2.5" rx="3"/>
+<text x="209" y="277" text-anchor="middle" font-size="11" fill="#415D56" font-weight="600">g − 1</text>
+<text x="151" y="277" text-anchor="middle" font-size="11" fill="#415D56" font-weight="600">t</text>
+</g>
+<g class="a w8 off">
+<rect x="311" y="196.2" width="278" height="22" fill="#E3E9E5" rx="4"/>
+<text x="155" y="64" text-anchor="middle" font-size="13" fill="#415D56" font-weight="600">ATT(3,2)</text>
+<rect x="122" y="88" width="58" height="24" fill="#FFFFFF" fill-opacity="0.82"/>
+<rect x="180" y="88" width="58" height="24" fill="#FFFFFF" fill-opacity="0.82"/>
+<rect x="238" y="88" width="58" height="24" fill="#FFFFFF" fill-opacity="0.82"/>
+<rect x="122" y="112" width="58" height="24" fill="#FFFFFF" fill-opacity="0.82"/>
+<rect x="180" y="112" width="58" height="24" fill="#FFFFFF" fill-opacity="0.82"/>
+<rect x="238" y="112" width="58" height="24" fill="#FFFFFF" fill-opacity="0.82"/>
+<rect x="122" y="143" width="58" height="24" fill="#FFFFFF" fill-opacity="0.82"/>
+<rect x="181" y="144" width="56" height="22" fill="url(#pA)"/>
+<rect x="238" y="143" width="58" height="24" fill="#FFFFFF" fill-opacity="0.82"/>
+<rect x="122" y="167" width="58" height="24" fill="#FFFFFF" fill-opacity="0.82"/>
+<rect x="181" y="168" width="56" height="22" fill="url(#pB)"/>
+<rect x="238" y="167" width="58" height="24" fill="#FFFFFF" fill-opacity="0.82"/>
+<rect x="122" y="198" width="58" height="24" fill="#FFFFFF" fill-opacity="0.82"/>
+<rect x="180" y="198" width="58" height="24" fill="#FFFFFF" fill-opacity="0.82"/>
+<rect x="238" y="198" width="58" height="24" fill="#FFFFFF" fill-opacity="0.82"/>
+<rect x="122" y="222" width="58" height="24" fill="#FFFFFF" fill-opacity="0.82"/>
+<rect x="180" y="222" width="58" height="24" fill="#FFFFFF" fill-opacity="0.82"/>
+<rect x="238" y="222" width="58" height="24" fill="#FFFFFF" fill-opacity="0.82"/>
+<rect x="178" y="141" width="62" height="52" fill="none" stroke="#1E2B27" stroke-width="2.5" rx="3"/>
+<text x="209" y="277" text-anchor="middle" font-size="11" fill="#415D56" font-weight="600">g − 1</text>
+</g>
+<g class="a w9 off">
+<rect x="311" y="223" width="278" height="22" fill="#E3E9E5" rx="4"/>
+<text x="155" y="64" text-anchor="middle" font-size="13" fill="#415D56" font-weight="600">ATT(3,3)</text>
+<rect x="122" y="88" width="58" height="24" fill="#FFFFFF" fill-opacity="0.82"/>
+<rect x="180" y="88" width="58" height="24" fill="#FFFFFF" fill-opacity="0.82"/>
+<rect x="238" y="88" width="58" height="24" fill="#FFFFFF" fill-opacity="0.82"/>
+<rect x="122" y="112" width="58" height="24" fill="#FFFFFF" fill-opacity="0.82"/>
+<rect x="180" y="112" width="58" height="24" fill="#FFFFFF" fill-opacity="0.82"/>
+<rect x="238" y="112" width="58" height="24" fill="#FFFFFF" fill-opacity="0.82"/>
+<rect x="122" y="143" width="58" height="24" fill="#FFFFFF" fill-opacity="0.82"/>
+<rect x="181" y="144" width="56" height="22" fill="url(#pA)"/>
+<rect x="239" y="144" width="56" height="22" fill="url(#pAw)"/>
+<rect x="122" y="167" width="58" height="24" fill="#FFFFFF" fill-opacity="0.82"/>
+<rect x="181" y="168" width="56" height="22" fill="url(#pB)"/>
+<rect x="239" y="168" width="56" height="22" fill="url(#pB)"/>
+<rect x="122" y="198" width="58" height="24" fill="#FFFFFF" fill-opacity="0.82"/>
+<rect x="181" y="199" width="56" height="22" fill="url(#pC)"/>
+<rect x="239" y="199" width="56" height="22" fill="url(#pC)"/>
+<rect x="122" y="222" width="58" height="24" fill="#FFFFFF" fill-opacity="0.82"/>
+<rect x="181" y="223" width="56" height="22" fill="url(#pC)"/>
+<rect x="239" y="223" width="56" height="22" fill="url(#pC)"/>
+<rect x="178" y="141" width="62" height="107" fill="none" stroke="#1E2B27" stroke-width="2.5" rx="3"/>
+<rect x="236" y="141" width="62" height="107" fill="none" stroke="#1E2B27" stroke-width="2.5" rx="3"/>
+<text x="209" y="277" text-anchor="middle" font-size="11" fill="#415D56" font-weight="600">g − 1</text>
+<text x="267" y="277" text-anchor="middle" font-size="11" fill="#415D56" font-weight="600">t</text>
+</g>
+<text x="450" y="64" text-anchor="middle" font-size="13" fill="#415D56" font-weight="600">ATT(g,t)</text>
+<line x1="438.7" x2="438.7" y1="88" y2="246" stroke="#415D56" stroke-width="1" stroke-dasharray="3 3"/>
+<text x="438.7" y="261" text-anchor="middle" font-size="10" fill="#5C746C">0</text>
+<g class="a w10">
+<text x="318" y="104" text-anchor="start" font-size="11" fill="#415D56">ATT(2,1)</text>
+<text x="408" y="104" text-anchor="end" font-size="11" fill="#5C746C">0</text>
+<polygon points="438.7,95.0 434.0,103.6 443.5,103.6" fill="#5C746C"/>
+</g>
+<g class="a w11">
+<text x="318" y="130.8" text-anchor="start" font-size="11" fill="#415D56">ATT(2,2)</text>
+<text x="408" y="130.8" text-anchor="end" font-size="11" fill="#415D56">10.19</text>
+<line x1="491.9" x2="497.8" y1="126.8" y2="126.8" stroke="#7391B3" stroke-width="4.5"/>
+<polygon points="494.8,121.8 490.1,130.4 499.6,130.4" fill="#154780"/>
+</g>
+<g class="a w12">
+<text x="318" y="157.6" text-anchor="start" font-size="11" fill="#415D56">ATT(2,3)</text>
+<text x="408" y="157.6" text-anchor="end" font-size="11" fill="#415D56">20.60</text>
+<line x1="547.9" x2="556.3" y1="153.6" y2="153.6" stroke="#7391B3" stroke-width="4.5"/>
+<polygon points="552.1,148.6 547.4,157.2 556.9,157.2" fill="#154780"/>
+</g>
+<g class="a w13">
+<text x="318" y="184.4" text-anchor="start" font-size="11" fill="#415D56">ATT(3,1)</text>
+<text x="408" y="184.4" text-anchor="end" font-size="11" fill="#415D56">−0.46</text>
+<line x1="432.3" x2="440.2" y1="180.4" y2="180.4" stroke="#D1BA77" stroke-width="4.5"/>
+<polygon points="436.2,175.4 431.5,184.0 441.0,184.0" fill="#B28C1C"/>
+</g>
+<g class="a w14">
+<text x="318" y="211.2" text-anchor="start" font-size="11" fill="#415D56">ATT(3,2)</text>
+<text x="408" y="211.2" text-anchor="end" font-size="11" fill="#5C746C">0</text>
+<polygon points="438.7,202.2 434.0,210.8 443.5,210.8" fill="#5C746C"/>
+</g>
+<g class="a w15">
+<text x="318" y="238" text-anchor="start" font-size="11" fill="#415D56">ATT(3,3)</text>
+<text x="408" y="238" text-anchor="end" font-size="11" fill="#415D56">24.60</text>
+<line x1="570.5" x2="577.7" y1="234.0" y2="234.0" stroke="#7391B3" stroke-width="4.5"/>
+<polygon points="574.1,229.0 569.4,237.6 578.9,237.6" fill="#154780"/>
+</g>
+<text x="745" y="64" text-anchor="middle" font-size="13" fill="#415D56" font-weight="600">Event study</text>
+<line x1="610" x2="880" y1="246" y2="246" stroke="#415D56" stroke-width="1"/>
+<line x1="610" x2="880" y1="223.4" y2="223.4" stroke="#415D56" stroke-width="1" stroke-dasharray="4 3"/>
+<line x1="745.0" x2="745.0" y1="88" y2="246" stroke="#415D56" stroke-width="1" stroke-dasharray="1 3"/>
+<text x="626" y="261" text-anchor="middle" font-size="11" fill="#5C746C">−2</text>
+<text x="705.3" y="261" text-anchor="middle" font-size="11" fill="#5C746C">−1</text>
+<text x="784.7" y="261" text-anchor="middle" font-size="11" fill="#5C746C">0</text>
+<text x="864" y="261" text-anchor="middle" font-size="11" fill="#5C746C">1</text>
+<text x="745" y="277" text-anchor="middle" font-size="11" fill="#5C746C">event time e</text>
+<g class="a w16 off">
+<rect x="311" y="169.4" width="278" height="22" fill="none" stroke="#B28C1C" stroke-width="1.8" rx="4"/>
+<path d="M589 180.4 C619.0 180.4 590.0 225.9 620.0 225.9" fill="none" stroke="#B28C1C" stroke-width="2"/>
+</g>
+<g class="a w17">
+<path d="M626.0 229.9 V221.9" stroke="#D1BA77" stroke-width="5" fill="none"/>
+<polygon points="626.0,219.7 620.1,230.4 631.9,230.4" fill="#B28C1C"/>
+</g>
+<g class="a w18 off">
+<rect x="311" y="89" width="278" height="22" fill="none" stroke="#B28C1C" stroke-width="1.8" rx="4"/>
+<path d="M589 100.0 C619.0 100.0 669.3 223.4 699.3 223.4" fill="none" stroke="#B28C1C" stroke-width="2" stroke-dasharray="3 3"/>
+<rect x="311" y="196.2" width="278" height="22" fill="none" stroke="#B28C1C" stroke-width="1.8" rx="4"/>
+<path d="M589 207.2 C619.0 207.2 669.3 223.4 699.3 223.4" fill="none" stroke="#B28C1C" stroke-width="2" stroke-dasharray="3 3"/>
+</g>
+<g class="a w19">
+<polygon points="705.3,217.2 699.4,227.8 711.2,227.8" fill="#B28C1C"/>
+</g>
+<g class="a w20 off">
+<rect x="311" y="115.8" width="278" height="22" fill="none" stroke="#154780" stroke-width="1.8" rx="4"/>
+<path d="M589 126.8 C619.0 126.8 748.7 122.5 778.7 122.5" fill="none" stroke="#154780" stroke-width="2"/>
+<text x="586" y="113.3" text-anchor="end" font-size="10" fill="#415D56">× 0.45</text>
+<rect x="311" y="223" width="278" height="22" fill="none" stroke="#154780" stroke-width="1.8" rx="4"/>
+<path d="M589 234.0 C619.0 234.0 748.7 122.5 778.7 122.5" fill="none" stroke="#154780" stroke-width="2"/>
+<text x="586" y="220.5" text-anchor="end" font-size="10" fill="#415D56">× 0.55</text>
+</g>
+<g class="a w21">
+<path d="M784.7 128.3 V116.6" stroke="#7391B3" stroke-width="5" fill="none"/>
+<polygon points="784.7,116.3 778.8,126.9 790.6,126.9" fill="#154780"/>
+</g>
+<g class="a w22 off">
+<rect x="311" y="142.6" width="278" height="22" fill="none" stroke="#154780" stroke-width="1.8" rx="4"/>
+<path d="M589 153.6 C619.0 153.6 828.0 108.3 858.0 108.3" fill="none" stroke="#154780" stroke-width="2"/>
+</g>
+<g class="a w23">
+<path d="M864.0 112.5 V104.1" stroke="#7391B3" stroke-width="5" fill="none"/>
+<polygon points="864.0,102.1 858.1,112.8 869.9,112.8" fill="#154780"/>
+</g>
+<g transform="translate(162.2 0)">
+<rect x="40" y="295" width="22" height="12" fill="#154780" stroke="#415D56" stroke-width="0.8"/>
+<text x="68" y="304" text-anchor="start" font-size="11" fill="#415D56">treated</text>
+<rect x="160" y="295" width="8" height="12" fill="#B3CBE6"/>
+<rect x="168" y="295" width="7" height="12" fill="#B28C1C"/>
+<rect x="175" y="295" width="7" height="12" fill="#E3E9E5"/>
+<rect x="160" y="295" width="22" height="12" fill="none" stroke="#415D56" stroke-width="0.8"/>
+<text x="190" y="304" text-anchor="start" font-size="11" fill="#415D56">not treated</text>
+<rect x="300" y="294" width="22" height="14" fill="none" stroke="#1E2B27" stroke-width="2.5" rx="3"/>
+<text x="330" y="304" text-anchor="start" font-size="11" fill="#415D56">data used for one ATT(g,t)</text>
+<rect x="40" y="317" width="22" height="12" fill="#B3CBE6" stroke="#415D56" stroke-width="0.8"/>
+<rect x="40" y="317" width="22" height="12" fill="url(#pA)"/>
+<text x="68" y="326" text-anchor="start" font-size="11" fill="#415D56">enabled, eligible</text>
+<rect x="200" y="317" width="22" height="12" fill="#B3CBE6" stroke="#415D56" stroke-width="0.8"/>
+<rect x="200" y="317" width="22" height="12" fill="url(#pB)"/>
+<text x="228" y="326" text-anchor="start" font-size="11" fill="#415D56">same group, ineligible</text>
+<rect x="390" y="317" width="22" height="12" fill="#B3CBE6" stroke="#415D56" stroke-width="0.8"/>
+<rect x="390" y="317" width="22" height="12" fill="url(#pC)"/>
+<text x="418" y="326" text-anchor="start" font-size="11" fill="#415D56">not yet or never enabled</text>
+</g>
+</g>
+</svg>

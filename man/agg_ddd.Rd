@@ -15,24 +15,25 @@ agg_ddd(
   boot = NULL,
   nboot = NULL,
   cband = NULL,
-  alpha = 0.05
+  alpha = NULL
 )
 }
 \arguments{
 \item{ddd_obj}{a \code{ddd} object (i.e., the results of the \code{\link[=ddd]{ddd()}} function)}
 
 \item{type}{Which type of aggregated treatment effect parameter to compute.
-\code{"simple"} just computes a weighted average of all
-group-time average treatment effects with weights proportional to group
-size.
+\code{"simple"} computes a weighted average of all post-treatment
+group-time average treatment effects, with cohort weights proportional to
+the share of treated units in each cohort.
 \code{"eventstudy"} computes average effects across
 different lengths of exposure to the treatment (event times). Here the overall effect averages the effect of the
 treatment across the positive lengths of exposure. This is the default option;
 \code{"group"} computes average treatment effects across different groups/cohorts; here
-the overall effect averages the effect across different groups using group size as weights;
+the overall effect averages the effect across different groups, with weights proportional
+to the share of treated units in each cohort;
 \code{"calendar"} computes average treatment effects across different
-time periods, with weights proportional to the group size; here the overall effect averages the effect across each
-time period.}
+time periods, with cohort weights proportional to the share of treated units; here the overall
+effect averages the effect across each time period. See Details for the cohort weights.}
 
 \item{cluster}{The name of the variable to be used for clustering. The maximum number of cluster variables is 1. Default is \code{NULL}.}
 
@@ -62,13 +63,13 @@ standard errors are reported.}
 and this is only applicable if \code{boot=TRUE}.}
 
 \item{cband}{Boolean for whether or not to compute a uniform confidence
-band that covers all of the group-time average treatment effects
-with fixed probability \code{0.95}.  In order to compute uniform confidence
+band that covers all of the aggregated treatment effects
+with fixed probability \code{1 - alpha}.  In order to compute uniform confidence
 bands, \code{boot} must also be set to \code{TRUE}.  The default is
-the value set in the ddd object}
+the value set in the ddd object.}
 
-\item{alpha}{The level of confidence for the confidence intervals.  The default is 0.05. Otherwise, it will
-use the value set in the ddd object.}
+\item{alpha}{The significance level for the confidence intervals and bands. The default, \code{NULL},
+uses the level stored in the \code{ddd} object (the \code{alpha} passed to \code{\link[=ddd]{ddd()}}).}
 }
 \value{
 A object (list) of class \code{\link{agg_ddd}} that holds the results from the
@@ -79,6 +80,13 @@ aggregation step.
 and aggregate them into a smaller number of summary parameters in staggered triple differences designs.
 There are several possible aggregations including \code{"simple"}, \code{"eventstudy"}, \code{"group"},
 and \code{"calendar"}.  Default is \code{"eventstudy"}.
+}
+\details{
+Cohort weights. Every aggregation weights cohort \eqn{g} by its share of
+treated units, \eqn{P(S = g, Q = 1)}: units first enabled in period \eqn{g}
+(the \code{gname} column of \code{\link[=ddd]{ddd()}}) that are also eligible (\code{pname} equal to 1),
+as in the event-study parameter of Ortiz-Villavicencio and Sant'Anna (2025).
+Ineligible units of a cohort do not count toward its weight.
 }
 \examples{
 #----------------------------------------------------------
