@@ -282,32 +282,12 @@ compute_aggregation <- function(ddd_obj,
   # removing NA values from ATT(g,t), groups and periods objects
   if(na.rm){
     notna <- !is.na(ATT)
+    if (!any(notna)) stop("No non-missing ATT(g,t) estimates to aggregate.")
     groups <- groups[notna]
     periods <- periods[notna]
     ATT <- ATT[notna]
-    inf_func_mat <- inf_func_mat[, notna]
+    inf_func_mat <- inf_func_mat[, notna, drop = FALSE]
     glist <- sort(unique(groups))
-
-    # Ensure we have non-missing post-treatment ATTs for each group if the type is "group"
-    if(type == "group"){
-      # Get the groups that have some non-missing ATT(g,t) in post-treatmemt periods
-      gnotna <- sapply(glist, function(g) {
-        # look at post-treatment periods for group g
-        whichg <- which((groups == g) & (g <= periods))
-        attg <- ATT[whichg]
-        group_select <- !is.na(mean(attg))
-        return(group_select)
-      })
-      gnotna <- glist[gnotna]
-      # indicator for not all post-treatment ATT(g,t) missing
-      not_all_na <- groups %in% gnotna
-      # Re-do the na.rm thing to update the groups
-      groups <- groups[not_all_na]
-      periods <- periods[not_all_na]
-      ATT <- ATT[not_all_na]
-      inf_func_mat <- inf_func_mat[, not_all_na]
-      glist <- sort(unique(groups))
-    }
   }
 
   #-----------------------------------------------------------------------------
@@ -352,6 +332,9 @@ compute_aggregation <- function(ddd_obj,
 
   # which group time average treatment effects are post-treatment
   keepers <- which(group <= t & t <= (group + max_e))
+  if (type %in% c("simple", "group") && !length(keepers)) {
+    stop("No post-treatment ATT(g,t) estimates within the aggregation window.")
+  }
 
   # n x 1 vector of treated cohort (0 for never-enabled or ineligible units)
   G <-  unlist(lapply(dta[["first_treat"]]*dta[["partition"]], orig2t))
@@ -410,20 +393,17 @@ compute_aggregation <- function(ddd_obj,
 
   if (type == "group") {
 
-    # get group specific ATTs
-    # note: there are no estimated weights here
-    selective.att.g <- sapply(glist, function(g) {
-      # look at post-treatment periods for group g
-      whichg <- which( (group == g) & (g <= t) & (t <= (group + max_e))) # added last condition to allow for limit on longest period included in att
-      attg <- ATT[whichg]
-      mean(attg)
-    })
-    selective.att.g[is.nan(selective.att.g)] <- NA
+    # Keep only cohorts with a post-treatment estimate inside the window.
+    supported <- glist %in% group[keepers]
+    glist <- glist[supported]
+    orig_glist <- orig_glist[supported]
+    pgg <- pgg[supported]
+    group_cells <- lapply(glist, function(g) keepers[group[keepers] == g])
 
+    selective.att.g <- vapply(group_cells, function(cells) mean(ATT[cells]), numeric(1))
 
     # get standard errors for each group specific ATT
-    selective.se.inner <- lapply(glist, function(g) {
-      whichg <- which( (group == g) & (g <= t) & (t <= (group + max_e)))  # added last condition to allow for limit on longest period included in att
+    selective.se.inner <- lapply(group_cells, function(whichg) {
       inf.func.g <- as.numeric(get_agg_inf_func(att=ATT,
                                                 inf_func=inf_func_mat,
                                                 whichones=whichg,

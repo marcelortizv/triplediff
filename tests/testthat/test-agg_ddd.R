@@ -27,6 +27,40 @@ test_that("aggregate estimates use the share of treated units as cohort weights"
   }
 })
 
+test_that("simple and group aggregates use the post-treatment cells left by max_e", {
+  o <- fx_agg_fit()
+  # Cohort 2 has later estimates but no supported dates in the window.
+  # Cohorts 3 and 4 have one and two supported dates, respectively.
+  o$ATT[(o$groups == 2 & o$periods %in% c(2, 3)) |
+          (o$groups == 3 & o$periods == 4)] <- NA_real_
+  fp <- o$first_period_dta
+  p3 <- sum(fp$weights[fp$first_treat == 3 & fp$partition == 1])
+  p4 <- sum(fp$weights[fp$first_treat == 4 & fp$partition == 1])
+  a3 <- o$ATT[o$groups == 3 & o$periods == 3]
+  a4 <- o$ATT[o$groups == 4 & o$periods %in% c(4, 5)]
+
+  simple <- agg_ddd(o, type = "simple", max_e = 1, na.rm = TRUE)$aggte_ddd
+  group <- agg_ddd(o, type = "group", max_e = 1, na.rm = TRUE)$aggte_ddd
+  expect_equal(simple$overall.att, (p3 * a3 + p4 * sum(a4)) / (p3 + 2 * p4))
+  expect_equal(group$overall.att, (p3 * a3 + p4 * mean(a4)) / (p3 + p4))
+  expect_equal(group$egt, c(3, 4))
+  expect_equal(group$att.egt, c(a3, mean(a4)))
+
+  # If the window leaves one cohort and one date, both summaries use that cell.
+  o$ATT[o$groups == 4 & o$periods == 4] <- NA_real_
+  simple <- agg_ddd(o, type = "simple", max_e = 0, na.rm = TRUE)$aggte_ddd
+  group <- agg_ddd(o, type = "group", max_e = 0, na.rm = TRUE)$aggte_ddd
+  expect_equal(simple$overall.att, a3)
+  expect_equal(group$overall.att, a3)
+  expect_equal(group$overall.se, simple$overall.se)
+
+  o$ATT[o$groups == 3 & o$periods == 3] <- NA_real_
+  for (type in c("simple", "group")) {
+    expect_error(agg_ddd(o, type = type, max_e = 0, na.rm = TRUE),
+                 "No post-treatment ATT", fixed = TRUE)
+  }
+})
+
 test_that("event-study SE uses treated-unit indicators in the weight influence function", {
   o <- fx_agg_fit(); fp <- o$first_period_dta; n <- o$n
   pg <- sapply(o$glist, function(g) mean(fp$weights * (fp$first_treat == g & fp$partition == 1)))
